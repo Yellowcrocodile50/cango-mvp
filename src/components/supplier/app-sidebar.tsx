@@ -8,6 +8,7 @@ import {
   ShoppingCart,
   Settings,
   LogOut,
+  ArrowLeft,
 } from "lucide-react";
 import {
   Sidebar,
@@ -24,6 +25,11 @@ import {
 import { supabase } from "@/lib/supabase";
 
 const navItems = [
+  {
+    title: "돌아가기",
+    url: "/",
+    icon: ArrowLeft,
+  },
   {
     title: "대시보드",
     url: "/supplier",

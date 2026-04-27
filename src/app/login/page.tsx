@@ -41,7 +41,7 @@ function LoginForm() {
     if (signInError) {
       setError(
         signInError.message === "Invalid login credentials"
-          ? "아이디(이메일) 또는 비밀번호를 확인해주세요."
+          ? "아이디 또는 비밀번호를 확인해주세요."
           : signInError.message
       );
       setLoading(false);

@@ -44,7 +44,20 @@ export default function SignupPage() {
     setLoading(true);
     setError("");
 
-    const { error: signUpError } = await supabase.auth.signUp({
+    // 아이디 중복 확인
+    const { data: existing } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("username", username)
+      .maybeSingle();
+
+    if (existing) {
+      setError("이미 사용 중인 아이디입니다.");
+      setLoading(false);
+      return;
+    }
+
+    const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -61,6 +74,15 @@ export default function SignupPage() {
       );
       setLoading(false);
       return;
+    }
+
+    // profiles 테이블에 아이디 저장
+    if (data.user) {
+      await supabase.from("profiles").insert({
+        id: data.user.id,
+        username,
+        email,
+      });
     }
 
     router.push("/login?registered=true");

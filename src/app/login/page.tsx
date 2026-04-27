@@ -10,7 +10,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const registered = searchParams.get("registered");
 
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,15 +20,32 @@ function LoginForm() {
     setLoading(true);
     setError("");
 
+    // 아이디 or 이메일 판별
+    let loginEmail = identifier;
+    if (!identifier.includes("@")) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("username", identifier)
+        .maybeSingle();
+
+      if (!profile) {
+        setError("존재하지 않는 아이디입니다.");
+        setLoading(false);
+        return;
+      }
+      loginEmail = profile.email;
+    }
+
     const { data, error: signInError } = await supabase.auth.signInWithPassword({
-      email,
+      email: loginEmail,
       password,
     });
 
     if (signInError) {
       setError(
         signInError.message === "Invalid login credentials"
-          ? "아이디 또는 패스워드를 확인해주세요."
+          ? "아이디(이메일) 또는 비밀번호를 확인해주세요."
           : signInError.message
       );
       setLoading(false);
@@ -59,12 +76,13 @@ function LoginForm() {
 
       <form onSubmit={handleLogin} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-1 text-[#365927]">이메일</label>
+          <label className="block text-sm font-medium mb-1 text-[#365927]">아이디 또는 이메일</label>
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="example@email.com"
+            type="text"
+            value={identifier}
+            onChange={(e) => { e.target.setCustomValidity(""); setIdentifier(e.target.value); }}
+            onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("아이디 또는 이메일을 입력해주세요.")}
+            placeholder="아이디 또는 이메일 주소"
             required
             className="w-full h-12 px-4 border border-[#d6e4d3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white"
           />
@@ -75,7 +93,8 @@ function LoginForm() {
           <input
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => { e.target.setCustomValidity(""); setPassword(e.target.value); }}
+            onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("비밀번호를 입력해주세요.")}
             placeholder="비밀번호를 입력하세요"
             required
             className="w-full h-12 px-4 border border-[#d6e4d3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white"

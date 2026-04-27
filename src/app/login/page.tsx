@@ -78,7 +78,7 @@ function LoginForm() {
             value={identifier}
             onChange={(e) => { e.target.setCustomValidity(""); setIdentifier(e.target.value); }}
             onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("아이디를 입력해주세요.")}
-            placeholder="아이디를 입력하세요"
+            placeholder="아이디를 입력해주세요"
             required
             className="w-full h-12 px-4 border border-[#d6e4d3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white"
           />
@@ -91,7 +91,7 @@ function LoginForm() {
             value={password}
             onChange={(e) => { e.target.setCustomValidity(""); setPassword(e.target.value); }}
             onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("비밀번호를 입력해주세요.")}
-            placeholder="비밀번호를 입력하세요"
+            placeholder="비밀번호를 입력해주세요"
             required
             className="w-full h-12 px-4 border border-[#d6e4d3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white"
           />

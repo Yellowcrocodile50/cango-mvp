@@ -34,7 +34,7 @@ function validateConfirm(password: string, confirm: string) {
 
 function validatePhone(v: string) {
   if (!v) return "";
-  if (!/^[0-9\-]{9,13}$/.test(v)) return "올바른 전화번호를 입력해주세요.";
+  if (!/^010-?[0-9]{4}-?[0-9]{4}$/.test(v)) return "올바른 휴대폰 번호를 입력해주세요. (예: 010-1234-5678)";
   return "";
 }
 

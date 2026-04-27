@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const { items, removeItems } = useCart();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -176,5 +176,13 @@ export default function CheckoutPage() {
         </div>
       </form>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<div className="max-w-lg mx-auto px-4 py-20 text-center"><p className="text-[#5a7d50]">로딩 중...</p></div>}>
+      <CheckoutContent />
+    </Suspense>
   );
 }

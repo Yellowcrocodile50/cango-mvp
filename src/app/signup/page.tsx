@@ -19,6 +19,14 @@ export default function SignupPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (/[ㄱ-ㅎㅏ-ㅣ]/.test(name)) {
+      setError("이름을 다시 입력해주세요.");
+      return;
+    }
+    if (password.length < 8) {
+      setError("비밀번호는 8자 이상 입력해주세요.");
+      return;
+    }
     if (password !== confirmPassword) {
       setError("비밀번호가 일치하지 않습니다.");
       return;
@@ -40,7 +48,12 @@ export default function SignupPage() {
     });
 
     if (signUpError) {
-      setError(signUpError.message);
+      const msg = signUpError.message;
+      setError(
+        msg.includes("already registered") ? "이미 가입된 이메일입니다." :
+        msg.includes("Password should be") ? "비밀번호는 8자 이상 입력해주세요." :
+        "회원가입 중 오류가 발생했습니다."
+      );
       setLoading(false);
       return;
     }
@@ -64,7 +77,8 @@ export default function SignupPage() {
           <input
             type="text"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => { e.target.setCustomValidity(""); setName(e.target.value); }}
+            onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("이름을 입력해주세요.")}
             placeholder="홍길동"
             required
             className="w-full h-12 px-4 border border-[#d6e4d3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white"
@@ -76,7 +90,10 @@ export default function SignupPage() {
           <input
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => { e.target.setCustomValidity(""); setEmail(e.target.value); }}
+            onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity(
+              e.target.validity.valueMissing ? "이메일을 입력해주세요." : "올바른 이메일 형식으로 입력해주세요."
+            )}
             placeholder="example@email.com"
             required
             className="w-full h-12 px-4 border border-[#d6e4d3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white"
@@ -88,10 +105,10 @@ export default function SignupPage() {
           <input
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => { e.target.setCustomValidity(""); setPassword(e.target.value); }}
+            onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("비밀번호를 입력해주세요.")}
             placeholder="8자 이상 입력하세요"
             required
-            minLength={8}
             className="w-full h-12 px-4 border border-[#d6e4d3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white"
           />
         </div>
@@ -101,7 +118,8 @@ export default function SignupPage() {
           <input
             type="password"
             value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            onChange={(e) => { e.target.setCustomValidity(""); setConfirmPassword(e.target.value); }}
+            onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("비밀번호를 다시 입력해주세요.")}
             placeholder="비밀번호를 다시 입력하세요"
             required
             className="w-full h-12 px-4 border border-[#d6e4d3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white"
@@ -113,7 +131,8 @@ export default function SignupPage() {
           <input
             type="tel"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) => { e.target.setCustomValidity(""); setPhone(e.target.value); }}
+            onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("전화번호를 입력해주세요.")}
             placeholder="010-1234-5678"
             required
             className="w-full h-12 px-4 border border-[#d6e4d3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white"

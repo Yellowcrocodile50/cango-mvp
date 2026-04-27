@@ -1,0 +1,132 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  Settings,
+  LogOut,
+} from "lucide-react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarRail,
+} from "@/components/ui/sidebar";
+import { supabase } from "@/lib/supabase";
+
+const navItems = [
+  {
+    title: "대시보드",
+    url: "/supplier",
+    icon: LayoutDashboard,
+  },
+  {
+    title: "내 자료 관리",
+    url: "/supplier/materials",
+    icon: Package,
+  },
+  {
+    title: "주문 관리",
+    url: "/supplier/orders",
+    icon: ShoppingCart,
+  },
+  {
+    title: "설정",
+    url: "/supplier/settings",
+    icon: Settings,
+  },
+];
+
+export function AppSidebar({ user }: { user: { email: string; name?: string } }) {
+  const pathname = usePathname();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.href = "/login";
+  };
+
+  return (
+    <Sidebar collapsible="icon">
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" render={<Link href="/supplier" />}>
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-[#365927] text-white font-bold text-sm">
+                C
+              </div>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-semibold">CANGO</span>
+                <span className="truncate text-xs text-muted-foreground">
+                  공급자 대시보드
+                </span>
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>메뉴</SidebarGroupLabel>
+          <SidebarMenu>
+            {navItems.map((item) => {
+              const isActive =
+                item.url === "/supplier"
+                  ? pathname === "/supplier"
+                  : pathname.startsWith(item.url);
+              return (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    isActive={isActive}
+                    tooltip={item.title}
+                    render={<Link href={item.url} />}
+                  >
+                    <item.icon />
+                    <span>{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
+          </SidebarMenu>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg">
+              <div className="flex aspect-square size-8 items-center justify-center rounded-full bg-[#365927] text-white text-xs font-bold">
+                {(user.name || user.email)[0].toUpperCase()}
+              </div>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-medium">
+                  {user.name || "공급자"}
+                </span>
+                <span className="truncate text-xs text-muted-foreground">
+                  {user.email}
+                </span>
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={handleLogout} tooltip="로그아웃">
+              <LogOut />
+              <span>로그아웃</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+
+      <SidebarRail />
+    </Sidebar>
+  );
+}

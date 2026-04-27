@@ -1,0 +1,166 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Send } from "lucide-react";
+
+interface Order {
+  id: string;
+  buyer_email: string;
+  buyer_phone: string | null;
+  amount: number;
+  payment_status: string;
+  is_sent: boolean;
+  created_at: string;
+  material_title: string;
+  material_id: string;
+}
+
+export default function OrdersPage() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  async function fetchOrders() {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: myMaterials } = await supabase
+      .from("materials")
+      .select("id, title")
+      .eq("supplier_id", user.id);
+
+    const materialMap = new Map(
+      myMaterials?.map((m) => [m.id, m.title]) || []
+    );
+    const materialIds = [...materialMap.keys()];
+
+    if (materialIds.length === 0) {
+      setOrders([]);
+      setLoading(false);
+      return;
+    }
+
+    const { data } = await supabase
+      .from("orders")
+      .select("*")
+      .in("material_id", materialIds)
+      .order("created_at", { ascending: false });
+
+    setOrders(
+      (data || []).map((o) => ({
+        ...o,
+        material_title: materialMap.get(o.material_id) || "알 수 없음",
+      }))
+    );
+    setLoading(false);
+  }
+
+  async function markAsSent(orderId: string) {
+    await supabase
+      .from("orders")
+      .update({ is_sent: true })
+      .eq("id", orderId);
+
+    setOrders((prev) =>
+      prev.map((o) => (o.id === orderId ? { ...o, is_sent: true } : o))
+    );
+  }
+
+  function getStatusBadge(order: Order) {
+    if (order.is_sent) {
+      return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">발송완료</Badge>;
+    }
+    if (order.payment_status === "done") {
+      return <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">발송대기</Badge>;
+    }
+    if (order.payment_status === "pending") {
+      return <Badge variant="secondary">결제대기</Badge>;
+    }
+    if (order.payment_status === "canceled") {
+      return <Badge variant="destructive">취소</Badge>;
+    }
+    return <Badge variant="outline">{order.payment_status}</Badge>;
+  }
+
+  return (
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold text-[#365927]">주문 관리</h1>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">전체 주문 목록</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <p className="text-sm text-muted-foreground py-8 text-center">
+              로딩 중...
+            </p>
+          ) : orders.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-8 text-center">
+              아직 주문이 없습니다.
+            </p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>자료명</TableHead>
+                  <TableHead>구매자</TableHead>
+                  <TableHead>전화번호</TableHead>
+                  <TableHead>금액</TableHead>
+                  <TableHead>상태</TableHead>
+                  <TableHead>주문일</TableHead>
+                  <TableHead className="text-right">액션</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {orders.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell className="font-medium">
+                      {order.material_title}
+                    </TableCell>
+                    <TableCell>{order.buyer_email}</TableCell>
+                    <TableCell>{order.buyer_phone || "-"}</TableCell>
+                    <TableCell>{order.amount.toLocaleString()}원</TableCell>
+                    <TableCell>{getStatusBadge(order)}</TableCell>
+                    <TableCell>
+                      {new Date(order.created_at).toLocaleDateString("ko-KR")}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {order.payment_status === "done" && !order.is_sent && (
+                        <Button
+                          size="sm"
+                          onClick={() => markAsSent(order.id)}
+                          className="bg-[#365927] hover:bg-[#4a7a38]"
+                        >
+                          <Send className="mr-1 h-3 w-3" />
+                          발송완료
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

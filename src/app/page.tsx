@@ -1,0 +1,98 @@
+"use client";
+
+import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import ProductCard from "@/components/ProductCard";
+import SupplierUploadSection from "@/components/SupplierUploadSection";
+import { supabase } from "@/lib/supabase";
+import { categoryGroups } from "@/data/categories";
+import type { Material } from "@/types/material";
+
+function ProductGrid() {
+  const searchParams = useSearchParams();
+  const category = searchParams.get("category");
+  const [supplierUserId, setSupplierUserId] = useState<string | null>(null);
+  const [materials, setMaterials] = useState<Material[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.user_metadata?.role === "supplier") {
+        setSupplierUserId(user.id);
+      }
+    });
+  }, []);
+
+  const fetchMaterials = useCallback(() => {
+    supabase
+      .from("materials")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        setMaterials(data || []);
+        setLoading(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    fetchMaterials();
+  }, [fetchMaterials]);
+
+  const groupItems =
+    categoryGroups.find((g) => g.label === category)?.items;
+
+  const filtered = category
+    ? materials.filter((m) =>
+        groupItems ? (groupItems as readonly string[]).includes(m.category) : m.category === category
+      )
+    : materials;
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      {supplierUserId && (
+        <SupplierUploadSection
+          userId={supplierUserId}
+          onUploaded={fetchMaterials}
+        />
+      )}
+
+      <section className="mb-12 text-center py-10 bg-[#365927] rounded-2xl">
+        <h1 className="text-4xl font-bold mb-4 text-white">
+          당신의 지식을 거래하세요
+        </h1>
+        <p className="text-[#c8dcc4] text-lg">
+          검증된 PDF 자료를 만나보세요
+        </p>
+      </section>
+
+      <div className="mb-6">
+        <h2 className="text-xl font-bold text-[#365927]">
+          {category ? category : "전체 자료"}
+        </h2>
+        <p className="text-sm text-[#5a7d50] mt-1">
+          {loading ? "로딩 중..." : `${filtered.length}개의 자료`}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8">
+        {filtered.map((material) => (
+          <ProductCard key={material.id} material={material} />
+        ))}
+      </div>
+
+      {!loading && filtered.length === 0 && (
+        <div className="text-center py-20 text-[#8aab82]">
+          해당 카테고리에 자료가 없습니다.
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="text-center py-20 text-[#5a7d50]">로딩 중...</div>}>
+      <ProductGrid />
+    </Suspense>
+  );
+}

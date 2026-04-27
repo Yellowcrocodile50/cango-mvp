@@ -5,8 +5,42 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
+function validateUsername(v: string) {
+  if (!v) return "";
+  if (!/^[a-z0-9]{6,16}$/.test(v)) return "6~16자, 영문 소문자·숫자만 사용 가능합니다.";
+  return "";
+}
+
+function validateEmail(v: string) {
+  if (!v) return "";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return "올바른 이메일 형식으로 입력해주세요.";
+  return "";
+}
+
+function validatePassword(v: string) {
+  if (!v) return "";
+  if (v.length < 8 || v.length > 16) return "8~16자로 입력해주세요.";
+  if (!/[a-zA-Z]/.test(v)) return "문자를 포함해야 합니다.";
+  if (!/[0-9]/.test(v)) return "숫자를 포함해야 합니다.";
+  if (!/[!@#$%^&*()\-_=+\[\]{};:'",.<>/?\\|`~]/.test(v)) return "특수문자를 포함해야 합니다.";
+  return "";
+}
+
+function validateConfirm(password: string, confirm: string) {
+  if (!confirm) return "";
+  if (password !== confirm) return "비밀번호가 일치하지 않습니다.";
+  return "";
+}
+
+function validatePhone(v: string) {
+  if (!v) return "";
+  if (!/^[0-9\-]{9,13}$/.test(v)) return "올바른 전화번호를 입력해주세요.";
+  return "";
+}
+
 export default function SignupPage() {
   const router = useRouter();
+
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -14,37 +48,40 @@ export default function SignupPage() {
   const [phone, setPhone] = useState("");
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
   const [marketingAgreed, setMarketingAgreed] = useState(false);
-  const [error, setError] = useState("");
+
+  const [usernameError, setUsernameError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmError, setConfirmError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!/^[a-z0-9]{6,16}$/.test(username)) {
-      setError("아이디는 6~16자, 영문 소문자와 숫자만 사용 가능합니다.");
-      return;
-    }
-    if (password.length < 8 || password.length > 16) {
-      setError("비밀번호는 8~16자로 입력해주세요.");
-      return;
-    }
-    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password) || !/[!@#$%^&*()\-_=+\[\]{};:'",.<>/?\\|`~]/.test(password)) {
-      setError("비밀번호는 문자, 숫자, 특수문자를 모두 포함해야 합니다.");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError("비밀번호가 일치하지 않습니다.");
-      return;
-    }
+    // 제출 시 전체 재검증
+    const uErr = validateUsername(username) || (!username ? "아이디를 입력해주세요." : "");
+    const eErr = validateEmail(email) || (!email ? "이메일을 입력해주세요." : "");
+    const pErr = validatePassword(password) || (!password ? "비밀번호를 입력해주세요." : "");
+    const cErr = validateConfirm(password, confirmPassword) || (!confirmPassword ? "비밀번호를 다시 입력해 주세요." : "");
+    const phErr = validatePhone(phone) || (!phone ? "전화번호를 입력해주세요." : "");
+
+    setUsernameError(uErr);
+    setEmailError(eErr);
+    setPasswordError(pErr);
+    setConfirmError(cErr);
+    setPhoneError(phErr);
+
+    if (uErr || eErr || pErr || cErr || phErr) return;
     if (!privacyAgreed) {
-      setError("개인정보 처리방침에 동의해주세요.");
+      setServerError("개인정보 처리방침에 동의해주세요.");
       return;
     }
 
     setLoading(true);
-    setError("");
+    setServerError("");
 
-    // 아이디 중복 확인
     const { data: existing } = await supabase
       .from("profiles")
       .select("username")
@@ -52,7 +89,7 @@ export default function SignupPage() {
       .maybeSingle();
 
     if (existing) {
-      setError("이미 사용 중인 아이디입니다.");
+      setUsernameError("이미 사용 중인 아이디입니다.");
       setLoading(false);
       return;
     }
@@ -67,22 +104,16 @@ export default function SignupPage() {
 
     if (signUpError) {
       const msg = signUpError.message;
-      setError(
+      setServerError(
         msg.includes("already registered") ? "이미 가입된 이메일입니다." :
-        msg.includes("Password should be") ? "비밀번호는 8자 이상 입력해주세요." :
         "회원가입 중 오류가 발생했습니다."
       );
       setLoading(false);
       return;
     }
 
-    // profiles 테이블에 아이디 저장
     if (data.user) {
-      await supabase.from("profiles").insert({
-        id: data.user.id,
-        username,
-        email,
-      });
+      await supabase.from("profiles").insert({ id: data.user.id, username, email });
     }
 
     router.push("/login?registered=true");
@@ -92,80 +123,96 @@ export default function SignupPage() {
     <div className="max-w-sm mx-auto px-4 py-20">
       <h1 className="text-2xl font-bold text-center mb-8 text-[#365927]">회원가입</h1>
 
-      {error && (
+      {serverError && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-          {error}
+          {serverError}
         </div>
       )}
 
       <form onSubmit={handleSignup} className="space-y-4">
+
+        {/* 아이디 */}
         <div>
           <label className="block text-sm font-medium mb-1 text-[#365927]">아이디</label>
           <input
             type="text"
             value={username}
-            onChange={(e) => { e.target.setCustomValidity(""); setUsername(e.target.value); }}
-            onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("아이디를 입력해주세요.")}
+            onChange={(e) => {
+              setUsername(e.target.value);
+              setUsernameError(validateUsername(e.target.value));
+            }}
             placeholder="6~16자, 영문 소문자·숫자 사용 가능"
-            required
-            className="w-full h-12 px-4 border border-[#d6e4d3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white"
+            className={`w-full h-12 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white ${usernameError ? "border-red-400" : "border-[#d6e4d3]"}`}
           />
+          {usernameError && <p className="text-red-500 text-xs mt-1">{usernameError}</p>}
         </div>
 
+        {/* 이메일 */}
         <div>
           <label className="block text-sm font-medium mb-1 text-[#365927]">이메일</label>
           <input
-            type="email"
+            type="text"
             value={email}
-            onChange={(e) => { e.target.setCustomValidity(""); setEmail(e.target.value); }}
-            onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity(
-              (e.target as HTMLInputElement).validity.valueMissing ? "이메일을 입력해주세요." : "올바른 이메일 형식으로 입력해주세요."
-            )}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setEmailError(validateEmail(e.target.value));
+            }}
             placeholder="example@email.com"
-            required
-            className="w-full h-12 px-4 border border-[#d6e4d3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white"
+            className={`w-full h-12 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white ${emailError ? "border-red-400" : "border-[#d6e4d3]"}`}
           />
+          {emailError && <p className="text-red-500 text-xs mt-1">{emailError}</p>}
         </div>
 
+        {/* 비밀번호 */}
         <div>
           <label className="block text-sm font-medium mb-1 text-[#365927]">비밀번호</label>
           <input
             type="password"
             value={password}
-            onChange={(e) => { e.target.setCustomValidity(""); setPassword(e.target.value); }}
-            onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("비밀번호를 입력해주세요.")}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setPasswordError(validatePassword(e.target.value));
+              if (confirmPassword) setConfirmError(validateConfirm(e.target.value, confirmPassword));
+            }}
             placeholder="8~16자, 문자·숫자·특수문자 모두 혼용"
-            required
-            className="w-full h-12 px-4 border border-[#d6e4d3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white"
+            className={`w-full h-12 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white ${passwordError ? "border-red-400" : "border-[#d6e4d3]"}`}
           />
+          {passwordError && <p className="text-red-500 text-xs mt-1">{passwordError}</p>}
         </div>
 
+        {/* 비밀번호 확인 */}
         <div>
           <label className="block text-sm font-medium mb-1 text-[#365927]">비밀번호 확인</label>
           <input
             type="password"
             value={confirmPassword}
-            onChange={(e) => { e.target.setCustomValidity(""); setConfirmPassword(e.target.value); }}
-            onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("비밀번호를 다시 입력해 주세요.")}
+            onChange={(e) => {
+              setConfirmPassword(e.target.value);
+              setConfirmError(validateConfirm(password, e.target.value));
+            }}
             placeholder="비밀번호를 다시 입력해 주세요"
-            required
-            className="w-full h-12 px-4 border border-[#d6e4d3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white"
+            className={`w-full h-12 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white ${confirmError ? "border-red-400" : "border-[#d6e4d3]"}`}
           />
+          {confirmError && <p className="text-red-500 text-xs mt-1">{confirmError}</p>}
         </div>
 
+        {/* 전화번호 */}
         <div>
           <label className="block text-sm font-medium mb-1 text-[#365927]">전화번호</label>
           <input
             type="tel"
             value={phone}
-            onChange={(e) => { e.target.setCustomValidity(""); setPhone(e.target.value); }}
-            onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("전화번호를 입력해주세요.")}
+            onChange={(e) => {
+              setPhone(e.target.value);
+              setPhoneError(validatePhone(e.target.value));
+            }}
             placeholder="010-1234-5678"
-            required
-            className="w-full h-12 px-4 border border-[#d6e4d3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white"
+            className={`w-full h-12 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white ${phoneError ? "border-red-400" : "border-[#d6e4d3]"}`}
           />
+          {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
         </div>
 
+        {/* 동의 */}
         <div className="space-y-3 pt-1">
           <label className="flex items-start gap-3 cursor-pointer">
             <input

@@ -57,10 +57,10 @@ function ProductGrid() {
       )}
 
       <section className="mb-12 text-center py-10 bg-[#365927] rounded-2xl">
-        <h1 className="text-4xl font-bold mb-4 text-white">
+        <h1 className="text-2xl sm:text-4xl font-bold mb-4 text-white">
           당신의 지식을 거래하세요
         </h1>
-        <p className="text-[#c8dcc4] text-lg">
+        <p className="text-[#c8dcc4] text-sm sm:text-lg">
           검증된 PDF 자료를 만나보세요
         </p>
       </section>

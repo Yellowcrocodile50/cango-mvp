@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase";
 
 export default function SignupPage() {
   const router = useRouter();
-  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -19,12 +19,17 @@ export default function SignupPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (/[ㄱ-ㅎㅏ-ㅣ]/.test(name)) {
-      setError("이름을 다시 입력해주세요.");
+
+    if (!/^[a-z0-9]{6,16}$/.test(username)) {
+      setError("아이디는 6~16자, 영문 소문자와 숫자만 사용 가능합니다.");
       return;
     }
-    if (password.length < 8) {
-      setError("비밀번호는 8자 이상 입력해주세요.");
+    if (password.length < 8 || password.length > 16) {
+      setError("비밀번호는 8~16자로 입력해주세요.");
+      return;
+    }
+    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password) || !/[!@#$%^&*()\-_=+\[\]{};:'",.<>/?\\|`~]/.test(password)) {
+      setError("비밀번호는 문자, 숫자, 특수문자를 모두 포함해야 합니다.");
       return;
     }
     if (password !== confirmPassword) {
@@ -43,7 +48,7 @@ export default function SignupPage() {
       email,
       password,
       options: {
-        data: { name, role: "buyer", phone, privacy_agreed: true, marketing_agreed: marketingAgreed },
+        data: { name: username, role: "buyer", phone, privacy_agreed: true, marketing_agreed: marketingAgreed },
       },
     });
 
@@ -73,13 +78,13 @@ export default function SignupPage() {
 
       <form onSubmit={handleSignup} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-1 text-[#365927]">이름</label>
+          <label className="block text-sm font-medium mb-1 text-[#365927]">아이디</label>
           <input
             type="text"
-            value={name}
-            onChange={(e) => { e.target.setCustomValidity(""); setName(e.target.value); }}
-            onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("이름을 입력해주세요.")}
-            placeholder="홍길동"
+            value={username}
+            onChange={(e) => { e.target.setCustomValidity(""); setUsername(e.target.value); }}
+            onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("아이디를 입력해주세요.")}
+            placeholder="6~16자, 영문 소문자·숫자 사용 가능"
             required
             className="w-full h-12 px-4 border border-[#d6e4d3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white"
           />
@@ -92,7 +97,7 @@ export default function SignupPage() {
             value={email}
             onChange={(e) => { e.target.setCustomValidity(""); setEmail(e.target.value); }}
             onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity(
-              e.target.validity.valueMissing ? "이메일을 입력해주세요." : "올바른 이메일 형식으로 입력해주세요."
+              (e.target as HTMLInputElement).validity.valueMissing ? "이메일을 입력해주세요." : "올바른 이메일 형식으로 입력해주세요."
             )}
             placeholder="example@email.com"
             required
@@ -107,7 +112,7 @@ export default function SignupPage() {
             value={password}
             onChange={(e) => { e.target.setCustomValidity(""); setPassword(e.target.value); }}
             onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("비밀번호를 입력해주세요.")}
-            placeholder="8자 이상 입력하세요"
+            placeholder="8~16자, 문자·숫자·특수문자 모두 혼용"
             required
             className="w-full h-12 px-4 border border-[#d6e4d3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white"
           />
@@ -119,8 +124,8 @@ export default function SignupPage() {
             type="password"
             value={confirmPassword}
             onChange={(e) => { e.target.setCustomValidity(""); setConfirmPassword(e.target.value); }}
-            onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("비밀번호를 다시 입력해주세요.")}
-            placeholder="비밀번호를 다시 입력하세요"
+            onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("비밀번호를 다시 입력해 주세요.")}
+            placeholder="비밀번호를 다시 입력해 주세요"
             required
             className="w-full h-12 px-4 border border-[#d6e4d3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white"
           />

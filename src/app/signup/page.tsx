@@ -94,27 +94,22 @@ export default function SignupPage() {
       return;
     }
 
-    const { data, error: signUpError } = await supabase.auth.signUp({
+    const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { name: username, role: "buyer", phone, privacy_agreed: true, marketing_agreed: marketingAgreed },
+        data: { name: username, username, role: "buyer", phone, privacy_agreed: true, marketing_agreed: marketingAgreed },
       },
     });
 
     if (signUpError) {
       const msg = signUpError.message;
-      console.error("[signup] supabase.auth.signUp error:", signUpError);
       setServerError(
         msg.includes("already registered") ? "이미 가입된 이메일입니다." :
-        `회원가입 중 오류가 발생했습니다. [DEBUG: ${msg}]`
+        "회원가입 중 오류가 발생했습니다."
       );
       setLoading(false);
       return;
-    }
-
-    if (data.user) {
-      await supabase.from("profiles").insert({ id: data.user.id, username, email });
     }
 
     router.push("/login?registered=true");

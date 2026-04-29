@@ -190,7 +190,7 @@ export default function Header() {
         </div>
 
         {/* Category bar */}
-        <nav className="flex gap-6 py-3 text-sm font-medium">
+        <nav className="flex gap-6 pt-0 pb-2 text-sm font-medium">
           {categories.map((cat) => (
             <div key={cat.name} className="relative group">
               <Link

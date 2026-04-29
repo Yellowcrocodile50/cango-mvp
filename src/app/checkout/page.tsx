@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { loadTossPayments } from "@tosspayments/tosspayments-sdk";
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 
 function CheckoutContent() {
-  const { items, removeItems } = useCart();
+  const { items } = useCart();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -22,10 +23,10 @@ function CheckoutContent() {
     () => checkoutItems.reduce((sum, i) => sum + i.price * i.quantity, 0),
     [checkoutItems]
   );
+
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
-  const [isCompleted, setIsCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -50,7 +51,7 @@ function CheckoutContent() {
     );
   }
 
-  if (checkoutItems.length === 0 && !isCompleted) {
+  if (checkoutItems.length === 0) {
     return (
       <div className="max-w-lg mx-auto px-4 py-20 text-center">
         <h1 className="text-2xl font-bold mb-4 text-[#365927]">구매할 자료가 없습니다</h1>
@@ -59,29 +60,6 @@ function CheckoutContent() {
           className="inline-block bg-[#365927] text-white px-6 py-3 rounded-lg hover:bg-[#4a7a38] transition"
         >
           자료 둘러보기
-        </Link>
-      </div>
-    );
-  }
-
-  if (isCompleted) {
-    return (
-      <div className="max-w-lg mx-auto px-4 py-20 text-center">
-        <div className="w-16 h-16 bg-[#365927] text-white rounded-full flex items-center justify-center text-3xl mx-auto mb-6">&#10003;</div>
-        <h1 className="text-2xl font-bold mb-4 text-[#365927]">
-          감사합니다. 구매가 완료되었습니다!
-        </h1>
-        <p className="text-[#5a7d50] mb-2">
-          입력하신 이메일({email})로 자료를 보내드리겠습니다 :)
-        </p>
-        <p className="text-[#8aab82] text-sm mb-8">
-          24시간 이내에 발송해드릴게요!
-        </p>
-        <Link
-          href="/"
-          className="inline-block bg-[#365927] text-white px-6 py-3 rounded-lg hover:bg-[#4a7a38] transition"
-        >
-          메인으로 돌아가기
         </Link>
       </div>
     );
@@ -96,13 +74,17 @@ function CheckoutContent() {
     if (!userId) return;
 
     setSubmitting(true);
+
+    const orderId = `order-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
     const rows = checkoutItems.map((i) => ({
       material_id: i.id,
       buyer_id: userId,
       buyer_email: email,
       buyer_phone: phone || null,
       amount: i.price * i.quantity,
-      payment_status: "done",
+      payment_status: "pending",
+      order_id: orderId,
     }));
 
     const { error } = await supabase.from("orders").insert(rows);
@@ -112,16 +94,35 @@ function CheckoutContent() {
       return;
     }
 
-    removeItems(checkoutItems.map((i) => i.id));
-    setIsCompleted(true);
-    setSubmitting(false);
+    const orderName =
+      checkoutItems.length === 1
+        ? checkoutItems[0].title
+        : `${checkoutItems[0].title} 외 ${checkoutItems.length - 1}건`;
+
+    try {
+      const tossPayments = await loadTossPayments(
+        process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY!
+      );
+      const payment = tossPayments.payment({ customerKey: userId });
+      await payment.requestPayment({
+        method: "CARD",
+        amount: { currency: "KRW", value: checkoutTotal },
+        orderId,
+        orderName,
+        customerEmail: email,
+        successUrl: `${window.location.origin}/checkout/success`,
+        failUrl: `${window.location.origin}/checkout/fail`,
+      });
+    } catch {
+      alert("결제 요청 중 오류가 발생했습니다. 다시 시도해주세요.");
+      setSubmitting(false);
+    }
   };
 
   return (
     <div className="max-w-lg mx-auto px-4 sm:px-6 py-8">
       <h1 className="text-2xl font-bold mb-8 text-[#365927]">결제하기</h1>
 
-      {/* Order summary */}
       <div className="bg-[#eaf2e8] rounded-lg p-5 mb-8">
         <h2 className="font-medium mb-4 text-[#365927]">주문 내역</h2>
         <div className="space-y-3">
@@ -145,7 +146,6 @@ function CheckoutContent() {
         </div>
       </div>
 
-      {/* Email form */}
       <form onSubmit={handlePayment}>
         <label className="block mb-2 text-sm font-medium text-[#365927]">
           이메일 주소
@@ -162,18 +162,13 @@ function CheckoutContent() {
           className="w-full h-12 px-4 border border-[#d6e4d3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent mb-6 bg-white"
         />
 
-        <div className="space-y-3">
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full h-14 bg-[#365927] text-white rounded-lg font-medium hover:bg-[#4a7a38] transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {submitting ? "처리 중..." : `결제하기 (${checkoutTotal.toLocaleString()}원)`}
-          </button>
-          <p className="text-xs text-center text-[#8aab82]">
-            * MVP 테스트 단계로, 실제 결제는 진행되지 않습니다.
-          </p>
-        </div>
+        <button
+          type="submit"
+          disabled={submitting}
+          className="w-full h-14 bg-[#365927] text-white rounded-lg font-medium hover:bg-[#4a7a38] transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {submitting ? "처리 중..." : `결제하기 (${checkoutTotal.toLocaleString()}원)`}
+        </button>
       </form>
     </div>
   );

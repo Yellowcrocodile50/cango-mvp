@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { COMPANY_INFO } from "@/lib/companyInfo";
+
 export default function Footer() {
   return (
     <footer className="border-t border-[#d6e4d3] bg-[#eaf2e8] mt-auto">
@@ -10,17 +13,31 @@ export default function Footer() {
           </div>
           <div>
             <h3 className="font-bold text-[#365927] mb-3">고객센터</h3>
-            <p>이메일: youCANGO@gmail.com</p>
-            <p>운영시간: 평일 10:00 - 18:00</p>
+            <p>이메일: {COMPANY_INFO.email}</p>
+            <p>전화: {COMPANY_INFO.phone}</p>
+            <p>운영시간: {COMPANY_INFO.customerSupportHours}</p>
           </div>
           <div>
             <h3 className="font-bold text-[#365927] mb-3">안내</h3>
-            <p>이용약관</p>
-            <p>개인정보처리방침</p>
+            <Link href="/terms" className="block hover:text-[#365927] transition">
+              이용약관
+            </Link>
+            <Link href="/privacy" className="block hover:text-[#365927] transition">
+              개인정보 처리방침
+            </Link>
           </div>
         </div>
-        <div className="mt-8 pt-6 border-t border-[#d6e4d3] text-xs text-[#8aab82] text-center">
-          &copy; 2026 CANGO. All rights reserved.
+
+        <div className="mt-8 pt-6 border-t border-[#d6e4d3] text-xs text-[#8aab82] space-y-1">
+          <p>
+            상호: {COMPANY_INFO.serviceName} | 대표: {COMPANY_INFO.representative} |
+            사업자등록번호: {COMPANY_INFO.businessNumber}
+          </p>
+          <p>
+            통신판매업 신고번호: {COMPANY_INFO.ecommerceNumber}
+          </p>
+          <p>주소: {COMPANY_INFO.address}</p>
+          <p className="pt-2">&copy; 2026 CANGO. All rights reserved.</p>
         </div>
       </div>
     </footer>

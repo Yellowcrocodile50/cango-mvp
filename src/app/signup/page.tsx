@@ -104,9 +104,10 @@ export default function SignupPage() {
 
     if (signUpError) {
       const msg = signUpError.message;
+      console.error("[signup] supabase.auth.signUp error:", signUpError);
       setServerError(
         msg.includes("already registered") ? "이미 가입된 이메일입니다." :
-        "회원가입 중 오류가 발생했습니다."
+        `회원가입 중 오류가 발생했습니다. [DEBUG: ${msg}]`
       );
       setLoading(false);
       return;

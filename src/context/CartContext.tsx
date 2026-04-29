@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useCallback, useContext, useMemo, useState, ReactNode } from "react";
 
 export interface CartItem {
   id: string;
@@ -25,7 +25,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
 
-  const addItem = (item: Omit<CartItem, "quantity">) => {
+  const addItem = useCallback((item: Omit<CartItem, "quantity">) => {
     setItems((prev) => {
       const existing = prev.find((i) => i.id === item.id);
       if (existing) {
@@ -35,32 +35,36 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, { ...item, quantity: 1 }];
     });
-  };
+  }, []);
 
-  const removeItem = (id: string) => {
+  const removeItem = useCallback((id: string) => {
     setItems((prev) => prev.filter((i) => i.id !== id));
-  };
+  }, []);
 
-  const removeItems = (ids: string[]) => {
+  const removeItems = useCallback((ids: string[]) => {
     setItems((prev) => prev.filter((i) => !ids.includes(i.id)));
-  };
+  }, []);
 
-  const setItemQuantity = (id: string, quantity: number) => {
+  const setItemQuantity = useCallback((id: string, quantity: number) => {
     if (quantity < 1) return;
     setItems((prev) =>
       prev.map((i) => (i.id === id ? { ...i, quantity } : i))
     );
-  };
+  }, []);
 
-  const clearCart = () => setItems([]);
+  const clearCart = useCallback(() => setItems([]), []);
 
-  const totalPrice = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-
-  return (
-    <CartContext.Provider value={{ items, addItem, removeItem, removeItems, setItemQuantity, clearCart, totalPrice }}>
-      {children}
-    </CartContext.Provider>
+  const totalPrice = useMemo(
+    () => items.reduce((sum, i) => sum + i.price * i.quantity, 0),
+    [items]
   );
+
+  const value = useMemo(
+    () => ({ items, addItem, removeItem, removeItems, setItemQuantity, clearCart, totalPrice }),
+    [items, addItem, removeItem, removeItems, setItemQuantity, clearCart, totalPrice]
+  );
+
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
 export function useCart() {

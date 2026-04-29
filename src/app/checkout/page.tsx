@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { loadTossPayments } from "@tosspayments/tosspayments-sdk";
+import type { User } from "@supabase/supabase-js";
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
@@ -24,9 +25,8 @@ function CheckoutContent() {
     [checkoutItems]
   );
 
+  const [user, setUser] = useState<User | null>(null);
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -35,9 +35,8 @@ function CheckoutContent() {
       if (!user) {
         router.replace("/login?redirect=/checkout");
       } else {
+        setUser(user);
         setEmail(user.email || "");
-        setPhone(user.user_metadata?.phone || "");
-        setUserId(user.id);
         setLoading(false);
       }
     });
@@ -67,11 +66,11 @@ function CheckoutContent() {
 
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
     if (!email) {
       alert("이메일을 입력해주세요.");
       return;
     }
-    if (!userId) return;
 
     setSubmitting(true);
 
@@ -79,9 +78,9 @@ function CheckoutContent() {
 
     const rows = checkoutItems.map((i) => ({
       material_id: i.id,
-      buyer_id: userId,
+      buyer_id: user.id,
       buyer_email: email,
-      buyer_phone: phone || null,
+      buyer_phone: user.user_metadata?.phone || null,
       amount: i.price * i.quantity,
       payment_status: "pending",
       order_id: orderId,
@@ -103,7 +102,7 @@ function CheckoutContent() {
       const tossPayments = await loadTossPayments(
         process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY!
       );
-      const payment = tossPayments.payment({ customerKey: userId });
+      const payment = tossPayments.payment({ customerKey: user.id });
       await payment.requestPayment({
         method: "CARD",
         amount: { currency: "KRW", value: checkoutTotal },

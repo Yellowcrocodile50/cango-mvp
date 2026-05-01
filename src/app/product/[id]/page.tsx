@@ -46,6 +46,7 @@ export default function ProductDetail() {
       .from("materials")
       .select("*")
       .eq("id", id)
+      .eq("is_deleted", false)
       .maybeSingle()
       .then(({ data }) => {
         setMaterial(data);

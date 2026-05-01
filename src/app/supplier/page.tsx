@@ -59,7 +59,8 @@ export default function SupplierDashboard() {
     const { data: myMaterials, count: materialsCount } = await supabase
       .from("materials")
       .select("id, title", { count: "exact" })
-      .eq("supplier_id", user.id);
+      .eq("supplier_id", user.id)
+      .eq("is_deleted", false);
 
     const materialMap = new Map(
       myMaterials?.map((m) => [m.id, m.title]) || []

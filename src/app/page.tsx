@@ -27,6 +27,7 @@ function ProductGrid() {
     supabase
       .from("materials")
       .select("*")
+      .eq("is_deleted", false)
       .order("created_at", { ascending: false })
       .then(({ data }) => {
         setMaterials(data || []);

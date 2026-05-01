@@ -108,6 +108,7 @@ export default function SupplierUploadSection({
       .from("materials")
       .select("id, title, price, file_url, created_at")
       .eq("supplier_id", userId)
+      .eq("is_deleted", false)
       .order("created_at", { ascending: false })
       .limit(4);
     setRecentMaterials(data || []);

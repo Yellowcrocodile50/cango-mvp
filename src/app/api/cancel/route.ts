@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 export async function POST(req: NextRequest) {
-  const { orderId } = await req.json();
-  if (!orderId) {
-    return NextResponse.json({ error: "orderId 누락" }, { status: 400 });
+  const { orderId, buyerId } = await req.json();
+  if (!orderId || !buyerId) {
+    return NextResponse.json({ error: "필수 파라미터가 누락되었습니다." }, { status: 400 });
   }
 
   const supabase = createClient(
@@ -16,6 +16,7 @@ export async function POST(req: NextRequest) {
     .from("orders")
     .update({ payment_status: "canceled" })
     .eq("order_id", orderId)
+    .eq("buyer_id", buyerId)
     .eq("payment_status", "pending");
 
   return NextResponse.json({ success: true });

@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 
 function FailContent() {
   const searchParams = useSearchParams();
@@ -14,11 +15,15 @@ function FailContent() {
   useEffect(() => {
     if (hasRun.current || !orderId) return;
     hasRun.current = true;
-    fetch("/api/cancel", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderId }),
-    }).catch(() => {});
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      fetch("/api/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, buyerId: user.id }),
+      }).catch(() => {});
+    })();
   }, [orderId]);
 
   return (

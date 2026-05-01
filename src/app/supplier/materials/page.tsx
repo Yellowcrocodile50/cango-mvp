@@ -152,6 +152,7 @@ export default function MaterialsPage() {
       .from("materials")
       .select("*")
       .eq("supplier_id", user.id)
+      .eq("is_deleted", false)
       .order("created_at", { ascending: false });
 
     setMaterials(data || []);
@@ -278,25 +279,7 @@ export default function MaterialsPage() {
 
   async function handleDelete(id: string) {
     if (!confirm("정말 삭제하시겠습니까?")) return;
-
-    const material = materials.find((m) => m.id === id);
-    if (material?.file_url) {
-      await supabase.storage.from("materials").remove([material.file_url]);
-    }
-    const thumbPath = thumbnailPathFromUrl(material?.thumbnail_url ?? null);
-    if (thumbPath) {
-      await supabase.storage.from("thumbnails").remove([thumbPath]);
-    }
-    if (material?.preview_images) {
-      const paths = material.preview_images
-        .map(thumbnailPathFromUrl)
-        .filter((p): p is string => p !== null);
-      if (paths.length > 0) {
-        await supabase.storage.from("thumbnails").remove(paths);
-      }
-    }
-
-    await supabase.from("materials").delete().eq("id", id);
+    await supabase.from("materials").update({ is_deleted: true }).eq("id", id);
     fetchMaterials();
   }
 

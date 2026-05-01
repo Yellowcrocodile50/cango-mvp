@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
@@ -8,6 +8,18 @@ function FailContent() {
   const searchParams = useSearchParams();
   const code = searchParams.get("code");
   const message = searchParams.get("message");
+  const orderId = searchParams.get("orderId");
+  const hasRun = useRef(false);
+
+  useEffect(() => {
+    if (hasRun.current || !orderId) return;
+    hasRun.current = true;
+    fetch("/api/cancel", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId }),
+    }).catch(() => {});
+  }, [orderId]);
 
   return (
     <div className="max-w-lg mx-auto px-4 py-20 text-center">

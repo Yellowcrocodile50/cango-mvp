@@ -113,6 +113,11 @@ function CheckoutContent() {
         failUrl: `${window.location.origin}/checkout/fail`,
       });
     } catch {
+      fetch("/api/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, buyerId: user.id }),
+      }).catch(() => {});
       alert("결제 요청 중 오류가 발생했습니다. 다시 시도해주세요.");
       setSubmitting(false);
     }

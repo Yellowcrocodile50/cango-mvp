@@ -66,6 +66,7 @@ export default function MyPage() {
           "id, amount, payment_status, is_sent, created_at, materials(id, title, category, thumbnail_url)"
         )
         .eq("buyer_id", user.id)
+        .eq("payment_status", "done")
         .order("created_at", { ascending: false });
 
       setOrders((data as unknown as OrderRow[]) || []);

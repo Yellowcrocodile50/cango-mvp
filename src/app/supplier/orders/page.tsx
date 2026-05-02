@@ -17,6 +17,7 @@ import { Send } from "lucide-react";
 
 interface Order {
   id: string;
+  buyer_id: string | null;
   buyer_email: string;
   buyer_phone: string | null;
   amount: number;
@@ -25,6 +26,8 @@ interface Order {
   created_at: string;
   material_title: string;
   material_id: string;
+  user_type: string | null;
+  grade: string | null;
 }
 
 export default function OrdersPage() {
@@ -63,10 +66,26 @@ export default function OrdersPage() {
       .in("material_id", materialIds)
       .order("created_at", { ascending: false });
 
+    const orders = data || [];
+    const buyerIds = [...new Set(orders.map((o) => o.buyer_id).filter(Boolean))];
+
+    const { data: profiles } = buyerIds.length > 0
+      ? await supabase
+          .from("profiles")
+          .select("id, user_type, grade")
+          .in("id", buyerIds)
+      : { data: [] };
+
+    const profileMap = new Map(
+      (profiles || []).map((p) => [p.id, { user_type: p.user_type, grade: p.grade }])
+    );
+
     setOrders(
-      (data || []).map((o) => ({
+      orders.map((o) => ({
         ...o,
         material_title: materialMap.get(o.material_id) || "알 수 없음",
+        user_type: profileMap.get(o.buyer_id)?.user_type ?? null,
+        grade: profileMap.get(o.buyer_id)?.grade ?? null,
       }))
     );
     setLoading(false);
@@ -122,6 +141,7 @@ export default function OrdersPage() {
                 <TableRow>
                   <TableHead>자료명</TableHead>
                   <TableHead>구매자</TableHead>
+                  <TableHead>구분 / 학년</TableHead>
                   <TableHead>전화번호</TableHead>
                   <TableHead>금액</TableHead>
                   <TableHead>상태</TableHead>
@@ -136,6 +156,16 @@ export default function OrdersPage() {
                       {order.material_title}
                     </TableCell>
                     <TableCell>{order.buyer_email}</TableCell>
+                    <TableCell>
+                      {order.user_type ? (
+                        <span>
+                          {order.user_type === "student" ? "학생" : "학부모"}
+                          {order.grade && (
+                            <span className="ml-1 text-muted-foreground">· {order.grade}</span>
+                          )}
+                        </span>
+                      ) : "-"}
+                    </TableCell>
                     <TableCell>{order.buyer_phone || "-"}</TableCell>
                     <TableCell>{order.amount.toLocaleString()}원</TableCell>
                     <TableCell>{getStatusBadge(order)}</TableCell>

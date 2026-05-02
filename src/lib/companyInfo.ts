@@ -3,11 +3,11 @@
 
 export const COMPANY_INFO = {
   serviceName: "CANGO",
-  representative: "(대표자명 입력 필요)",
-  businessNumber: "(사업자등록번호 입력 필요)",
-  ecommerceNumber: "(통신판매업 신고번호 입력 필요)",
-  address: "(사업장 주소 입력 필요)",
-  phone: "(유선번호 입력 필요)",
+  representative: "윤태희",
+  businessNumber: "460-01-03166",
+  ecommerceNumber: "2025-인천연수구-0714",
+  address: "인천광역시 연수구 청량로 185번길 37, sm프라자 1동 301-비35호(목련동)",
+  phone: "010-5581-9050",
   email: "youCANGO@gmail.com",
   customerSupportHours: "평일 10:00 - 18:00",
 };

@@ -39,6 +39,7 @@ const categories: NavItem[] = [
     ],
   },
   { name: "진로/직업", href: "/?category=진로/직업" },
+  { name: "기타", href: "/?category=기타" },
   {
     name: "무료 내신 자료",
     href: "/?category=무료 내신 자료",
@@ -102,7 +103,6 @@ const categories: NavItem[] = [
       { name: "한국사", href: "/?category=한국사" },
     ],
   },
-  { name: "기타", href: "/?category=기타" },
 ];
 
 export default function Header() {

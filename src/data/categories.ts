@@ -23,6 +23,10 @@ export const categoryGroups: CategoryGroup[] = [
     items: ["진로/직업"],
   },
   {
+    label: "기타",
+    items: ["기타"],
+  },
+  {
     label: "무료 내신 자료",
     items: [
       "공통국어", "문학", "비문학", "화법과작문", "언어와매체",
@@ -40,10 +44,6 @@ export const categoryGroups: CategoryGroup[] = [
       { label: "사회탐구", items: ["통합사회", "사회문화", "세계사", "경제", "정치와법", "지리"] },
       { label: "한국사", items: ["한국사"] },
     ],
-  },
-  {
-    label: "기타",
-    items: ["기타"],
   },
 ];
 

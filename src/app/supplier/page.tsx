@@ -12,8 +12,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Package, ShoppingCart, CheckCircle, Clock, Send } from "lucide-react";
+import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 
 interface Order {
   id: string;
@@ -132,18 +132,6 @@ export default function SupplierDashboard() {
     }));
   }
 
-  function getStatusBadge(order: Order) {
-    if (order.is_sent)
-      return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">발송완료</Badge>;
-    if (order.payment_status === "done")
-      return <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">발송대기</Badge>;
-    if (order.payment_status === "pending")
-      return <Badge variant="secondary">결제대기</Badge>;
-    if (order.payment_status === "canceled")
-      return <Badge variant="destructive">취소</Badge>;
-    return <Badge variant="outline">{order.payment_status}</Badge>;
-  }
-
   const statCards = [
     { title: "등록 자료", value: stats.totalMaterials, icon: Package, description: "등록된 PDF 자료 수" },
     { title: "총 주문", value: stats.totalOrders, icon: ShoppingCart, description: "전체 주문 건수" },
@@ -217,7 +205,7 @@ export default function SupplierDashboard() {
                     <TableCell>{order.material_title}</TableCell>
                     <TableCell className="text-muted-foreground">{order.material_category}</TableCell>
                     <TableCell>{order.amount.toLocaleString()}원</TableCell>
-                    <TableCell>{getStatusBadge(order)}</TableCell>
+                    <TableCell><OrderStatusBadge is_sent={order.is_sent} payment_status={order.payment_status} /></TableCell>
                     <TableCell>
                       {new Date(order.created_at).toLocaleDateString("ko-KR")}
                     </TableCell>

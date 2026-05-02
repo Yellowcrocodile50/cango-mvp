@@ -62,13 +62,8 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
 
   const handleUserTypeChange = (type: "student" | "parent") => {
-    if (userType === type) {
-      setUserType(null);
-      setGrade("");
-    } else {
-      setUserType(type);
-      setGrade("");
-    }
+    setUserType((prev) => (prev === type ? null : type));
+    setGrade("");
   };
 
   const handleSignup = async (e: React.FormEvent) => {

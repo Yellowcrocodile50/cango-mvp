@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronLeft } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
@@ -283,8 +283,8 @@ export default function Header() {
                               href={child.href}
                               className="flex items-center justify-between px-4 py-2 text-sm text-[#5a7d50] hover:bg-[#eef5ec] hover:text-[#365927] transition whitespace-nowrap"
                             >
+                              <ChevronLeft className="h-3 w-3 mr-4 text-[#8aab82]" />
                               <span>{child.name}</span>
-                              <ChevronRight className="h-3 w-3 ml-4 text-[#8aab82]" />
                             </Link>
                             <div className="absolute right-full top-0 hidden group-hover/sub:block z-50">
                               <div className="mr-0.5 bg-white border border-[#d6e4d3] rounded-md shadow-lg py-1 min-w-[140px]">

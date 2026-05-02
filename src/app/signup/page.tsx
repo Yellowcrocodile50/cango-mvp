@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
-const GRADES = ["고3", "고2", "고1", "중3", "중2", "중1"] as const;
-type Grade = (typeof GRADES)[number];
+const GRADES = ["고3", "고2", "고1", "중3", "중2", "중1"];
 
 function validateUsername(v: string) {
   if (!v) return "";
@@ -50,7 +49,7 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [userType, setUserType] = useState<"student" | "parent" | null>(null);
-  const [grade, setGrade] = useState<Grade | "">("");
+  const [grade, setGrade] = useState("");
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
   const [marketingAgreed, setMarketingAgreed] = useState(false);
 
@@ -272,7 +271,7 @@ export default function SignupPage() {
               )}
               <select
                 value={grade}
-                onChange={(e) => setGrade(e.target.value as Grade)}
+                onChange={(e) => setGrade(e.target.value)}
                 className="w-full h-11 px-4 border border-[#d6e4d3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white text-sm text-[#365927]"
               >
                 <option value="">학년 선택</option>

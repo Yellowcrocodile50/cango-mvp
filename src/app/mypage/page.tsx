@@ -55,20 +55,20 @@ export default function MyPage() {
   useEffect(() => {
     (async () => {
       const {
-        data: { user },
+        data: { user: authUser },
       } = await supabase.auth.getUser();
 
-      if (!user) {
+      if (!authUser) {
         router.replace("/login?redirect=/mypage");
         return;
       }
 
-      if (user.user_metadata?.role === "supplier") {
+      if (authUser.user_metadata?.role === "supplier") {
         router.replace("/supplier");
         return;
       }
 
-      setUser(user);
+      setUser(authUser);
 
       const { data } = await supabase
         .from("orders")

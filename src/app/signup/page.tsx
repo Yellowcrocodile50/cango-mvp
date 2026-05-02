@@ -221,17 +221,21 @@ export default function SignupPage() {
               <span className="font-medium">[필수]</span> 개인정보 처리방침에 동의합니다
             </span>
           </label>
-          <label className="flex items-start gap-3 cursor-pointer">
+          <div className="flex items-start gap-3">
             <input
+              id="marketing"
               type="checkbox"
               checked={marketingAgreed}
               onChange={(e) => setMarketingAgreed(e.target.checked)}
               className="mt-0.5 h-4 w-4 rounded border-[#d6e4d3] accent-[#365927] cursor-pointer"
             />
             <span className="text-sm text-[#5a7d50]">
-              <span className="font-medium">[선택]</span> 마케팅 정보 수신에 동의합니다
+              <span className="font-medium">[선택]</span>{" "}
+              <Link href="/marketing-terms" target="_blank" className="underline hover:text-[#365927]">
+                마케팅 정보 수신에 동의합니다
+              </Link>
             </span>
-          </label>
+          </div>
         </div>
 
         <button

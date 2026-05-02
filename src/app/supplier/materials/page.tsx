@@ -392,15 +392,23 @@ export default function MaterialsPage() {
                   onChange={(e) => setForm({ ...form, category: e.target.value })}
                   className="mt-1 w-full h-10 px-3 border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-background"
                 >
-                  {categoryGroups.map((group) => (
-                    <optgroup key={group.label} label={group.label}>
-                      {group.items.map((item) => (
-                        <option key={item} value={item}>
-                          {item}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))}
+                  {categoryGroups.flatMap((group) =>
+                    group.subGroups
+                      ? group.subGroups.map((sub) => (
+                          <optgroup key={`${group.label}-${sub.label}`} label={`${group.label} › ${sub.label}`}>
+                            {sub.items.map((item) => (
+                              <option key={item} value={item}>{item}</option>
+                            ))}
+                          </optgroup>
+                        ))
+                      : [
+                          <optgroup key={group.label} label={group.label}>
+                            {group.items.map((item) => (
+                              <option key={item} value={item}>{item}</option>
+                            ))}
+                          </optgroup>,
+                        ]
+                  )}
                 </select>
               </div>
               <div>

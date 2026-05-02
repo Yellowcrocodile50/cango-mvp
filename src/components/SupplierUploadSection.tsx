@@ -278,15 +278,23 @@ export default function SupplierUploadSection({
               onChange={(e) => setForm({ ...form, category: e.target.value })}
               className="w-full h-10 px-3 border border-[#d6e4d3] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white"
             >
-              {categoryGroups.map((group) => (
-                <optgroup key={group.label} label={group.label}>
-                  {group.items.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
+              {categoryGroups.flatMap((group) =>
+                group.subGroups
+                  ? group.subGroups.map((sub) => (
+                      <optgroup key={`${group.label}-${sub.label}`} label={`${group.label} › ${sub.label}`}>
+                        {sub.items.map((item) => (
+                          <option key={item} value={item}>{item}</option>
+                        ))}
+                      </optgroup>
+                    ))
+                  : [
+                      <optgroup key={group.label} label={group.label}>
+                        {group.items.map((item) => (
+                          <option key={item} value={item}>{item}</option>
+                        ))}
+                      </optgroup>,
+                    ]
+              )}
             </select>
           </div>
           <div>

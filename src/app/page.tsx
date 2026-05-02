@@ -39,13 +39,17 @@ function ProductGrid() {
     fetchMaterials();
   }, [fetchMaterials]);
 
-  const groupItems =
-    categoryGroups.find((g) => g.label === category)?.items;
+  const group = categoryGroups.find((g) => g.label === category);
+  const subGroup = !group
+    ? categoryGroups.flatMap((g) => g.subGroups ?? []).find((sg) => sg.label === category)
+    : undefined;
 
   const filtered = category
-    ? materials.filter((m) =>
-        groupItems ? (groupItems as readonly string[]).includes(m.category) : m.category === category
-      )
+    ? materials.filter((m) => {
+        if (group) return group.items.includes(m.category);
+        if (subGroup) return subGroup.items.includes(m.category);
+        return m.category === category;
+      })
     : materials;
 
   return (

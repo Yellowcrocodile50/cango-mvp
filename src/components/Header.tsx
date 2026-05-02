@@ -3,18 +3,24 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
-type Category = {
+type NavChild = {
   name: string;
   href: string;
   children?: { name: string; href: string }[];
 };
 
-const categories: Category[] = [
+type NavItem = {
+  name: string;
+  href: string;
+  children?: NavChild[];
+};
+
+const categories: NavItem[] = [
   { name: "전체", href: "/" },
   {
     name: "고등학생(대학입시)",
@@ -33,6 +39,69 @@ const categories: Category[] = [
     ],
   },
   { name: "진로/직업", href: "/?category=진로/직업" },
+  {
+    name: "무료 내신 자료",
+    href: "/?category=무료 내신 자료",
+    children: [
+      {
+        name: "국어",
+        href: "/?category=국어",
+        children: [
+          { name: "공통국어", href: "/?category=공통국어" },
+          { name: "문학", href: "/?category=문학" },
+          { name: "비문학", href: "/?category=비문학" },
+          { name: "화법과작문", href: "/?category=화법과작문" },
+          { name: "언어와매체", href: "/?category=언어와매체" },
+        ],
+      },
+      {
+        name: "영어",
+        href: "/?category=영어",
+        children: [
+          { name: "고1", href: "/?category=고1영어" },
+          { name: "고2", href: "/?category=고2영어" },
+          { name: "고3", href: "/?category=고3영어" },
+        ],
+      },
+      {
+        name: "수학",
+        href: "/?category=수학",
+        children: [
+          { name: "공통수학1", href: "/?category=공통수학1" },
+          { name: "공통수학2", href: "/?category=공통수학2" },
+          { name: "대수", href: "/?category=대수" },
+          { name: "미적분1", href: "/?category=미적분1" },
+          { name: "미적분2", href: "/?category=미적분2" },
+          { name: "확률과 통계", href: "/?category=확률과 통계" },
+          { name: "기하", href: "/?category=기하" },
+        ],
+      },
+      {
+        name: "과학탐구",
+        href: "/?category=과학탐구",
+        children: [
+          { name: "통합과학", href: "/?category=통합과학" },
+          { name: "물리", href: "/?category=물리" },
+          { name: "화학", href: "/?category=화학" },
+          { name: "지구과학", href: "/?category=지구과학" },
+          { name: "생명과학", href: "/?category=생명과학" },
+        ],
+      },
+      {
+        name: "사회탐구",
+        href: "/?category=사회탐구",
+        children: [
+          { name: "통합사회", href: "/?category=통합사회" },
+          { name: "사회문화", href: "/?category=사회문화" },
+          { name: "세계사", href: "/?category=세계사" },
+          { name: "경제", href: "/?category=경제" },
+          { name: "정치와법", href: "/?category=정치와법" },
+          { name: "지리", href: "/?category=지리" },
+        ],
+      },
+      { name: "한국사", href: "/?category=한국사" },
+    ],
+  },
   { name: "기타", href: "/?category=기타" },
 ];
 
@@ -202,15 +271,40 @@ export default function Header() {
               {cat.children && (
                 <div className="absolute left-0 top-full pt-1 hidden group-hover:block z-50">
                   <div className="bg-white border border-[#d6e4d3] rounded-md shadow-lg py-1 min-w-[140px]">
-                    {cat.children.map((child) => (
-                      <Link
-                        key={child.name}
-                        href={child.href}
-                        className="block px-4 py-2 text-sm text-[#5a7d50] hover:bg-[#eef5ec] hover:text-[#365927] transition whitespace-nowrap"
-                      >
-                        {child.name}
-                      </Link>
-                    ))}
+                    {cat.children.map((child) =>
+                      child.children ? (
+                        <div key={child.name} className="relative group/sub">
+                          <Link
+                            href={child.href}
+                            className="flex items-center justify-between px-4 py-2 text-sm text-[#5a7d50] hover:bg-[#eef5ec] hover:text-[#365927] transition whitespace-nowrap"
+                          >
+                            <span>{child.name}</span>
+                            <ChevronRight className="h-3 w-3 ml-4 text-[#8aab82]" />
+                          </Link>
+                          <div className="absolute left-full top-0 hidden group-hover/sub:block z-50">
+                            <div className="ml-0.5 bg-white border border-[#d6e4d3] rounded-md shadow-lg py-1 min-w-[140px]">
+                              {child.children.map((grandchild) => (
+                                <Link
+                                  key={grandchild.name}
+                                  href={grandchild.href}
+                                  className="block px-4 py-2 text-sm text-[#5a7d50] hover:bg-[#eef5ec] hover:text-[#365927] transition whitespace-nowrap"
+                                >
+                                  {grandchild.name}
+                                </Link>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <Link
+                          key={child.name}
+                          href={child.href}
+                          className="block px-4 py-2 text-sm text-[#5a7d50] hover:bg-[#eef5ec] hover:text-[#365927] transition whitespace-nowrap"
+                        >
+                          {child.name}
+                        </Link>
+                      )
+                    )}
                   </div>
                 </div>
               )}

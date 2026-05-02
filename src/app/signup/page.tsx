@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
-const GRADES = ["고3", "고2", "고1", "중3", "중2", "중1"];
+const GRADES = ["고3/N수", "고2", "고1", "중3", "중2", "중1"];
 
 function validateUsername(v: string) {
   if (!v) return "";

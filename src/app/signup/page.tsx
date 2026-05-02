@@ -220,7 +220,7 @@ export default function SignupPage() {
             />
             <span className="text-sm text-[#365927]">
               <span className="font-medium">[필수]</span>{" "}
-              <Link href="/privacy-policy" target="_blank" className="underline hover:text-[#4a7a38]">
+              <Link href="/privacy-policy" target="_blank" className="hover:text-[#4a7a38]">
                 개인정보 처리방침에 동의합니다
               </Link>
             </span>
@@ -235,7 +235,7 @@ export default function SignupPage() {
             />
             <span className="text-sm text-[#5a7d50]">
               <span className="font-medium">[선택]</span>{" "}
-              <Link href="/marketing-terms" target="_blank" className="underline hover:text-[#365927]">
+              <Link href="/marketing-terms" target="_blank" className="hover:text-[#365927]">
                 마케팅 정보 수신에 동의합니다
               </Link>
             </span>

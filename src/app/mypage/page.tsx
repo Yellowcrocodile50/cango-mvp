@@ -75,7 +75,7 @@ export default function MyPage() {
         .select(
           "id, amount, payment_status, is_sent, created_at, materials(id, title, category, thumbnail_url)"
         )
-        .eq("buyer_id", user.id)
+        .eq("buyer_id", authUser.id)
         .eq("payment_status", "done")
         .order("created_at", { ascending: false });
 

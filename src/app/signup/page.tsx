@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
+const GRADES = ["고3", "고2", "고1", "중3", "중2", "중1"] as const;
+type Grade = (typeof GRADES)[number];
+
 function validateUsername(v: string) {
   if (!v) return "";
   if (!/^[a-z0-9]{6,16}$/.test(v)) return "6~16자, 영문 소문자·숫자만 사용 가능합니다.";
@@ -46,6 +49,8 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [phone, setPhone] = useState("");
+  const [userType, setUserType] = useState<"student" | "parent" | null>(null);
+  const [grade, setGrade] = useState<Grade | "">("");
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
   const [marketingAgreed, setMarketingAgreed] = useState(false);
 
@@ -57,10 +62,19 @@ export default function SignupPage() {
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const handleUserTypeChange = (type: "student" | "parent") => {
+    if (userType === type) {
+      setUserType(null);
+      setGrade("");
+    } else {
+      setUserType(type);
+      setGrade("");
+    }
+  };
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 제출 시 전체 재검증
     const uErr = validateUsername(username) || (!username ? "아이디를 입력해주세요." : "");
     const eErr = validateEmail(email) || (!email ? "이메일을 입력해주세요." : "");
     const pErr = validatePassword(password) || (!password ? "비밀번호를 입력해주세요." : "");
@@ -76,6 +90,10 @@ export default function SignupPage() {
     if (uErr || eErr || pErr || cErr || phErr) return;
     if (!privacyAgreed) {
       setServerError("개인정보 처리방침에 동의해주세요.");
+      return;
+    }
+    if (userType && !grade) {
+      setServerError("학년을 선택해주세요.");
       return;
     }
 
@@ -98,7 +116,16 @@ export default function SignupPage() {
       email,
       password,
       options: {
-        data: { name: username, username, role: "buyer", phone, privacy_agreed: true, marketing_agreed: marketingAgreed },
+        data: {
+          name: username,
+          username,
+          role: "buyer",
+          phone,
+          privacy_agreed: true,
+          marketing_agreed: marketingAgreed,
+          user_type: userType ?? "",
+          grade: grade ?? "",
+        },
       },
     });
 
@@ -206,6 +233,55 @@ export default function SignupPage() {
             className={`w-full h-12 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white ${phoneError ? "border-red-400" : "border-[#d6e4d3]"}`}
           />
           {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
+        </div>
+
+        {/* 학생 / 학부모 선택 */}
+        <div>
+          <label className="block text-sm font-medium mb-2 text-[#365927]">
+            구분 <span className="text-[#8aab82] font-normal">(선택)</span>
+          </label>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => handleUserTypeChange("student")}
+              className={`flex-1 h-11 rounded-lg border text-sm font-medium transition cursor-pointer ${
+                userType === "student"
+                  ? "bg-[#365927] text-white border-[#365927]"
+                  : "bg-white text-[#5a7d50] border-[#d6e4d3] hover:border-[#365927]"
+              }`}
+            >
+              학생
+            </button>
+            <button
+              type="button"
+              onClick={() => handleUserTypeChange("parent")}
+              className={`flex-1 h-11 rounded-lg border text-sm font-medium transition cursor-pointer ${
+                userType === "parent"
+                  ? "bg-[#365927] text-white border-[#365927]"
+                  : "bg-white text-[#5a7d50] border-[#d6e4d3] hover:border-[#365927]"
+              }`}
+            >
+              학부모
+            </button>
+          </div>
+
+          {userType && (
+            <div className="mt-2">
+              {userType === "parent" && (
+                <p className="text-xs text-[#8aab82] mb-1">자녀 학년</p>
+              )}
+              <select
+                value={grade}
+                onChange={(e) => setGrade(e.target.value as Grade)}
+                className="w-full h-11 px-4 border border-[#d6e4d3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white text-sm text-[#365927]"
+              >
+                <option value="">학년 선택</option>
+                {GRADES.map((g) => (
+                  <option key={g} value={g}>{g}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {/* 동의 */}

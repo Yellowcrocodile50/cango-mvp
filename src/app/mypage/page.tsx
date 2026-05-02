@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FileText } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js";
 
 interface OrderRow {
   id: string;
@@ -39,8 +40,15 @@ function colorForId(id: string): string {
   return coverColors[Math.abs(hash) % coverColors.length];
 }
 
+function userTypeLabel(type: string | undefined): string {
+  if (type === "student") return "학생";
+  if (type === "parent") return "학부모";
+  return "";
+}
+
 export default function MyPage() {
   const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -60,6 +68,8 @@ export default function MyPage() {
         return;
       }
 
+      setUser(user);
+
       const { data } = await supabase
         .from("orders")
         .select(
@@ -74,8 +84,36 @@ export default function MyPage() {
     })();
   }, [router]);
 
+  const meta = user?.user_metadata;
+  const typeLabel = userTypeLabel(meta?.user_type);
+  const grade = meta?.grade as string | undefined;
+
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
+
+      {/* 프로필 요약 */}
+      {!loading && user && (
+        <div className="flex items-center gap-4 bg-white border border-[#d6e4d3] rounded-xl p-5 mb-6">
+          <div className="w-12 h-12 rounded-full bg-[#eaf2e8] flex items-center justify-center text-[#365927] font-bold text-lg flex-shrink-0">
+            {(meta?.username as string | undefined)?.[0]?.toUpperCase() ?? "U"}
+          </div>
+          <div className="min-w-0">
+            <p className="font-semibold text-[#1a2e16] text-base truncate">
+              {meta?.username ?? user.email}
+            </p>
+            {typeLabel && (
+              <p className="text-sm text-[#5a7d50] mt-0.5">
+                {typeLabel}
+                {grade && <span className="ml-1.5 text-[#8aab82]">· {grade}</span>}
+              </p>
+            )}
+            {!typeLabel && (
+              <p className="text-sm text-[#8aab82] mt-0.5">{user.email}</p>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-[#365927]">구매 내역</h1>
         <p className="text-sm text-[#5a7d50] mt-1">

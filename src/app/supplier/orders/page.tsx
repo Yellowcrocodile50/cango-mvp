@@ -66,7 +66,7 @@ export default function OrdersPage() {
       .order("created_at", { ascending: false });
 
     const orderList = rawOrders || [];
-    const buyerIds = [...new Set(orderList.map((o) => o.buyer_id).filter(Boolean))];
+    const buyerIds = [...new Set(orderList.map((o) => o.buyer_id).filter((id): id is string => id !== null))];
 
     const { data: profiles } = buyerIds.length > 0
       ? await supabase

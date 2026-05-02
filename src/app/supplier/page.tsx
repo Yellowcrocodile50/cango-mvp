@@ -83,7 +83,7 @@ export default function SupplierDashboard() {
 
     const orderList = allOrders || [];
 
-    const buyerIds = [...new Set(orderList.map((o) => o.buyer_id).filter(Boolean))];
+    const buyerIds = [...new Set(orderList.map((o) => o.buyer_id).filter((id): id is string => id !== null))];
 
     const { data: profiles } = buyerIds.length > 0
       ? await supabase

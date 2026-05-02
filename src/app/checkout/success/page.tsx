@@ -86,7 +86,7 @@ function SuccessContent() {
       <h1 className="text-2xl font-bold mb-4 text-[#365927]">
         감사합니다. 구매가 완료되었습니다!
       </h1>
-      <p className="text-[#5a7d50] mb-2">마이페이지에서 자료를 다운로드하실 수 있습니다.</p>
+      <p className="text-[#5a7d50] mb-2">주문하신 자료의 상태는 구매 내역에서 확인하실 수 있습니다.</p>
       <p className="text-[#8aab82] text-sm mb-8">24시간 이내에 발송해드릴게요!</p>
       <div className="space-y-3">
         <Link

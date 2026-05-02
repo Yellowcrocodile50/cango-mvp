@@ -261,7 +261,6 @@ export default function Header() {
         {/* Category bar */}
         <nav className="flex gap-6 pt-0 pb-2 text-sm font-medium">
           {categories.map((cat) => {
-            const isRightAligned = cat.children?.some((c) => c.children);
             return (
               <div key={cat.name} className="relative group">
                 <Link
@@ -275,7 +274,7 @@ export default function Header() {
                   {cat.name}
                 </Link>
                 {cat.children && (
-                  <div className={`absolute ${isRightAligned ? "right-0" : "left-0"} top-full pt-1 hidden group-hover:block z-50`}>
+                  <div className="absolute left-0 top-full pt-1 hidden group-hover:block z-50">
                     <div className="bg-white border border-[#d6e4d3] rounded-md shadow-lg py-1 min-w-[140px]">
                       {cat.children.map((child) =>
                         child.children ? (

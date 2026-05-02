@@ -7,10 +7,7 @@ export const metadata = {
 export default function PrivacyPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
-      <h1 className="text-2xl font-bold text-[#365927] mb-2">개인정보 처리방침</h1>
-      <p className="text-xs text-[#8aab82] mb-8">
-        시행일자: 2026-04-29 (초안)
-      </p>
+      <h1 className="text-2xl font-bold text-[#365927] mb-8">개인정보 처리방침</h1>
 
       <div className="space-y-8 text-sm leading-relaxed text-[#365927]">
         <section>
@@ -119,11 +116,7 @@ export default function PrivacyPage() {
           </p>
         </section>
 
-        <section className="pt-6 border-t border-[#d6e4d3]">
-          <p className="text-xs text-[#5a7d50]">
-            <strong>※ 본 처리방침은 초안이며 사업자 등록 및 법무 검토 후 최종 확정됩니다.</strong>
-          </p>
-        </section>
+
       </div>
     </div>
   );

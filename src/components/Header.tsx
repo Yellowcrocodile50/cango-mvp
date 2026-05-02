@@ -264,7 +264,11 @@ export default function Header() {
             <div key={cat.name} className="relative group">
               <Link
                 href={cat.href}
-                className="whitespace-nowrap text-[#5a7d50] hover:text-[#365927] transition inline-block py-1"
+                className={`whitespace-nowrap transition inline-block py-1 ${
+                  cat.name === "무료 내신 자료"
+                    ? "text-[#8aab82] hover:text-[#5a7d50]"
+                    : "text-[#5a7d50] hover:text-[#365927]"
+                }`}
               >
                 {cat.name}
               </Link>

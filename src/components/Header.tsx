@@ -260,60 +260,63 @@ export default function Header() {
 
         {/* Category bar */}
         <nav className="flex gap-6 pt-0 pb-2 text-sm font-medium">
-          {categories.map((cat) => (
-            <div key={cat.name} className="relative group">
-              <Link
-                href={cat.href}
-                className={`whitespace-nowrap transition inline-block py-1 ${
-                  cat.name === "무료 내신 자료"
-                    ? "text-[#8aab82] hover:text-[#5a7d50]"
-                    : "text-[#5a7d50] hover:text-[#365927]"
-                }`}
-              >
-                {cat.name}
-              </Link>
-              {cat.children && (
-                <div className="absolute left-0 top-full pt-1 hidden group-hover:block z-50">
-                  <div className="bg-white border border-[#d6e4d3] rounded-md shadow-lg py-1 min-w-[140px]">
-                    {cat.children.map((child) =>
-                      child.children ? (
-                        <div key={child.name} className="relative group/sub">
-                          <Link
-                            href={child.href}
-                            className="flex items-center justify-between px-4 py-2 text-sm text-[#5a7d50] hover:bg-[#eef5ec] hover:text-[#365927] transition whitespace-nowrap"
-                          >
-                            <span>{child.name}</span>
-                            <ChevronRight className="h-3 w-3 ml-4 text-[#8aab82]" />
-                          </Link>
-                          <div className="absolute left-full top-0 hidden group-hover/sub:block z-50">
-                            <div className="ml-0.5 bg-white border border-[#d6e4d3] rounded-md shadow-lg py-1 min-w-[140px]">
-                              {child.children.map((grandchild) => (
-                                <Link
-                                  key={grandchild.name}
-                                  href={grandchild.href}
-                                  className="block px-4 py-2 text-sm text-[#5a7d50] hover:bg-[#eef5ec] hover:text-[#365927] transition whitespace-nowrap"
-                                >
-                                  {grandchild.name}
-                                </Link>
-                              ))}
+          {categories.map((cat) => {
+            const isRightAligned = cat.children?.some((c) => c.children);
+            return (
+              <div key={cat.name} className="relative group">
+                <Link
+                  href={cat.href}
+                  className={`whitespace-nowrap transition inline-block py-1 ${
+                    cat.name === "무료 내신 자료"
+                      ? "text-[#8aab82] hover:text-[#5a7d50]"
+                      : "text-[#5a7d50] hover:text-[#365927]"
+                  }`}
+                >
+                  {cat.name}
+                </Link>
+                {cat.children && (
+                  <div className={`absolute ${isRightAligned ? "right-0" : "left-0"} top-full pt-1 hidden group-hover:block z-50`}>
+                    <div className="bg-white border border-[#d6e4d3] rounded-md shadow-lg py-1 min-w-[140px]">
+                      {cat.children.map((child) =>
+                        child.children ? (
+                          <div key={child.name} className="relative group/sub">
+                            <Link
+                              href={child.href}
+                              className="flex items-center justify-between px-4 py-2 text-sm text-[#5a7d50] hover:bg-[#eef5ec] hover:text-[#365927] transition whitespace-nowrap"
+                            >
+                              <span>{child.name}</span>
+                              <ChevronRight className="h-3 w-3 ml-4 text-[#8aab82]" />
+                            </Link>
+                            <div className="absolute right-full top-0 hidden group-hover/sub:block z-50">
+                              <div className="mr-0.5 bg-white border border-[#d6e4d3] rounded-md shadow-lg py-1 min-w-[140px]">
+                                {child.children.map((grandchild) => (
+                                  <Link
+                                    key={grandchild.name}
+                                    href={grandchild.href}
+                                    className="block px-4 py-2 text-sm text-[#5a7d50] hover:bg-[#eef5ec] hover:text-[#365927] transition whitespace-nowrap"
+                                  >
+                                    {grandchild.name}
+                                  </Link>
+                                ))}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ) : (
-                        <Link
-                          key={child.name}
-                          href={child.href}
-                          className="block px-4 py-2 text-sm text-[#5a7d50] hover:bg-[#eef5ec] hover:text-[#365927] transition whitespace-nowrap"
-                        >
-                          {child.name}
-                        </Link>
-                      )
-                    )}
+                        ) : (
+                          <Link
+                            key={child.name}
+                            href={child.href}
+                            className="block px-4 py-2 text-sm text-[#5a7d50] hover:bg-[#eef5ec] hover:text-[#365927] transition whitespace-nowrap"
+                          >
+                            {child.name}
+                          </Link>
+                        )
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-          ))}
+                )}
+              </div>
+            );
+          })}
         </nav>
       </div>
       {/* Login modal */}

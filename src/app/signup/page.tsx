@@ -210,17 +210,21 @@ export default function SignupPage() {
 
         {/* 동의 */}
         <div className="space-y-3 pt-1">
-          <label className="flex items-start gap-3 cursor-pointer">
+          <div className="flex items-start gap-3">
             <input
+              id="privacy"
               type="checkbox"
               checked={privacyAgreed}
               onChange={(e) => setPrivacyAgreed(e.target.checked)}
               className="mt-0.5 h-4 w-4 rounded border-[#d6e4d3] accent-[#365927] cursor-pointer"
             />
             <span className="text-sm text-[#365927]">
-              <span className="font-medium">[필수]</span> 개인정보 처리방침에 동의합니다
+              <span className="font-medium">[필수]</span>{" "}
+              <Link href="/privacy-policy" target="_blank" className="underline hover:text-[#4a7a38]">
+                개인정보 처리방침에 동의합니다
+              </Link>
             </span>
-          </label>
+          </div>
           <div className="flex items-start gap-3">
             <input
               id="marketing"

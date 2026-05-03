@@ -113,6 +113,8 @@ export default function Header() {
   const [user, setUser] = useState<User | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [openCat, setOpenCat] = useState<string | null>(null);
+  const [openSubCat, setOpenSubCat] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -138,6 +140,8 @@ export default function Header() {
 
   useEffect(() => {
     setMenuOpen(false);
+    setOpenCat(null);
+    setOpenSubCat(null);
   }, [pathname]);
 
   const handleLogout = async () => {
@@ -258,8 +262,8 @@ export default function Header() {
           </nav>
         </div>
 
-        {/* Category bar */}
-        <nav className="flex gap-6 pt-0 pb-2 text-sm font-medium">
+        {/* Desktop Category Bar */}
+        <nav className="hidden md:flex gap-6 pt-0 pb-2 text-sm font-medium">
           {categories.map((cat) => {
             return (
               <div key={cat.name} className="relative group">
@@ -317,6 +321,84 @@ export default function Header() {
             );
           })}
         </nav>
+
+        {/* Mobile Category Bar */}
+        <div className="md:hidden">
+            <div className="overflow-x-auto -mx-4 sm:-mx-6 px-4 sm:px-6">
+              <div className="flex gap-5 pb-2 text-sm font-medium min-w-max">
+                {categories.map((cat) => (
+                  <button
+                    key={cat.name}
+                    onClick={() => {
+                      if (cat.children) {
+                        setOpenCat(openCat === cat.name ? null : cat.name);
+                        setOpenSubCat(null);
+                      } else {
+                        router.push(cat.href);
+                        setOpenCat(null);
+                      }
+                    }}
+                    className={`whitespace-nowrap py-1 transition flex items-center gap-0.5 ${
+                      cat.name === "무료 내신 자료"
+                        ? openCat === cat.name ? "text-[#5a7d50] font-semibold" : "text-[#8aab82]"
+                        : openCat === cat.name ? "text-[#365927] font-semibold" : "text-[#5a7d50]"
+                    }`}
+                  >
+                    {cat.name}
+                    {cat.children && (
+                      <ChevronDown className={`h-3 w-3 transition-transform ${openCat === cat.name ? "rotate-180" : ""}`} />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {openCat && (() => {
+              const activeCat = categories.find(c => c.name === openCat);
+              if (!activeCat?.children) return null;
+              return (
+                <div className="border-t border-[#d6e4d3] bg-white -mx-4 sm:-mx-6 px-4 sm:px-6 py-1">
+                  {activeCat.children.map((child) => (
+                    <div key={child.name}>
+                      {child.children ? (
+                        <>
+                          <button
+                            onClick={() => setOpenSubCat(openSubCat === child.name ? null : child.name)}
+                            className="flex items-center justify-between w-full py-2.5 text-sm text-[#5a7d50] active:bg-[#eef5ec]"
+                          >
+                            <span>{child.name}</span>
+                            <ChevronDown className={`h-3 w-3 transition-transform ${openSubCat === child.name ? "rotate-180" : ""}`} />
+                          </button>
+                          {openSubCat === child.name && (
+                            <div className="bg-[#f5f9f4] -mx-4 sm:-mx-6 px-8 sm:px-10 mb-1 rounded">
+                              {child.children.map((grandchild) => (
+                                <Link
+                                  key={grandchild.name}
+                                  href={grandchild.href}
+                                  onClick={() => { setOpenCat(null); setOpenSubCat(null); }}
+                                  className="block py-2.5 text-sm text-[#5a7d50] active:text-[#365927]"
+                                >
+                                  {grandchild.name}
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <Link
+                          href={child.href}
+                          onClick={() => { setOpenCat(null); setOpenSubCat(null); }}
+                          className="block py-2.5 text-sm text-[#5a7d50] active:text-[#365927]"
+                        >
+                          {child.name}
+                        </Link>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+        </div>
       </div>
       {/* Login modal */}
       {showLoginModal && (

@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
 import type { Material } from "@/types/material";
+import { getBreadcrumb } from "@/data/categories";
 
 const coverColors = [
   "#365927", "#4a7a38", "#2d4a22", "#5a8c4a",
@@ -105,12 +106,19 @@ export default function ProductDetail() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <nav className="text-sm text-[#5a7d50] mb-6">
+      <nav className="text-sm text-[#5a7d50] mb-6 flex flex-wrap items-center">
         <Link href="/" className="hover:text-[#365927]">홈</Link>
-        <span className="mx-2">/</span>
-        <Link href={`/?category=${material.category}`} className="hover:text-[#365927]">
-          {material.category}
-        </Link>
+        {getBreadcrumb(material.category).map((item) => (
+          <span key={item.name} className="flex items-center">
+            <span className="mx-2">/</span>
+            <Link
+              href={item.href ?? `/?category=${encodeURIComponent(item.name)}`}
+              className="hover:text-[#365927]"
+            >
+              {item.name}
+            </Link>
+          </span>
+        ))}
         <span className="mx-2">/</span>
         <span className="text-[#365927]">{material.title}</span>
       </nav>

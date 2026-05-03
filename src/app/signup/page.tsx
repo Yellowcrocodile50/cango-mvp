@@ -58,12 +58,18 @@ export default function SignupPage() {
   const [passwordError, setPasswordError] = useState("");
   const [confirmError, setConfirmError] = useState("");
   const [phoneError, setPhoneError] = useState("");
+  const [userTypeError, setUserTypeError] = useState("");
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleUserTypeChange = (type: "student" | "parent") => {
-    setUserType((prev) => (prev === type ? null : type));
-    setGrade("");
+    if (userType === type) {
+      setUserType(null);
+      setGrade("");
+    } else {
+      setUserType(type);
+      setGrade("");
+    }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -74,14 +80,16 @@ export default function SignupPage() {
     const pErr = validatePassword(password) || (!password ? "비밀번호를 입력해주세요." : "");
     const cErr = validateConfirm(password, confirmPassword) || (!confirmPassword ? "비밀번호를 다시 입력해 주세요." : "");
     const phErr = validatePhone(phone) || (!phone ? "전화번호를 입력해주세요." : "");
+    const utErr = !userType ? "구분을 선택해주세요." : "";
 
     setUsernameError(uErr);
     setEmailError(eErr);
     setPasswordError(pErr);
     setConfirmError(cErr);
     setPhoneError(phErr);
+    setUserTypeError(utErr);
 
-    if (uErr || eErr || pErr || cErr || phErr) return;
+    if (uErr || eErr || pErr || cErr || phErr || utErr) return;
     if (!privacyAgreed) {
       setServerError("개인정보 처리방침에 동의해주세요.");
       return;
@@ -231,16 +239,16 @@ export default function SignupPage() {
 
         {/* 학생 / 학부모 선택 */}
         <div>
-          <label className="block text-sm font-medium mb-2 text-[#365927]">
-            구분 <span className="text-[#8aab82] font-normal">(선택)</span>
-          </label>
+          <label className="block text-sm font-medium mb-2 text-[#365927]">구분</label>
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={() => handleUserTypeChange("student")}
+              onClick={() => { handleUserTypeChange("student"); setUserTypeError(""); }}
               className={`flex-1 h-11 rounded-lg border text-sm font-medium transition cursor-pointer ${
                 userType === "student"
                   ? "bg-[#365927] text-white border-[#365927]"
+                  : userTypeError
+                  ? "bg-white text-[#5a7d50] border-red-400 hover:border-[#365927]"
                   : "bg-white text-[#5a7d50] border-[#d6e4d3] hover:border-[#365927]"
               }`}
             >
@@ -248,16 +256,19 @@ export default function SignupPage() {
             </button>
             <button
               type="button"
-              onClick={() => handleUserTypeChange("parent")}
+              onClick={() => { handleUserTypeChange("parent"); setUserTypeError(""); }}
               className={`flex-1 h-11 rounded-lg border text-sm font-medium transition cursor-pointer ${
                 userType === "parent"
                   ? "bg-[#365927] text-white border-[#365927]"
+                  : userTypeError
+                  ? "bg-white text-[#5a7d50] border-red-400 hover:border-[#365927]"
                   : "bg-white text-[#5a7d50] border-[#d6e4d3] hover:border-[#365927]"
               }`}
             >
               학부모
             </button>
           </div>
+          {userTypeError && <p className="text-red-500 text-xs mt-1">{userTypeError}</p>}
 
           {userType && (
             <div className="mt-2">

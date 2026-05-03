@@ -33,6 +33,9 @@ function ProductGrid() {
       .then(({ data }) => {
         setMaterials(data || []);
         setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
       });
   }, []);
 

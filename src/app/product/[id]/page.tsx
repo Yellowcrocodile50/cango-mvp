@@ -8,19 +8,7 @@ import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
 import type { Material } from "@/types/material";
 import { getBreadcrumb } from "@/data/categories";
-
-const coverColors = [
-  "#365927", "#4a7a38", "#2d4a22", "#5a8c4a",
-  "#3d6b2e", "#6b9e5a", "#2a5020", "#4d7040",
-];
-
-function colorForId(id: string): string {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) {
-    hash = (hash * 31 + id.charCodeAt(i)) | 0;
-  }
-  return coverColors[Math.abs(hash) % coverColors.length];
-}
+import { colorForId } from "@/lib/coverColor";
 
 export default function ProductDetail() {
   const params = useParams();

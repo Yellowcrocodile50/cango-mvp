@@ -2,10 +2,11 @@
 
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
 import SupplierUploadSection from "@/components/SupplierUploadSection";
 import { supabase } from "@/lib/supabase";
-import { categoryGroups } from "@/data/categories";
+import { categoryGroups, getBreadcrumb } from "@/data/categories";
 import type { Material } from "@/types/material";
 
 function ProductGrid() {
@@ -63,7 +64,29 @@ function ProductGrid() {
 
       <div className="mb-6">
         <h2 className="text-xl font-bold text-[#365927]">
-          {category ? category : "전체 자료"}
+          {category ? (
+            <>
+              {getBreadcrumb(category).map((item, i) => (
+                <span key={item.name}>
+                  {i > 0 && (
+                    <span className="mx-1.5 text-[#8aab82] font-normal">›</span>
+                  )}
+                  {item.href ? (
+                    <Link
+                      href={item.href}
+                      className="font-normal text-[#5a7d50] hover:text-[#365927] hover:underline transition"
+                    >
+                      {item.name}
+                    </Link>
+                  ) : (
+                    <span>{item.name}</span>
+                  )}
+                </span>
+              ))}
+            </>
+          ) : (
+            "전체 자료"
+          )}
         </h2>
         <p className="text-sm text-[#5a7d50] mt-1">
           {loading ? "로딩 중..." : `${filtered.length}개의 자료`}

@@ -50,3 +50,52 @@ export const categoryGroups: CategoryGroup[] = [
 export const allCategories = categoryGroups.flatMap((g) => g.items);
 
 export type Category = string;
+
+export type BreadcrumbItem = {
+  name: string;
+  href: string | null;
+};
+
+export function getBreadcrumb(category: string | null): BreadcrumbItem[] {
+  if (!category) return [];
+
+  // 최상위 그룹 자체인 경우
+  const topGroup = categoryGroups.find((g) => g.label === category);
+  if (topGroup) return [{ name: category, href: null }];
+
+  // 무료 내신 자료 하위 계층 처리 (2단계 / 3단계)
+  const freeGroup = categoryGroups.find((g) => g.label === "무료 내신 자료");
+  if (freeGroup?.subGroups) {
+    // 2단계: 국어/영어/수학 등 subGroup 라벨
+    const subGroup = freeGroup.subGroups.find((sg) => sg.label === category);
+    if (subGroup) {
+      return [
+        { name: "무료 내신 자료", href: "/?category=무료 내신 자료" },
+        { name: category, href: null },
+      ];
+    }
+    // 3단계: 공통국어/문학 등 subGroup 내 항목
+    for (const sg of freeGroup.subGroups) {
+      if (sg.items.includes(category)) {
+        return [
+          { name: "무료 내신 자료", href: "/?category=무료 내신 자료" },
+          { name: sg.label, href: `/?category=${sg.label}` },
+          { name: category, href: null },
+        ];
+      }
+    }
+  }
+
+  // 고등학생/중학생 하위 항목 (수시/정시/공부법/고교입시)
+  for (const group of categoryGroups) {
+    if (group.label === "무료 내신 자료") continue;
+    if (group.items.includes(category) && group.label !== category) {
+      return [
+        { name: group.label, href: `/?category=${group.label}` },
+        { name: category, href: null },
+      ];
+    }
+  }
+
+  return [{ name: category, href: null }];
+}

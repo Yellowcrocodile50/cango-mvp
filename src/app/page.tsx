@@ -74,7 +74,7 @@ function ProductGrid() {
                   {item.href ? (
                     <Link
                       href={item.href}
-                      className="font-normal text-[#5a7d50] hover:text-[#365927] hover:underline transition"
+                      className="font-normal text-[#5a7d50] hover:text-[#365927] transition"
                     >
                       {item.name}
                     </Link>

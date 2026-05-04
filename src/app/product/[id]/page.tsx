@@ -98,7 +98,7 @@ export default function ProductDetail() {
         <Link href="/" className="hover:text-[#365927]">홈</Link>
         {getBreadcrumb(material.category).map((item) => (
           <span key={item.name} className="flex items-center">
-            <span className="mx-2">/</span>
+            <span className="mx-2">{">"}</span>
             <Link
               href={item.href ?? `/?category=${encodeURIComponent(item.name)}`}
               className="hover:text-[#365927]"
@@ -107,7 +107,7 @@ export default function ProductDetail() {
             </Link>
           </span>
         ))}
-        <span className="mx-2">/</span>
+        <span className="mx-2">{">"}</span>
         <span className="text-[#365927]">{material.title}</span>
       </nav>
 

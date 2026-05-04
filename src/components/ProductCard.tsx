@@ -7,7 +7,7 @@ export default function ProductCard({ material }: { material: Material }) {
   const bgColor = colorForId(material.id);
 
   return (
-    <div className="block">
+    <div>
       <Link href={`/product/${material.id}`} className="group block">
         <div className="aspect-square rounded-lg overflow-hidden mb-3 relative shadow-sm">
           {material.thumbnail_url ? (

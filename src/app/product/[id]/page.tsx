@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
 import type { Material } from "@/types/material";
-import { getBreadcrumb } from "@/data/categories";
+import { getBreadcrumb, getCategoryLabel } from "@/data/categories";
 import { colorForId } from "@/lib/coverColor";
 
 export default function ProductDetail() {
@@ -162,7 +162,12 @@ export default function ProductDetail() {
           <div className="border-t border-[#d6e4d3] pt-6 space-y-3 text-sm text-[#5a7d50]">
             <div className="flex justify-between">
               <span>카테고리</span>
-              <span className="text-[#1a2e16]">{material.category}</span>
+              <Link
+                href={`/?category=${encodeURIComponent(material.category)}`}
+                className="text-[#1a2e16] hover:text-[#365927] hover:underline transition"
+              >
+                {getCategoryLabel(material.category)}
+              </Link>
             </div>
             <div className="flex justify-between">
               <span>형식</span>

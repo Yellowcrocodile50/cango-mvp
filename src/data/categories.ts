@@ -49,6 +49,30 @@ export const categoryGroups: CategoryGroup[] = [
 
 export const allCategories = categoryGroups.flatMap((g) => g.items);
 
+export function getCategoryLabel(category: string): string {
+  const highschoolGroup = categoryGroups.find((g) => g.label === "고등학생(대학입시)");
+  if (highschoolGroup?.items.includes(category)) {
+    return `(고등학생)${category}`;
+  }
+
+  const middleGroup = categoryGroups.find((g) => g.label === "중학생");
+  if (middleGroup?.items.includes(category)) {
+    return `(중학생)${category}`;
+  }
+
+  const freeGroup = categoryGroups.find((g) => g.label === "무료 내신 자료");
+  if (freeGroup?.subGroups) {
+    for (const sg of freeGroup.subGroups) {
+      if (sg.items.includes(category)) {
+        if (sg.label === category) return category;
+        return `(${sg.label})${category}`;
+      }
+    }
+  }
+
+  return category;
+}
+
 export type Category = string;
 
 export type BreadcrumbItem = {

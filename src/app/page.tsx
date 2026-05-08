@@ -106,7 +106,13 @@ function ProductGrid() {
 
       {!loading && filtered.length === 0 && (
         <div className="text-center py-20 text-[#8aab82]">
-          해당 카테고리에 자료가 없습니다.
+          <p className="mb-4">해당 카테고리에 자료가 없습니다.</p>
+          <Link
+            href="/"
+            className="inline-block px-6 py-2.5 bg-[#365927] text-white rounded-lg text-sm font-medium hover:bg-[#4a7a38] transition"
+          >
+            전체 자료 보기
+          </Link>
         </div>
       )}
     </div>

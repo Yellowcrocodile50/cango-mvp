@@ -8,23 +8,23 @@ import { useCart } from "@/context/CartContext";
 function SuccessContent() {
   const searchParams = useSearchParams();
   const { removeItems } = useCart();
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
-  const [errorMsg, setErrorMsg] = useState("");
+
+  const paymentKey = searchParams.get("paymentKey");
+  const orderId = searchParams.get("orderId");
+  const amount = Number(searchParams.get("amount"));
+  const paramsValid = !!(paymentKey && orderId && amount);
+
+  const [status, setStatus] = useState<"loading" | "success" | "error">(
+    () => (paramsValid ? "loading" : "error")
+  );
+  const [errorMsg, setErrorMsg] = useState(
+    () => (paramsValid ? "" : "잘못된 접근입니다.")
+  );
   const hasRun = useRef(false);
 
   useEffect(() => {
-    if (hasRun.current) return;
+    if (!paramsValid || hasRun.current) return;
     hasRun.current = true;
-
-    const paymentKey = searchParams.get("paymentKey");
-    const orderId = searchParams.get("orderId");
-    const amount = Number(searchParams.get("amount"));
-
-    if (!paymentKey || !orderId || !amount) {
-      setStatus("error");
-      setErrorMsg("잘못된 접근입니다.");
-      return;
-    }
 
     fetch("/api/confirm", {
       method: "POST",
@@ -45,7 +45,7 @@ function SuccessContent() {
         setStatus("error");
         setErrorMsg("네트워크 오류가 발생했습니다.");
       });
-  }, [searchParams, removeItems]);
+  }, [paramsValid, paymentKey, orderId, amount, removeItems]);
 
   if (status === "loading") {
     return (

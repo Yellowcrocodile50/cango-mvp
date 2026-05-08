@@ -23,7 +23,7 @@ export default function CartPage() {
   const { items, removeItem, removeItems, setItemQuantity } = useCart();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>(() => items.map((i) => i.id));
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -35,10 +35,13 @@ export default function CartPage() {
     });
   }, [router]);
 
-  // 아이템이 바뀌면 선택 상태를 전체 선택으로 초기화
-  useEffect(() => {
+  // 아이템 목록이 바뀌면(추가/삭제) 선택 상태를 전체 선택으로 초기화
+  const [prevItemKey, setPrevItemKey] = useState(() => items.map((i) => i.id).join(","));
+  const currentItemKey = items.map((i) => i.id).join(",");
+  if (prevItemKey !== currentItemKey) {
+    setPrevItemKey(currentItemKey);
     setSelectedIds(items.map((i) => i.id));
-  }, [items]);
+  }
 
   const isAllSelected = items.length > 0 && selectedIds.length === items.length;
 

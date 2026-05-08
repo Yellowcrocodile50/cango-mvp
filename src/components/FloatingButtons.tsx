@@ -4,7 +4,7 @@ const KAKAO_CHANNEL_URL = "https://pf.kakao.com/_BpejX/friend";
 
 export default function FloatingButtons() {
   return (
-    <div className="fixed bottom-8 right-6 z-50">
+    <div className="fixed bottom-20 right-4 z-50 sm:bottom-8 sm:right-6">
       <a
         href={KAKAO_CHANNEL_URL}
         target="_blank"

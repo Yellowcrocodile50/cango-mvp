@@ -117,6 +117,15 @@ export default function Header() {
   const [openSubCat, setOpenSubCat] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  // pathname 변경 시 메뉴 닫기 (렌더 중 처리)
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
+    setMenuOpen(false);
+    setOpenCat(null);
+    setOpenSubCat(null);
+  }
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
 
@@ -138,11 +147,6 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [menuOpen]);
 
-  useEffect(() => {
-    setMenuOpen(false);
-    setOpenCat(null);
-    setOpenSubCat(null);
-  }, [pathname]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();

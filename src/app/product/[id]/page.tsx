@@ -144,7 +144,7 @@ export default function ProductDetail() {
             </span>
           </div>
 
-          <div className="space-y-3 mb-6">
+          <div className="space-y-3 mb-6 pr-20 sm:pr-0">
             <button
               onClick={handleBuyNow}
               className="w-full h-14 bg-[#365927] text-white rounded-lg font-medium hover:bg-[#4a7a38] transition cursor-pointer"

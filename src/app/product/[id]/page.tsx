@@ -9,6 +9,7 @@ import type { User } from "@supabase/supabase-js";
 import type { Material } from "@/types/material";
 import { getBreadcrumb, getCategoryLabel } from "@/data/categories";
 import { colorForId } from "@/lib/coverColor";
+import { toast } from "sonner";
 
 export default function ProductDetail() {
   const params = useParams();
@@ -75,7 +76,7 @@ export default function ProductDetail() {
       price: material.price,
       thumbnail_url: material.thumbnail_url,
     });
-    alert("장바구니에 담겼습니다!");
+    toast.success("장바구니에 담겼습니다!");
   };
 
   const handleBuyNow = () => {

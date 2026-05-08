@@ -3,17 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Package, ShoppingCart, CheckCircle, Clock, Send, RefreshCw, ChevronRight } from "lucide-react";
-import { OrderStatusBadge } from "@/components/OrderStatusBadge";
+import { Package, ShoppingCart, CheckCircle, Clock, RefreshCw, ChevronRight } from "lucide-react";
 
 interface Order {
   id: string;
@@ -185,36 +175,41 @@ export default function SupplierDashboard() {
           </button>
         </CardHeader>
         <CardContent className="pt-4">
-          {/* 총합 요약 바 */}
-          <div className="flex items-center gap-6 text-xs text-muted-foreground bg-[#f5f9f4] rounded-lg px-4 py-2 mb-5">
-            <span className="font-medium text-[#5a7d50]">총합</span>
-            <span>{stats.paidOrders}</span>
-            <span>{stats.pendingDelivery}</span>
-            <span>{stats.completedOrders}</span>
-          </div>
-
-          {/* 흐름 */}
-          <div className="flex items-center justify-center gap-2 sm:gap-4">
-            <div className="flex flex-col items-center gap-1 min-w-[72px]">
-              <span className="text-3xl font-bold text-[#365927]">{stats.paidOrders}</span>
-              <span className="text-xs text-muted-foreground whitespace-nowrap">결제 완료</span>
+          {/* 총합 행 + 흐름 행 - 동일 컬럼 너비로 정렬 */}
+          <div>
+            {/* 총합 행 */}
+            <div className="flex items-center bg-[#f5f9f4] rounded-lg py-2 text-xs text-muted-foreground mb-3">
+              <span className="w-12 text-center font-medium text-[#5a7d50] shrink-0">총합</span>
+              <div className="flex-1 text-center font-medium text-[#365927]">{stats.paidOrders}</div>
+              <div className="w-5 shrink-0" />
+              <div className="flex-1 text-center font-medium text-amber-500">{stats.pendingDelivery}</div>
+              <div className="w-5 shrink-0" />
+              <div className="flex-1 text-center font-medium text-[#5a7d50]">{stats.completedOrders}</div>
             </div>
-            <ChevronRight className="h-5 w-5 text-[#d6e4d3] shrink-0" />
-            <div className="flex flex-col items-center gap-1 min-w-[72px]">
-              <span className={`text-3xl font-bold ${stats.pendingDelivery > 0 ? "text-amber-500" : "text-[#8aab82]"}`}>
-                {stats.pendingDelivery}
-              </span>
-              <span className="text-xs text-muted-foreground whitespace-nowrap">상품 준비중</span>
-            </div>
-            <ChevronRight className="h-5 w-5 text-[#d6e4d3] shrink-0" />
-            <div className="flex flex-col items-center gap-1 min-w-[72px]">
-              <span className="text-3xl font-bold text-[#5a7d50]">{stats.completedOrders}</span>
-              <span className="text-xs text-muted-foreground whitespace-nowrap">발송 완료</span>
+            {/* 흐름 행 */}
+            <div className="flex items-center">
+              <div className="w-12 shrink-0" />
+              <div className="flex-1 flex flex-col items-center gap-1 py-3">
+                <span className="text-3xl font-bold text-[#365927]">{stats.paidOrders}</span>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">결제 완료</span>
+              </div>
+              <ChevronRight className="w-5 h-5 text-[#d6e4d3] shrink-0" />
+              <div className="flex-1 flex flex-col items-center gap-1 py-3">
+                <span className={`text-3xl font-bold ${stats.pendingDelivery > 0 ? "text-amber-500" : "text-[#8aab82]"}`}>
+                  {stats.pendingDelivery}
+                </span>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">상품 준비중</span>
+              </div>
+              <ChevronRight className="w-5 h-5 text-[#d6e4d3] shrink-0" />
+              <div className="flex-1 flex flex-col items-center gap-1 py-3">
+                <span className="text-3xl font-bold text-[#5a7d50]">{stats.completedOrders}</span>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">발송 완료</span>
+              </div>
             </div>
           </div>
 
           {/* 총 정산액 */}
-          <div className="mt-5 pt-4 border-t flex items-center justify-between">
+          <div className="mt-2 pt-4 border-t flex items-center justify-between">
             <span className="text-sm text-[#5a7d50] font-medium">💰 총 정산액</span>
             <span className="text-lg font-bold text-[#365927]">
               {stats.totalRevenue.toLocaleString()}원
@@ -223,73 +218,6 @@ export default function SupplierDashboard() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg text-[#365927]">주문 내역</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <p className="text-sm text-muted-foreground py-8 text-center">로딩 중...</p>
-          ) : orders.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-8 text-center">아직 주문이 없습니다.</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>주문자</TableHead>
-                  <TableHead>구분 / 학년</TableHead>
-                  <TableHead>이메일</TableHead>
-                  <TableHead>전화번호</TableHead>
-                  <TableHead>상품명</TableHead>
-                  <TableHead>카테고리</TableHead>
-                  <TableHead>금액</TableHead>
-                  <TableHead>상태</TableHead>
-                  <TableHead>주문일</TableHead>
-                  <TableHead className="text-right">액션</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {orders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.buyer_name}</TableCell>
-                    <TableCell>
-                      {order.user_type ? (
-                        <span>
-                          {order.user_type === "student" ? "학생" : "학부모"}
-                          {order.grade && (
-                            <span className="ml-1 text-muted-foreground">· {order.grade}</span>
-                          )}
-                        </span>
-                      ) : "-"}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{order.buyer_email}</TableCell>
-                    <TableCell className="text-muted-foreground">{order.buyer_phone || "-"}</TableCell>
-                    <TableCell>{order.material_title}</TableCell>
-                    <TableCell className="text-muted-foreground">{order.material_category}</TableCell>
-                    <TableCell>{order.amount.toLocaleString()}원</TableCell>
-                    <TableCell><OrderStatusBadge is_sent={order.is_sent} payment_status={order.payment_status} /></TableCell>
-                    <TableCell>
-                      {new Date(order.created_at).toLocaleDateString("ko-KR")}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {order.payment_status === "done" && !order.is_sent && (
-                        <Button
-                          size="sm"
-                          onClick={() => markAsSent(order.id)}
-                          className="bg-[#365927] hover:bg-[#4a7a38]"
-                        >
-                          <Send className="mr-1 h-3 w-3" />
-                          발송
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }

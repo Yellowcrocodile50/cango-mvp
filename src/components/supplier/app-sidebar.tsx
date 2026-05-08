@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
+  TrendingUp,
   Package,
-  ShoppingCart,
+  ClipboardList,
   Settings,
   LogOut,
   ArrowLeft,
@@ -31,19 +31,19 @@ const navItems = [
     icon: ArrowLeft,
   },
   {
-    title: "대시보드",
+    title: "판매 현황",
     url: "/supplier",
-    icon: LayoutDashboard,
+    icon: TrendingUp,
+  },
+  {
+    title: "주문 내역",
+    url: "/supplier/orders",
+    icon: ClipboardList,
   },
   {
     title: "내 자료 관리",
     url: "/supplier/materials",
     icon: Package,
-  },
-  {
-    title: "주문 관리",
-    url: "/supplier/orders",
-    icon: ShoppingCart,
   },
   {
     title: "설정",

@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Package, ShoppingCart, CheckCircle, Clock, Send } from "lucide-react";
+import { Package, ShoppingCart, CheckCircle, Clock, Send, RefreshCw, ChevronRight } from "lucide-react";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 
 interface Order {
@@ -37,6 +37,8 @@ interface Stats {
   totalOrders: number;
   completedOrders: number;
   pendingDelivery: number;
+  paidOrders: number;
+  totalRevenue: number;
 }
 
 export default function SupplierDashboard() {
@@ -45,6 +47,8 @@ export default function SupplierDashboard() {
     totalOrders: 0,
     completedOrders: 0,
     pendingDelivery: 0,
+    paidOrders: 0,
+    totalRevenue: 0,
   });
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,7 +73,7 @@ export default function SupplierDashboard() {
     const materialIds = [...materialMap.keys()];
 
     if (materialIds.length === 0) {
-      setStats({ totalMaterials: materialsCount || 0, totalOrders: 0, completedOrders: 0, pendingDelivery: 0 });
+      setStats({ totalMaterials: materialsCount || 0, totalOrders: 0, completedOrders: 0, pendingDelivery: 0, paidOrders: 0, totalRevenue: 0 });
       setOrders([]);
       setLoading(false);
       return;
@@ -98,12 +102,17 @@ export default function SupplierDashboard() {
 
     const completed = orderList.filter((o) => o.payment_status === "done" && o.is_sent).length;
     const pendingDelivery = orderList.filter((o) => o.payment_status === "done" && !o.is_sent).length;
+    const paidOrdersList = orderList.filter((o) => o.payment_status === "done");
+    const paidOrders = paidOrdersList.length;
+    const totalRevenue = paidOrdersList.reduce((sum, o) => sum + o.amount, 0);
 
     setStats({
       totalMaterials: materialsCount || 0,
       totalOrders: ordersCount || 0,
       completedOrders: completed,
       pendingDelivery,
+      paidOrders,
+      totalRevenue,
     });
 
     setOrders(
@@ -160,6 +169,59 @@ export default function SupplierDashboard() {
           </Card>
         ))}
       </div>
+
+      {/* 판매 현황 */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-3 border-b">
+          <CardTitle className="text-base font-bold text-[#365927] flex items-center gap-2">
+            🏷️ 판매 현황
+          </CardTitle>
+          <button
+            onClick={fetchData}
+            className="p-1.5 rounded-md text-[#8aab82] hover:text-[#365927] hover:bg-[#f5f9f4] transition cursor-pointer"
+            aria-label="새로고침"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </button>
+        </CardHeader>
+        <CardContent className="pt-4">
+          {/* 총합 요약 바 */}
+          <div className="flex items-center gap-6 text-xs text-muted-foreground bg-[#f5f9f4] rounded-lg px-4 py-2 mb-5">
+            <span className="font-medium text-[#5a7d50]">총합</span>
+            <span>{stats.paidOrders}</span>
+            <span>{stats.pendingDelivery}</span>
+            <span>{stats.completedOrders}</span>
+          </div>
+
+          {/* 흐름 */}
+          <div className="flex items-center justify-center gap-2 sm:gap-4">
+            <div className="flex flex-col items-center gap-1 min-w-[72px]">
+              <span className="text-3xl font-bold text-[#365927]">{stats.paidOrders}</span>
+              <span className="text-xs text-muted-foreground whitespace-nowrap">결제 완료</span>
+            </div>
+            <ChevronRight className="h-5 w-5 text-[#d6e4d3] shrink-0" />
+            <div className="flex flex-col items-center gap-1 min-w-[72px]">
+              <span className={`text-3xl font-bold ${stats.pendingDelivery > 0 ? "text-amber-500" : "text-[#8aab82]"}`}>
+                {stats.pendingDelivery}
+              </span>
+              <span className="text-xs text-muted-foreground whitespace-nowrap">상품 준비중</span>
+            </div>
+            <ChevronRight className="h-5 w-5 text-[#d6e4d3] shrink-0" />
+            <div className="flex flex-col items-center gap-1 min-w-[72px]">
+              <span className="text-3xl font-bold text-[#5a7d50]">{stats.completedOrders}</span>
+              <span className="text-xs text-muted-foreground whitespace-nowrap">발송 완료</span>
+            </div>
+          </div>
+
+          {/* 총 정산액 */}
+          <div className="mt-5 pt-4 border-t flex items-center justify-between">
+            <span className="text-sm text-[#5a7d50] font-medium">💰 총 정산액</span>
+            <span className="text-lg font-bold text-[#365927]">
+              {stats.totalRevenue.toLocaleString()}원
+            </span>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

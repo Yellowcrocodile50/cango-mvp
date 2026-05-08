@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Pencil, Upload, FileText, Image as ImageIcon, X } from "lucide-react";
 import { categoryGroups } from "@/data/categories";
+import { toast } from "sonner";
 
 const THUMBNAIL_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const THUMBNAIL_MAX_BYTES = 5 * 1024 * 1024;
@@ -271,7 +272,7 @@ export default function MaterialsPage() {
       setEditingId(null);
       fetchMaterials();
     } catch (err) {
-      alert("업로드 중 오류가 발생했습니다: " + (err as Error).message);
+      toast.error("업로드 중 오류가 발생했습니다: " + (err as Error).message);
     } finally {
       setUploading(false);
     }

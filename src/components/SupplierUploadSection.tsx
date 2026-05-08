@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { Upload, FileText, Plus, X, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 import { categoryGroups } from "@/data/categories";
+import { toast } from "sonner";
 
 const THUMBNAIL_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const THUMBNAIL_MAX_BYTES = 5 * 1024 * 1024;
@@ -197,7 +198,7 @@ export default function SupplierUploadSection({
       setLoaded(false);
       onUploaded?.();
     } catch (err) {
-      alert("업로드 중 오류가 발생했습니다: " + (err as Error).message);
+      toast.error("업로드 중 오류가 발생했습니다: " + (err as Error).message);
     } finally {
       setUploading(false);
     }

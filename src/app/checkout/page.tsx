@@ -7,6 +7,7 @@ import type { User } from "@supabase/supabase-js";
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
+import { toast } from "sonner";
 
 function CheckoutContent() {
   const { items } = useCart();
@@ -88,7 +89,7 @@ function CheckoutContent() {
 
     const { error } = await supabase.from("orders").insert(rows);
     if (error) {
-      alert("주문 저장 중 오류가 발생했습니다: " + error.message);
+      toast.error("주문 저장 중 오류가 발생했습니다: " + error.message);
       setSubmitting(false);
       return;
     }
@@ -118,7 +119,7 @@ function CheckoutContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderId, buyerId: user.id }),
       }).catch(() => {});
-      alert("결제 요청 중 오류가 발생했습니다. 다시 시도해주세요.");
+      toast.error("결제 요청 중 오류가 발생했습니다. 다시 시도해주세요.");
       setSubmitting(false);
     }
   };

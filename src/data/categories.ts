@@ -54,14 +54,14 @@ export function getCategoryLabel(category: string): string {
     if (group.subGroups) {
       for (const sg of group.subGroups) {
         if (sg.items.includes(category)) {
-          return sg.label === category ? category : `(${sg.label})${category}`;
+          return sg.label === category ? category : `${sg.label} › ${category}`;
         }
       }
       continue;
     }
     if (group.items.includes(category) && group.label !== category) {
       const prefix = group.label === "고등학생(대학입시)" ? "고등학생" : group.label;
-      return `(${prefix})${category}`;
+      return `${prefix} › ${category}`;
     }
   }
   return category;

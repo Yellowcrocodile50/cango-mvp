@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /supplier/
+Disallow: /mypage/
+Disallow: /checkout/
+Disallow: /cart/
+Disallow: /api/
+
+Sitemap: https://cango.kr/sitemap.xml

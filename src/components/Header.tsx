@@ -160,9 +160,12 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Top bar */}
         <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center">
+          <Link href="/" className="flex items-center gap-4">
             <span className="text-2xl font-extrabold tracking-tight text-[#365927]">
               CANGO
+            </span>
+            <span className="hidden sm:block text-xl font-bold text-[#b7beb1] leading-tight">
+              선배들이 만든 입시 자료 PDF 마켓
             </span>
           </Link>
 

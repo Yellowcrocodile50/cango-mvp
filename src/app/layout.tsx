@@ -15,20 +15,25 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const SITE_URL = "https://cango.kr";
+const SITE_TITLE = "CANGO - 선배들이 만든 입시 자료 PDF 마켓";
+const SITE_DESCRIPTION =
+  "선배들이 직접 만든 입시 자료 PDF 마켓플레이스. 수시·정시·공부법까지 검증된 자료를 쉽게 구매하고 즉시 다운로드하세요.";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://cango.kr"),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "CANGO - 선배들이 만든 입시 자료 PDF 마켓",
+    default: SITE_TITLE,
     template: "%s | CANGO",
   },
-  description: "선배들이 직접 만든 입시 자료 PDF 마켓플레이스. 수시·정시·공부법까지 검증된 자료를 쉽게 구매하고 즉시 다운로드하세요.",
+  description: SITE_DESCRIPTION,
   openGraph: {
     type: "website",
     locale: "ko_KR",
-    url: "https://cango.kr",
+    url: SITE_URL,
     siteName: "CANGO",
-    title: "CANGO - 선배들이 만든 입시 자료 PDF 마켓",
-    description: "선배들이 직접 만든 입시 자료 PDF 마켓플레이스. 수시·정시·공부법까지 검증된 자료를 쉽게 구매하고 즉시 다운로드하세요.",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
   },
   ...(process.env.NAVER_SITE_VERIFICATION && {
     verification: {

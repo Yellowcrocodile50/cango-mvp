@@ -24,16 +24,19 @@ import {
 } from "@/components/ui/sidebar";
 import { supabase } from "@/lib/supabase";
 
+// exact: true인 항목은 정확 일치할 때만 활성 (하위 경로에서 활성되면 안 되는 메뉴)
 const navItems = [
   {
     title: "돌아가기",
     url: "/",
     icon: ArrowLeft,
+    exact: true,
   },
   {
     title: "판매 현황",
     url: "/supplier",
     icon: TrendingUp,
+    exact: true,
   },
   {
     title: "주문 내역",
@@ -85,10 +88,10 @@ export function AppSidebar({ user }: { user: { email: string; name?: string } })
           <SidebarGroupLabel>메뉴</SidebarGroupLabel>
           <SidebarMenu>
             {navItems.map((item) => {
-              const isActive =
-                item.url === "/supplier"
-                  ? pathname === "/supplier"
-                  : pathname.startsWith(item.url);
+              // exact 메뉴는 정확 일치만, 그 외는 하위 경로(/supplier/orders/[id] 등)도 활성
+              const isActive = item.exact
+                ? pathname === item.url
+                : pathname === item.url || pathname.startsWith(item.url + "/");
               return (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton

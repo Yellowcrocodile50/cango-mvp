@@ -16,8 +16,27 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CANGO - PDF 자료 마켓플레이스",
-  description: "당신의 지식을 거래하세요. PDF 자료를 사고 팔 수 있는 플랫폼.",
+  metadataBase: new URL("https://cango.kr"),
+  title: {
+    default: "CANGO - PDF 자료 마켓플레이스",
+    template: "%s | CANGO",
+  },
+  description: "교사·학생을 위한 PDF 학습자료 마켓플레이스. 검증된 자료를 쉽게 구매하고 즉시 다운로드하세요.",
+  openGraph: {
+    type: "website",
+    locale: "ko_KR",
+    url: "https://cango.kr",
+    siteName: "CANGO",
+    title: "CANGO - PDF 자료 마켓플레이스",
+    description: "교사·학생을 위한 PDF 학습자료 마켓플레이스. 검증된 자료를 쉽게 구매하고 즉시 다운로드하세요.",
+  },
+  ...(process.env.NAVER_SITE_VERIFICATION && {
+    verification: {
+      other: {
+        "naver-site-verification": process.env.NAVER_SITE_VERIFICATION,
+      },
+    },
+  }),
 };
 
 export default function RootLayout({

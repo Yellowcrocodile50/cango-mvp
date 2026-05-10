@@ -3,6 +3,9 @@ import { createClient } from "@supabase/supabase-js";
 
 const BASE_URL = "https://cango.kr";
 
+// 1시간 단위로 재생성 — 크롤러 반복 요청 시 Supabase 쿼리 캐시
+export const revalidate = 3600;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

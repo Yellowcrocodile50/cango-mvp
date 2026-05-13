@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 const SITE_URL = "https://cango.kr";
-const SITE_TITLE = "CANGO - 선배들이 만든 입시 자료 PDF 마켓";
+const SITE_TITLE = "CANGO - 선배들이 만든 입시 자료";
 const SITE_DESCRIPTION =
   "선배들이 직접 만든 입시 자료 PDF 마켓플레이스. 수시·정시·공부법까지 검증된 자료를 쉽게 구매하고 즉시 다운로드하세요.";
 

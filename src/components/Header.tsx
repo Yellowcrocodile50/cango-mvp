@@ -164,8 +164,8 @@ export default function Header() {
             <span className="text-2xl font-extrabold tracking-tight text-[#365927]">
               CANGO
             </span>
-            <span className="hidden sm:block text-xl font-bold text-[#b7beb1] leading-tight">
-              선배들이 만든 입시 자료 PDF 마켓
+            <span className="hidden sm:block text-[17px] font-bold text-[#b7beb1] leading-tight">
+              선배들이 만든 입시 자료
             </span>
           </Link>
 

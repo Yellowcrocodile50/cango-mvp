@@ -3,8 +3,9 @@ import { createClient } from "@supabase/supabase-js";
 
 const BASE_URL = "https://www.cango.kr";
 
-// 1시간 단위로 재생성 — 크롤러 반복 요청 시 Supabase 쿼리 캐시
-export const revalidate = 3600;
+// 사이트맵은 매 요청마다 fresh 생성 — 신규 자료 즉시 반영
+// 크롤러 요청 빈도 낮아 Supabase 호출 부담 미미
+export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createClient(

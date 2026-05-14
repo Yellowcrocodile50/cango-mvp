@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { ChevronDown, ChevronRight } from "lucide-react";
@@ -159,11 +160,16 @@ export default function Header() {
     <header className="sticky top-0 z-50 bg-white border-b border-[#d6e4d3]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Top bar */}
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-20">
           <Link href="/" className="flex items-center gap-4">
-            <span className="text-2xl font-extrabold tracking-tight text-[#365927]">
-              CANGO
-            </span>
+            <Image
+              src="/cango-logo.png"
+              alt="CANGO"
+              width={1731}
+              height={909}
+              priority
+              className="h-16 w-auto"
+            />
             <span className="hidden sm:block text-[17px] font-bold text-[#b7beb1] leading-tight">
               선배들이 만든 입시 자료
             </span>

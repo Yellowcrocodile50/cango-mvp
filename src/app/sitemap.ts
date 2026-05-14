@@ -13,14 +13,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  const { data: materials } = await supabase
+  // materials 테이블에는 updated_at 컬럼 없음 → created_at 사용
+  const { data: materials, error } = await supabase
     .from("materials")
-    .select("id, updated_at")
+    .select("id, created_at")
     .eq("is_deleted", false);
+
+  if (error) {
+    console.error("[sitemap] materials 쿼리 실패:", error);
+  }
 
   const productPages: MetadataRoute.Sitemap = (materials ?? []).map((m) => ({
     url: `${BASE_URL}/product/${m.id}`,
-    lastModified: m.updated_at ? new Date(m.updated_at) : new Date(),
+    lastModified: m.created_at ? new Date(m.created_at) : new Date(),
     changeFrequency: "weekly",
     priority: 0.8,
   }));

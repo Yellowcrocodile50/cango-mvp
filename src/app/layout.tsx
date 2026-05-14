@@ -35,6 +35,11 @@ export const metadata: Metadata = {
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
   },
+  icons: {
+    icon: [{ url: `${SITE_URL}/icon.png`, type: "image/png", sizes: "any" }],
+    shortcut: [{ url: `${SITE_URL}/icon.png` }],
+    apple: [{ url: `${SITE_URL}/icon.png` }],
+  },
   ...(process.env.NAVER_SITE_VERIFICATION && {
     verification: {
       other: {

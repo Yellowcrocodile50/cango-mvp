@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 import { createClient } from "@supabase/supabase-js";
 
-const BASE_URL = "https://cango.kr";
+const BASE_URL = "https://www.cango.kr";
 
 // 1시간 단위로 재생성 — 크롤러 반복 요청 시 Supabase 쿼리 캐시
 export const revalidate = 3600;
@@ -24,22 +24,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
+  // login/signup은 색인 노출 불필요 → 각 페이지 layout에서 noindex 처리. 사이트맵에서도 제외.
   return [
     {
       url: BASE_URL,
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 1.0,
-    },
-    {
-      url: `${BASE_URL}/login`,
-      changeFrequency: "monthly",
-      priority: 0.3,
-    },
-    {
-      url: `${BASE_URL}/signup`,
-      changeFrequency: "monthly",
-      priority: 0.3,
     },
     ...productPages,
   ];

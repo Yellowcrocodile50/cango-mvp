@@ -6,4 +6,4 @@ Disallow: /checkout/
 Disallow: /cart/
 Disallow: /api/
 
-Sitemap: https://cango.kr/sitemap.xml
+Sitemap: https://www.cango.kr/sitemap.xml

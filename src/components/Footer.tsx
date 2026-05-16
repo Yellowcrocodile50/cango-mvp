@@ -8,8 +8,8 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-sm text-[#5a7d50]">
           <div>
             <h3 className="font-bold text-[#365927] mb-3">CANGO</h3>
-            <p>PDF 자료 마켓플레이스</p>
-            <p>당신의 지식을 거래하세요.</p>
+            <p>선배들이 만든 입시 자료 마켓플레이스</p>
+            <p>수시•정시•공부법까지 검증된 자료를 쉽게 구매하고 즉시 다운로드하세요.</p>
           </div>
           <div>
             <h3 className="font-bold text-[#365927] mb-3">고객센터</h3>

@@ -9,8 +9,7 @@ export default function Footer() {
           <div>
             <h3 className="font-bold text-[#365927] mb-3">CANGO</h3>
             <p>선배들이 만든 입시 자료 마켓플레이스</p>
-            <p>수시·정시·공부법까지 검증된 자료를</p>
-            <p>쉽게 구매하고 즉시 다운로드하세요.</p>
+            <p className="text-xs mt-1 text-[#8aab82]">수시·정시·공부법까지 검증된 자료를<br />쉽게 구매하고 즉시 다운로드하세요.</p>
           </div>
           <div>
             <h3 className="font-bold text-[#365927] mb-3">고객센터</h3>

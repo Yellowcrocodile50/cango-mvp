@@ -276,7 +276,7 @@ export default function Header() {
         </div>
 
         {/* Desktop Category Bar */}
-        <nav className="hidden md:flex gap-6 pt-0 pb-2 text-sm font-medium">
+        <nav className="hidden lg:flex gap-6 pt-0 pb-2 text-sm font-medium">
           {categories.map((cat) => {
             return (
               <div key={cat.name} className="relative group">
@@ -336,7 +336,7 @@ export default function Header() {
         </nav>
 
         {/* Mobile Category Bar */}
-        <div className="md:hidden">
+        <div className="lg:hidden">
             <div className="overflow-x-auto -mx-4 sm:-mx-6 px-4 sm:px-6">
               <div className="flex gap-5 pb-2 text-sm font-medium min-w-max">
                 {categories.map((cat) => (

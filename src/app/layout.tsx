@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
   },
   icons: {
-    icon: [{ url: `${SITE_URL}/icon.png`, type: "image/png", sizes: "any" }],
+    icon: [{ url: `${SITE_URL}/icon.png`, type: "image/png", sizes: "1024x1024" }],
     shortcut: [{ url: `${SITE_URL}/icon.png` }],
     apple: [{ url: `${SITE_URL}/icon.png` }],
   },

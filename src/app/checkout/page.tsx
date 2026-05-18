@@ -167,6 +167,18 @@ function CheckoutContent() {
           className="w-full h-12 px-4 border border-[#d6e4d3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent mb-6 bg-white"
         />
 
+        <div className="mb-4 p-3 bg-[#f5f9f4] border border-[#d6e4d3] rounded-lg text-xs text-[#5a7d50] leading-relaxed">
+          <p className="font-medium text-[#365927] mb-1">환불 안내</p>
+          <p>
+            결제 완료 후 24시간 이내 등록 이메일로 자료가 발송됩니다. <strong>자료 발송 메일 열람 전</strong>까지는 7일 이내 전액 환불 가능하며,
+            <strong> 메일 열람 후에는 단순 변심에 의한 환불이 불가합니다.</strong>{" "}
+            <Link href="/terms" target="_blank" className="underline hover:text-[#365927]">
+              전체 환불정책 보기
+            </Link>
+          </p>
+          <p className="mt-2 text-[#8aab82]">결제 시 위 환불정책에 동의한 것으로 간주됩니다.</p>
+        </div>
+
         <button
           type="submit"
           disabled={submitting}

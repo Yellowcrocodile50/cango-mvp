@@ -12,9 +12,9 @@ export default function PrivacyPage() {
       <div className="space-y-8 text-sm leading-relaxed text-[#365927]">
         <section>
           <p>
-            {COMPANY_INFO.serviceName}(이하 &ldquo;회사&rdquo;)는 「개인정보 보호법」
-            제30조에 따라 정보주체의 개인정보를 보호하고 이와 관련한 고충을 신속하게
-            처리할 수 있도록 다음과 같이 개인정보 처리방침을 수립·공개합니다.
+            CANGO는 {COMPANY_INFO.businessName}(이하 &ldquo;회사&rdquo;)가 운영하는 서비스 중 하나이며,
+            회사는 「개인정보 보호법」 제30조에 따라 정보주체의 개인정보를 보호하고 이와 관련한 고충을
+            신속하게 처리할 수 있도록 다음과 같이 개인정보 처리방침을 수립·공개합니다.
           </p>
         </section>
 

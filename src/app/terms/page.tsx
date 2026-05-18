@@ -26,6 +26,7 @@ export default function TermsPage() {
             <section>
               <h3 className="font-semibold mb-2">제2조&nbsp;&nbsp;&nbsp;본 약관에서 사용되는 용어의 의미를 알려드립니다.</h3>
               <ol className="list-decimal pl-5 space-y-1 text-[#5a7d50]">
+                <li>&apos;CANGO팀&apos;이란 CANGO 서비스를 운영하는 사업자 &apos;아이이즈&apos;를 의미하며, CANGO는 아이이즈가 제공하는 서비스 중 하나입니다.</li>
                 <li>&apos;CANGO 서비스&apos;란 각종 입시 자료 서비스(유료), 각종 내신 자료 서비스(무료) 등 CANGO팀이 제공하는 일체의 서비스를 의미합니다.</li>
                 <li>&apos;CANGO 웹&apos;이란 CANGO 서비스를 제공하기 위하여 CANGO팀이 운영하는 인터넷 웹사이트를 의미합니다.</li>
                 <li>&apos;아이디&apos;란 회원이 정하고 CANGO팀이 승인한 문자 및 숫자의 조합으로서 회원 식별을 위해 사용되는 것을 의미합니다.</li>

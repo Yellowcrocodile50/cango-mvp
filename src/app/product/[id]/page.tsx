@@ -212,7 +212,7 @@ export default function ProductDetail() {
               <div>
                 <h3 className="font-semibold text-[#365927] mb-2">이용 안내</h3>
                 <p className="text-[#5a7d50] leading-relaxed">
-                  무료로 제공되는 내신 자료입니다. 로그인 없이 바로 다운로드 가능합니다.
+                  무료로 제공되는 내신 자료입니다. 로그인 없이 바로 다운로드 가능합니다.<br />
                   다운로드한 자료의 사용 기간에는 제한이 없습니다.
                 </p>
               </div>

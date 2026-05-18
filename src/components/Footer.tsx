@@ -37,7 +37,6 @@ export default function Footer() {
             통신판매업 신고번호: {COMPANY_INFO.ecommerceNumber}
           </p>
           <p>주소: {COMPANY_INFO.address}</p>
-          <p className="pt-2">&copy; 2026 CANGO. All rights reserved.</p>
         </div>
       </div>
     </footer>

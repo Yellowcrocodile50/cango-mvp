@@ -68,21 +68,16 @@ export default function ProductDetail() {
   const isFree = isFreeCategory(material.category);
 
   const handleDownload = async () => {
-    if (!material.file_url) {
-      toast.error("다운로드할 파일이 없습니다.");
-      return;
-    }
     setDownloading(true);
-    const { data, error } = await supabase.storage
-      .from("materials")
-      .createSignedUrl(material.file_url, 3600);
+    const res = await fetch(`/api/download/${material.id}`);
     setDownloading(false);
-    if (error || !data) {
+    if (!res.ok) {
       toast.error("다운로드 링크 생성에 실패했습니다.");
       return;
     }
+    const { signedUrl } = await res.json();
     const a = document.createElement("a");
-    a.href = data.signedUrl;
+    a.href = signedUrl;
     a.download = `${material.title}.pdf`;
     document.body.appendChild(a);
     a.click();

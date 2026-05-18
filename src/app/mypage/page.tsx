@@ -19,7 +19,6 @@ interface OrderRow {
     id: string;
     title: string;
     category: string;
-    file_url: string | null;
     thumbnail_url: string | null;
   } | null;
 }
@@ -76,7 +75,7 @@ export default function MyPage() {
       const { data } = await supabase
         .from("orders")
         .select(
-          "id, amount, payment_status, is_sent, created_at, materials(id, title, category, file_url, thumbnail_url)"
+          "id, amount, payment_status, is_sent, created_at, materials(id, title, category, thumbnail_url)"
         )
         .eq("buyer_id", authUser.id)
         .eq("payment_status", "done")
@@ -87,16 +86,15 @@ export default function MyPage() {
     })();
   }, [router]);
 
-  const handleDownload = async (fileUrl: string, title: string) => {
-    const { data, error } = await supabase.storage
-      .from("materials")
-      .createSignedUrl(fileUrl, 3600);
-    if (error || !data) {
+  const handleDownload = async (materialId: string, title: string) => {
+    const res = await fetch(`/api/download/${materialId}`);
+    if (!res.ok) {
       toast.error("다운로드 링크 생성에 실패했습니다.");
       return;
     }
+    const { signedUrl } = await res.json();
     const a = document.createElement("a");
-    a.href = data.signedUrl;
+    a.href = signedUrl;
     a.download = `${title}.pdf`;
     document.body.appendChild(a);
     a.click();
@@ -211,8 +209,8 @@ export default function MyPage() {
               <div className="flex-shrink-0">
                 {isFree ? (
                   <button
-                    onClick={() => m?.file_url && handleDownload(m.file_url, m.title)}
-                    disabled={!m?.file_url}
+                    onClick={() => m && handleDownload(m.id, m.title)}
+                    disabled={!m}
                     className="flex items-center gap-1.5 text-xs font-medium text-white bg-[#365927] px-3 py-1.5 rounded-md hover:bg-[#4a7a38] transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Download className="w-3.5 h-3.5" />

@@ -233,7 +233,7 @@ export default function ProductDetail() {
                     <li><strong>자료 발송 메일을 열람한 이후에는 단순 변심에 의한 환불이 불가</strong>합니다 (디지털 콘텐츠 특성)</li>
                   </ul>
                   <Link href="/terms" target="_blank" className="inline-block mt-3 text-xs text-[#365927] underline hover:text-[#4a7a38]">
-                    전체 환불정책 보기
+                    전체 환불정책 보기 (17조 참고)
                   </Link>
                 </div>
               </>

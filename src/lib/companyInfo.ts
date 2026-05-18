@@ -3,6 +3,7 @@
 
 export const COMPANY_INFO = {
   serviceName: "CANGO",
+  businessName: "아이이즈",
   representative: "윤태희",
   businessNumber: "460-01-03166",
   ecommerceNumber: "2025-인천연수구-0714",

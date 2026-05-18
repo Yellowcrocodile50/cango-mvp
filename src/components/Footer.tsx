@@ -30,7 +30,7 @@ export default function Footer() {
 
         <div className="mt-8 pt-6 border-t border-[#d6e4d3] text-xs text-[#8aab82] space-y-1">
           <p>
-            상호: {COMPANY_INFO.serviceName} | 대표: {COMPANY_INFO.representative} |
+            상호: {COMPANY_INFO.businessName} | 대표: {COMPANY_INFO.representative} |
             사업자등록번호: {COMPANY_INFO.businessNumber}
           </p>
           <p>

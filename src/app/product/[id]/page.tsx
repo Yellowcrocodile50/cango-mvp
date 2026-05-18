@@ -175,6 +175,27 @@ export default function ProductDetail() {
               <span className="text-[#1a2e16]">PDF</span>
             </div>
           </div>
+
+          <div className="mt-6 border-t border-[#d6e4d3] pt-6 space-y-5 text-sm">
+            <div>
+              <h3 className="font-semibold text-[#365927] mb-2">자료 제공 안내</h3>
+              <p className="text-[#5a7d50] leading-relaxed">
+                결제 완료 후 영업일 기준 24시간 이내 등록 이메일로 자료를 발송해 드립니다.
+                수령한 자료의 사용 기간에는 제한이 없습니다.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-[#365927] mb-2">환불 안내</h3>
+              <ul className="text-[#5a7d50] leading-relaxed space-y-1 list-disc pl-5">
+                <li>구매일 또는 자료 발송일 중 늦은 날로부터 7일 이내, <strong>자료 발송 메일 열람 전</strong>까지 전액 환불 가능</li>
+                <li>상품 내용이 설명과 현저히 다른 경우 또는 파일 손상 시 메일 열람 여부와 무관하게 전액 환불</li>
+                <li><strong>자료 발송 메일을 열람한 이후에는 단순 변심에 의한 환불이 불가</strong>합니다 (디지털 콘텐츠 특성)</li>
+              </ul>
+              <Link href="/terms" target="_blank" className="inline-block mt-3 text-xs text-[#365927] underline hover:text-[#4a7a38]">
+                전체 환불정책 보기
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
 

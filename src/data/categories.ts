@@ -49,6 +49,16 @@ export const categoryGroups: CategoryGroup[] = [
 
 export const allCategories = categoryGroups.flatMap((g) => g.items);
 
+export const FREE_PARENT_CATEGORY = "무료 내신 자료";
+
+export function isFreeCategory(category: string): boolean {
+  const freeGroup = categoryGroups.find((g) => g.label === FREE_PARENT_CATEGORY);
+  if (!freeGroup) return false;
+  if (category === FREE_PARENT_CATEGORY) return true;
+  if (freeGroup.items.includes(category)) return true;
+  return freeGroup.subGroups?.some((sg) => sg.label === category) ?? false;
+}
+
 export function getCategoryLabel(category: string): string {
   for (const group of categoryGroups) {
     if (group.subGroups) {

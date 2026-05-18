@@ -1,10 +1,11 @@
 import Link from "next/link";
 import type { Material } from "@/types/material";
 import { colorForId } from "@/lib/coverColor";
-import { getCategoryLabel } from "@/data/categories";
+import { getCategoryLabel, isFreeCategory } from "@/data/categories";
 
 export default function ProductCard({ material }: { material: Material }) {
   const bgColor = colorForId(material.id);
+  const isFree = isFreeCategory(material.category);
 
   return (
     <div>
@@ -24,6 +25,11 @@ export default function ProductCard({ material }: { material: Material }) {
               {material.title}
             </div>
           )}
+          {isFree && (
+            <span className="absolute top-2 left-2 bg-[#365927] text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+              무료
+            </span>
+          )}
         </div>
       </Link>
       <div className="space-y-1">
@@ -41,7 +47,7 @@ export default function ProductCard({ material }: { material: Material }) {
           </p>
         </Link>
         <p className="text-sm font-bold text-[#365927]">
-          {material.price.toLocaleString()}원
+          {isFree ? "무료" : `${material.price.toLocaleString()}원`}
         </p>
       </div>
     </div>

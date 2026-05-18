@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
 import type { Material } from "@/types/material";
-import { getBreadcrumb, getCategoryLabel } from "@/data/categories";
+import { getBreadcrumb, getCategoryLabel, isFreeCategory } from "@/data/categories";
 import { colorForId } from "@/lib/coverColor";
 import { toast } from "sonner";
 
@@ -21,6 +21,7 @@ export default function ProductDetail() {
   const [material, setMaterial] = useState<Material | null>(null);
   const [loading, setLoading] = useState(true);
   const [previewExpanded, setPreviewExpanded] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
@@ -64,6 +65,29 @@ export default function ProductDetail() {
   }
 
   const bgColor = colorForId(material.id);
+  const isFree = isFreeCategory(material.category);
+
+  const handleDownload = async () => {
+    if (!material.file_url) {
+      toast.error("다운로드할 파일이 없습니다.");
+      return;
+    }
+    setDownloading(true);
+    const { data, error } = await supabase.storage
+      .from("materials")
+      .createSignedUrl(material.file_url, 3600);
+    setDownloading(false);
+    if (error || !data) {
+      toast.error("다운로드 링크 생성에 실패했습니다.");
+      return;
+    }
+    const a = document.createElement("a");
+    a.href = data.signedUrl;
+    a.download = `${material.title}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
 
   const handleAddToCart = () => {
     if (!user) {
@@ -141,23 +165,35 @@ export default function ProductDetail() {
 
           <div className="flex items-baseline gap-2 mb-4">
             <span className="text-3xl font-bold text-[#365927]">
-              {material.price.toLocaleString()}원
+              {isFree ? "무료" : `${material.price.toLocaleString()}원`}
             </span>
           </div>
 
           <div className="space-y-3 mb-6 pr-20 sm:pr-0">
-            <button
-              onClick={handleBuyNow}
-              className="w-full h-14 bg-[#365927] text-white rounded-lg font-medium hover:bg-[#4a7a38] transition cursor-pointer"
-            >
-              바로 구매하기
-            </button>
-            <button
-              onClick={handleAddToCart}
-              className="w-full h-14 border-2 border-[#365927] text-[#365927] rounded-lg font-medium hover:bg-[#eaf2e8] transition cursor-pointer"
-            >
-              장바구니 담기
-            </button>
+            {isFree ? (
+              <button
+                onClick={handleDownload}
+                disabled={downloading}
+                className="w-full h-14 bg-[#365927] text-white rounded-lg font-medium hover:bg-[#4a7a38] transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {downloading ? "준비 중..." : "무료 다운로드"}
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={handleBuyNow}
+                  className="w-full h-14 bg-[#365927] text-white rounded-lg font-medium hover:bg-[#4a7a38] transition cursor-pointer"
+                >
+                  바로 구매하기
+                </button>
+                <button
+                  onClick={handleAddToCart}
+                  className="w-full h-14 border-2 border-[#365927] text-[#365927] rounded-lg font-medium hover:bg-[#eaf2e8] transition cursor-pointer"
+                >
+                  장바구니 담기
+                </button>
+              </>
+            )}
           </div>
 
           <div className="border-t border-[#d6e4d3] pt-6 space-y-3 text-sm text-[#5a7d50]">
@@ -177,24 +213,36 @@ export default function ProductDetail() {
           </div>
 
           <div className="mt-6 border-t border-[#d6e4d3] pt-6 space-y-5 text-sm">
-            <div>
-              <h3 className="font-semibold text-[#365927] mb-2">자료 제공 안내</h3>
-              <p className="text-[#5a7d50] leading-relaxed">
-                결제 완료 후 영업일 기준 24시간 이내 등록 이메일로 자료를 발송해 드립니다.
-                수령한 자료의 사용 기간에는 제한이 없습니다.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-[#365927] mb-2">환불 안내</h3>
-              <ul className="text-[#5a7d50] leading-relaxed space-y-1 list-disc pl-5">
-                <li>구매일 또는 자료 발송일 중 늦은 날로부터 7일 이내, <strong>자료 발송 메일 열람 전</strong>까지 전액 환불 가능</li>
-                <li>상품 내용이 설명과 현저히 다른 경우 또는 파일 손상 시 메일 열람 여부와 무관하게 전액 환불</li>
-                <li><strong>자료 발송 메일을 열람한 이후에는 단순 변심에 의한 환불이 불가</strong>합니다 (디지털 콘텐츠 특성)</li>
-              </ul>
-              <Link href="/terms" target="_blank" className="inline-block mt-3 text-xs text-[#365927] underline hover:text-[#4a7a38]">
-                전체 환불정책 보기
-              </Link>
-            </div>
+            {isFree ? (
+              <div>
+                <h3 className="font-semibold text-[#365927] mb-2">이용 안내</h3>
+                <p className="text-[#5a7d50] leading-relaxed">
+                  무료로 제공되는 내신 자료입니다. 로그인 없이 바로 다운로드 가능합니다.
+                  다운로드한 자료의 사용 기간에는 제한이 없습니다.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div>
+                  <h3 className="font-semibold text-[#365927] mb-2">자료 제공 안내</h3>
+                  <p className="text-[#5a7d50] leading-relaxed">
+                    결제 완료 후 영업일 기준 24시간 이내 등록 이메일로 자료를 발송해 드립니다.
+                    수령한 자료의 사용 기간에는 제한이 없습니다.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-[#365927] mb-2">환불 안내</h3>
+                  <ul className="text-[#5a7d50] leading-relaxed space-y-1 list-disc pl-5">
+                    <li>구매일 또는 자료 발송일 중 늦은 날로부터 7일 이내, <strong>자료 발송 메일 열람 전</strong>까지 전액 환불 가능</li>
+                    <li>상품 내용이 설명과 현저히 다른 경우 또는 파일 손상 시 메일 열람 여부와 무관하게 전액 환불</li>
+                    <li><strong>자료 발송 메일을 열람한 이후에는 단순 변심에 의한 환불이 불가</strong>합니다 (디지털 콘텐츠 특성)</li>
+                  </ul>
+                  <Link href="/terms" target="_blank" className="inline-block mt-3 text-xs text-[#365927] underline hover:text-[#4a7a38]">
+                    전체 환불정책 보기
+                  </Link>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

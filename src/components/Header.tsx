@@ -227,7 +227,7 @@ export default function Header() {
                           role="menuitem"
                           className="block px-4 py-2 text-sm text-[#365927] hover:bg-[#eef5ec] transition"
                         >
-                          구매 내역
+                          마이페이지
                         </Link>
                         <div className="border-t border-[#d6e4d3] my-1" />
                         <button

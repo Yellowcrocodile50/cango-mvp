@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { FileText } from "lucide-react";
+import { FileText, Download } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { isFreeCategory } from "@/data/categories";
+import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
 
 interface OrderRow {
@@ -17,6 +19,7 @@ interface OrderRow {
     id: string;
     title: string;
     category: string;
+    file_url: string | null;
     thumbnail_url: string | null;
   } | null;
 }
@@ -73,7 +76,7 @@ export default function MyPage() {
       const { data } = await supabase
         .from("orders")
         .select(
-          "id, amount, payment_status, is_sent, created_at, materials(id, title, category, thumbnail_url)"
+          "id, amount, payment_status, is_sent, created_at, materials(id, title, category, file_url, thumbnail_url)"
         )
         .eq("buyer_id", authUser.id)
         .eq("payment_status", "done")
@@ -83,6 +86,22 @@ export default function MyPage() {
       setLoading(false);
     })();
   }, [router]);
+
+  const handleDownload = async (fileUrl: string, title: string) => {
+    const { data, error } = await supabase.storage
+      .from("materials")
+      .createSignedUrl(fileUrl, 3600);
+    if (error || !data) {
+      toast.error("다운로드 링크 생성에 실패했습니다.");
+      return;
+    }
+    const a = document.createElement("a");
+    a.href = data.signedUrl;
+    a.download = `${title}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
 
   const meta = user?.user_metadata;
   const typeLabel = userTypeLabel(meta?.user_type);
@@ -115,7 +134,7 @@ export default function MyPage() {
       )}
 
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#365927]">구매 내역</h1>
+        <h1 className="text-2xl font-bold text-[#365927]">마이페이지</h1>
         <p className="text-sm text-[#5a7d50] mt-1">
           {loading ? "로딩 중..." : `총 ${orders.length}건의 구매`}
         </p>
@@ -134,79 +153,112 @@ export default function MyPage() {
         </div>
       )}
 
-      {!loading && orders.length > 0 && (
-        <ul className="space-y-3">
-          {orders.map((order) => {
-            const m = order.materials;
-            const deleted = !m;
-            const bg = colorForId(order.id);
-            return (
-              <li
-                key={order.id}
-                className="flex items-center gap-4 bg-white border border-[#d6e4d3] rounded-xl p-4"
-              >
-                {m?.thumbnail_url ? (
-                  <img
-                    src={m.thumbnail_url}
-                    alt={m.title}
-                    className="w-20 h-24 rounded object-cover flex-shrink-0 border border-[#d6e4d3]"
-                  />
+      {!loading && orders.length > 0 && (() => {
+        const paidOrders = orders.filter((o) => !isFreeCategory(o.materials?.category ?? ""));
+        const freeOrders = orders.filter((o) => isFreeCategory(o.materials?.category ?? ""));
+
+        const renderOrderItem = (order: OrderRow, isFree: boolean) => {
+          const m = order.materials;
+          const deleted = !m;
+          const bg = colorForId(order.id);
+          return (
+            <li
+              key={order.id}
+              className="flex items-center gap-4 bg-white border border-[#d6e4d3] rounded-xl p-4"
+            >
+              {m?.thumbnail_url ? (
+                <img
+                  src={m.thumbnail_url}
+                  alt={m.title}
+                  className="w-20 h-24 rounded object-cover flex-shrink-0 border border-[#d6e4d3]"
+                />
+              ) : (
+                <div
+                  className="w-20 h-24 rounded flex-shrink-0 flex items-center justify-center text-white font-bold text-xs p-2 text-center leading-tight"
+                  style={{ background: bg }}
+                >
+                  {deleted ? "삭제됨" : m?.title}
+                </div>
+              )}
+
+              <div className="flex-1 min-w-0">
+                {deleted ? (
+                  <p className="text-sm font-medium text-[#5a7d50] truncate">삭제된 자료</p>
                 ) : (
-                  <div
-                    className="w-20 h-24 rounded flex-shrink-0 flex items-center justify-center text-white font-bold text-xs p-2 text-center leading-tight"
-                    style={{ background: bg }}
-                  >
-                    {deleted ? "삭제됨" : m?.title}
-                  </div>
+                  <>
+                    <Link
+                      href={`/product/${m.id}`}
+                      className="text-base font-medium text-[#1a2e16] hover:text-[#365927] transition truncate block"
+                    >
+                      {m.title}
+                    </Link>
+                    <p className="text-xs text-[#5a7d50] mt-0.5">{m.category}</p>
+                  </>
                 )}
+                <p className="text-sm font-bold text-[#365927] mt-1">
+                  {isFree ? "무료" : `${order.amount.toLocaleString()}원`}
+                </p>
+                <p className="text-xs text-[#8aab82] mt-1">
+                  {new Date(order.created_at).toLocaleDateString("ko-KR", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}{" "}
+                  {isFree ? "다운로드" : "구매"}
+                </p>
+              </div>
 
-                <div className="flex-1 min-w-0">
-                  {deleted ? (
-                    <p className="text-sm font-medium text-[#5a7d50] truncate">
-                      삭제된 자료
-                    </p>
-                  ) : (
-                    <>
-                      <Link
-                        href={`/product/${m.id}`}
-                        className="text-base font-medium text-[#1a2e16] hover:text-[#365927] transition truncate block"
-                      >
-                        {m.title}
-                      </Link>
-                      <p className="text-xs text-[#5a7d50] mt-0.5">
-                        {m.category}
-                      </p>
-                    </>
-                  )}
-                  <p className="text-sm font-bold text-[#365927] mt-1">
-                    {order.amount.toLocaleString()}원
-                  </p>
-                  <p className="text-xs text-[#8aab82] mt-1">
-                    {new Date(order.created_at).toLocaleDateString("ko-KR", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}{" "}
-                    구매
-                  </p>
-                </div>
+              <div className="flex-shrink-0">
+                {isFree ? (
+                  <button
+                    onClick={() => m?.file_url && handleDownload(m.file_url, m.title)}
+                    disabled={!m?.file_url}
+                    className="flex items-center gap-1.5 text-xs font-medium text-white bg-[#365927] px-3 py-1.5 rounded-md hover:bg-[#4a7a38] transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    다운로드
+                  </button>
+                ) : order.is_sent ? (
+                  <span className="text-xs font-medium text-[#365927] bg-[#eaf2e8] px-2.5 py-1 rounded-md">
+                    이메일 발송 완료
+                  </span>
+                ) : (
+                  <span className="text-xs text-[#8aab82] bg-[#f5f9f4] px-2.5 py-1 rounded-md">
+                    이메일 발송 예정
+                  </span>
+                )}
+              </div>
+            </li>
+          );
+        };
 
-                <div className="flex-shrink-0">
-                  {order.is_sent ? (
-                    <span className="text-xs font-medium text-[#365927] bg-[#eaf2e8] px-2.5 py-1 rounded-md">
-                      이메일 발송 완료
-                    </span>
-                  ) : (
-                    <span className="text-xs text-[#8aab82] bg-[#f5f9f4] px-2.5 py-1 rounded-md">
-                      이메일 발송 예정
-                    </span>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+        return (
+          <div className="space-y-8">
+            {paidOrders.length > 0 && (
+              <div>
+                <h2 className="text-sm font-semibold text-[#5a7d50] mb-3 flex items-center gap-2">
+                  <span className="inline-block w-2 h-2 rounded-full bg-[#365927]" />
+                  유료 자료 · {paidOrders.length}건
+                </h2>
+                <ul className="space-y-3">
+                  {paidOrders.map((o) => renderOrderItem(o, false))}
+                </ul>
+              </div>
+            )}
+            {freeOrders.length > 0 && (
+              <div>
+                <h2 className="text-sm font-semibold text-[#5a7d50] mb-3 flex items-center gap-2">
+                  <span className="inline-block w-2 h-2 rounded-full bg-[#8aab82]" />
+                  무료 자료 · {freeOrders.length}건
+                </h2>
+                <ul className="space-y-3">
+                  {freeOrders.map((o) => renderOrderItem(o, true))}
+                </ul>
+              </div>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }

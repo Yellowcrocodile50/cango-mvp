@@ -86,14 +86,14 @@ function SuccessContent() {
       <h1 className="text-2xl font-bold mb-4 text-[#365927]">
         감사합니다. 구매가 완료되었습니다!
       </h1>
-      <p className="text-[#5a7d50] mb-2">자료가 발송되면 구매 내역에서 확인하실 수 있습니다.</p>
+      <p className="text-[#5a7d50] mb-2">자료가 발송되면 마이페이지에서 확인하실 수 있습니다.</p>
       <p className="text-[#8aab82] text-sm mb-8">24시간 이내에 발송해드릴게요!</p>
       <div className="space-y-3">
         <Link
           href="/mypage"
           className="block w-full h-12 bg-[#365927] text-white rounded-lg font-medium hover:bg-[#4a7a38] transition flex items-center justify-center"
         >
-          구매 내역 보기
+          마이페이지 보기
         </Link>
         <Link
           href="/"

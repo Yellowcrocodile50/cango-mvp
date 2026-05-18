@@ -70,14 +70,14 @@ export default function ProductDetail() {
   const handleDownload = async () => {
     setDownloading(true);
     const res = await fetch(`/api/download/${material.id}`);
+    const json = await res.json();
     setDownloading(false);
     if (!res.ok) {
-      toast.error("다운로드 링크 생성에 실패했습니다.");
+      toast.error(json.error ?? "다운로드 링크 생성에 실패했습니다.");
       return;
     }
-    const { signedUrl } = await res.json();
     const a = document.createElement("a");
-    a.href = signedUrl;
+    a.href = json.signedUrl;
     a.download = `${material.title}.pdf`;
     document.body.appendChild(a);
     a.click();

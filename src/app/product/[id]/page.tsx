@@ -99,17 +99,19 @@ export default function ProductDetail() {
     }
   };
 
+  const cartItem = {
+    id: material.id,
+    title: material.title,
+    price: material.price,
+    thumbnail_url: material.thumbnail_url,
+  };
+
   const handleAddToCart = () => {
     if (!user) {
       setShowLoginModal(true);
       return;
     }
-    addItem({
-      id: material.id,
-      title: material.title,
-      price: material.price,
-      thumbnail_url: material.thumbnail_url,
-    });
+    addItem(cartItem);
     toast.success("장바구니에 담겼습니다!");
   };
 
@@ -118,12 +120,7 @@ export default function ProductDetail() {
       setShowLoginModal(true);
       return;
     }
-    addItem({
-      id: material.id,
-      title: material.title,
-      price: material.price,
-      thumbnail_url: material.thumbnail_url,
-    });
+    addItem(cartItem);
     router.push("/checkout");
   };
 

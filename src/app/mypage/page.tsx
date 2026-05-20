@@ -6,6 +6,7 @@ import Link from "next/link";
 import { FileText, Download } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { isFreeCategory } from "@/data/categories";
+import { colorForId } from "@/lib/coverColor";
 import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
 
@@ -21,25 +22,6 @@ interface OrderRow {
     category: string;
     thumbnail_url: string | null;
   } | null;
-}
-
-const coverColors = [
-  "#365927",
-  "#4a7a38",
-  "#2d4a22",
-  "#5a8c4a",
-  "#3d6b2e",
-  "#6b9e5a",
-  "#2a5020",
-  "#4d7040",
-];
-
-function colorForId(id: string): string {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) {
-    hash = (hash * 31 + id.charCodeAt(i)) | 0;
-  }
-  return coverColors[Math.abs(hash) % coverColors.length];
 }
 
 function userTypeLabel(type: string | undefined): string {

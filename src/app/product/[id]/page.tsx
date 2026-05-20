@@ -69,19 +69,26 @@ export default function ProductDetail() {
 
   const handleDownload = async () => {
     setDownloading(true);
-    const res = await fetch(`/api/download/${material.id}`);
-    const json = await res.json();
-    setDownloading(false);
-    if (!res.ok) {
-      toast.error(json.error ?? "다운로드 링크 생성에 실패했습니다.");
-      return;
+    try {
+      const res = await fetch(`/api/download/${material.id}`);
+      const json = await res.json();
+      if (!res.ok) {
+        toast.error(json.error ?? "다운로드 링크 생성에 실패했습니다.");
+        return;
+      }
+      const fileRes = await fetch(json.signedUrl);
+      const blob = await fileRes.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = `${material.title}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    } finally {
+      setDownloading(false);
     }
-    const a = document.createElement("a");
-    a.href = json.signedUrl;
-    a.download = `${material.title}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
   };
 
   const handleAddToCart = () => {

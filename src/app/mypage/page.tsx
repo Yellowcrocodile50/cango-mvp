@@ -93,12 +93,16 @@ export default function MyPage() {
       return;
     }
     const { signedUrl } = await res.json();
+    const fileRes = await fetch(signedUrl);
+    const blob = await fileRes.blob();
+    const blobUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = signedUrl;
+    a.href = blobUrl;
     a.download = `${title}.pdf`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+    URL.revokeObjectURL(blobUrl);
   };
 
   const meta = user?.user_metadata;

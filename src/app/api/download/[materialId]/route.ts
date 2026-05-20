@@ -39,7 +39,7 @@ export async function GET(
 
   const { data: signedData, error: signedError } = await supabaseAdmin.storage
     .from("materials")
-    .createSignedUrl(material.file_url, 3600, { download: `${material.title}.pdf` });
+    .createSignedUrl(material.file_url, 3600);
 
   if (signedError || !signedData) {
     console.error("[download] signed URL error:", signedError?.message);

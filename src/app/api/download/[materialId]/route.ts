@@ -4,8 +4,10 @@ import { isFreeCategory } from "@/data/categories";
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { materialId: string } }
+  { params }: { params: Promise<{ materialId: string }> }
 ) {
+  const { materialId } = await params;
+
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -14,7 +16,7 @@ export async function GET(
   const { data: material, error: dbError } = await supabaseAdmin
     .from("materials")
     .select("file_url, category")
-    .eq("id", params.materialId)
+    .eq("id", materialId)
     .eq("is_deleted", false)
     .maybeSingle();
 

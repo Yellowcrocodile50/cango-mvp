@@ -138,7 +138,7 @@ export default function MyPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-[#365927]">마이페이지</h1>
         <p className="text-sm text-[#5a7d50] mt-1">
-          {loading ? "로딩 중..." : `총 ${orders.length}건의 구매`}
+          {loading ? "로딩 중..." : `총 ${orders.length}건`}
         </p>
       </div>
 

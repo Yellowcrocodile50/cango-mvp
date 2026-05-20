@@ -67,25 +67,33 @@ export default function ProductDetail() {
   const bgColor = colorForId(material.id);
   const isFree = isFreeCategory(material.category);
 
-  const handleDownload = async () => {
+  const handleFreeDownload = async () => {
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
     setDownloading(true);
     try {
-      const res = await fetch(`/api/download/${material.id}`);
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/register-free", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({ materialId: material.id }),
+      });
       const json = await res.json();
       if (!res.ok) {
-        toast.error(json.error ?? "다운로드 링크 생성에 실패했습니다.");
+        toast.error(json.error ?? "오류가 발생했습니다.");
         return;
       }
-      const fileRes = await fetch(json.signedUrl);
-      const blob = await fileRes.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = blobUrl;
-      a.download = `${material.title}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(blobUrl);
+      if (json.alreadyRegistered) {
+        toast.info("이미 마이페이지에 등록된 자료입니다.");
+      } else {
+        toast.success("마이페이지에 등록되었습니다.");
+      }
+      router.push("/mypage");
     } finally {
       setDownloading(false);
     }
@@ -174,11 +182,11 @@ export default function ProductDetail() {
           <div className="space-y-3 mb-6 pr-20 sm:pr-0">
             {isFree ? (
               <button
-                onClick={handleDownload}
+                onClick={handleFreeDownload}
                 disabled={downloading}
                 className="w-full h-14 bg-[#365927] text-white rounded-lg font-medium hover:bg-[#4a7a38] transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {downloading ? "준비 중..." : "무료 다운로드"}
+                {downloading ? "처리 중..." : "무료 다운로드"}
               </button>
             ) : (
               <>

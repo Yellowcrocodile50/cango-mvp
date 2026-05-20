@@ -227,7 +227,7 @@ export default function ProductDetail() {
               <div>
                 <h3 className="font-semibold text-[#365927] mb-2">이용 안내</h3>
                 <p className="text-[#5a7d50] leading-relaxed">
-                  <span className="block">무료로 제공되는 내신 자료입니다.</span>
+                  <span className="block">무료로 제공되는 내신 자료입니다. 마이페이지에서 다운로드하실 수 있습니다.</span>
                   <span className="block">다운로드한 자료의 사용 기간에는 제한이 없습니다.</span>
                 </p>
               </div>

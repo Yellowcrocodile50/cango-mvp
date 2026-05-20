@@ -237,8 +237,8 @@ export default function ProductDetail() {
                 <div>
                   <h3 className="font-semibold text-[#365927] mb-2">자료 제공 안내</h3>
                   <p className="text-[#5a7d50] leading-relaxed">
-                    <span className="block">결제 완료 후 영업일 기준 24시간 이내 등록 이메일로 자료를 발송해 드립니다.</span>
-                    <span className="block">수령한 자료의 사용 기간에는 제한이 없습니다.</span>
+                    <span className="sm:block">결제 완료 후 영업일 기준 24시간 이내 등록 이메일로 자료를 발송해 드립니다.</span>
+                    <span className="sm:block"> 수령한 자료의 사용 기간에는 제한이 없습니다.</span>
                   </p>
                 </div>
                 <div>

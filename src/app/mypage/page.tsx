@@ -69,22 +69,30 @@ export default function MyPage() {
   }, [router]);
 
   const handleDownload = async (materialId: string, title: string) => {
-    const res = await fetch(`/api/download/${materialId}`);
-    if (!res.ok) {
-      toast.error("다운로드 링크 생성에 실패했습니다.");
-      return;
+    try {
+      const res = await fetch(`/api/download/${materialId}`);
+      if (!res.ok) {
+        toast.error("다운로드 링크 생성에 실패했습니다.");
+        return;
+      }
+      const { signedUrl } = await res.json();
+      const fileRes = await fetch(signedUrl);
+      if (!fileRes.ok) {
+        toast.error("파일을 가져오지 못했습니다.");
+        return;
+      }
+      const blob = await fileRes.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = `${title}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    } catch {
+      toast.error("다운로드 중 오류가 발생했습니다.");
     }
-    const { signedUrl } = await res.json();
-    const fileRes = await fetch(signedUrl);
-    const blob = await fileRes.blob();
-    const blobUrl = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = blobUrl;
-    a.download = `${title}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(blobUrl);
   };
 
   const meta = user?.user_metadata;

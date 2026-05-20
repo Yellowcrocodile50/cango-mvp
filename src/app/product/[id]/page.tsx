@@ -94,6 +94,8 @@ export default function ProductDetail() {
         toast.success("마이페이지에 등록되었습니다.");
       }
       router.push("/mypage");
+    } catch {
+      toast.error("네트워크 오류가 발생했습니다.");
     } finally {
       setDownloading(false);
     }

@@ -22,30 +22,31 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "인증에 실패했습니다." }, { status: 401 });
   }
 
-  const { data: material } = await supabaseAdmin
-    .from("materials")
-    .select("category")
-    .eq("id", materialId)
-    .eq("is_deleted", false)
-    .maybeSingle();
+  const [materialRes, existingRes] = await Promise.all([
+    supabaseAdmin
+      .from("materials")
+      .select("category")
+      .eq("id", materialId)
+      .eq("is_deleted", false)
+      .maybeSingle(),
+    supabaseAdmin
+      .from("orders")
+      .select("id")
+      .eq("buyer_id", user.id)
+      .eq("material_id", materialId)
+      .eq("payment_status", "done")
+      .maybeSingle(),
+  ]);
 
-  if (!material) {
+  if (!materialRes.data) {
     return NextResponse.json({ error: "자료를 찾을 수 없습니다." }, { status: 404 });
   }
 
-  if (!isFreeCategory(material.category)) {
+  if (!isFreeCategory(materialRes.data.category)) {
     return NextResponse.json({ error: "무료 자료가 아닙니다." }, { status: 403 });
   }
 
-  const { data: existing } = await supabaseAdmin
-    .from("orders")
-    .select("id")
-    .eq("buyer_id", user.id)
-    .eq("material_id", materialId)
-    .eq("payment_status", "done")
-    .maybeSingle();
-
-  if (existing) {
+  if (existingRes.data) {
     return NextResponse.json({ alreadyRegistered: true });
   }
 

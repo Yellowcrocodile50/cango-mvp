@@ -290,7 +290,7 @@ export default function ProductDetail() {
           <div className="bg-white rounded-xl p-8 max-w-sm w-full mx-4 text-center shadow-xl">
             <h2 className="text-2xl font-bold text-[#365927] mb-3">잠깐, 로그인은 하셨나요?</h2>
             <p className="text-[#5a7d50] text-xs mb-6">
-              장바구니는 로그인 후 이용할 수 있어요.
+              로그인 후 이용하실 수 있어요!
             </p>
             <div className="space-y-3">
               <Link

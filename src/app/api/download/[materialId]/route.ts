@@ -15,7 +15,7 @@ export async function GET(
 
   const { data: material, error: dbError } = await supabaseAdmin
     .from("materials")
-    .select("file_url, category")
+    .select("file_url, category, title")
     .eq("id", materialId)
     .eq("is_deleted", false)
     .maybeSingle();
@@ -39,7 +39,7 @@ export async function GET(
 
   const { data: signedData, error: signedError } = await supabaseAdmin.storage
     .from("materials")
-    .createSignedUrl(material.file_url, 3600);
+    .createSignedUrl(material.file_url, 3600, { download: `${material.title}.pdf` });
 
   if (signedError || !signedData) {
     console.error("[download] signed URL error:", signedError?.message);

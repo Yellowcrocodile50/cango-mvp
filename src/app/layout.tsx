@@ -51,6 +51,15 @@ export const metadata: Metadata = {
   }),
 };
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "CANGO",
+  alternateName: ["캔고", "캔고 입시"],
+  url: SITE_URL,
+  description: SITE_DESCRIPTION,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -61,6 +70,12 @@ export default function RootLayout({
       lang="ko"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <CartProvider>
           <MainShell>{children}</MainShell>

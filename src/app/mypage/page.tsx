@@ -70,7 +70,12 @@ export default function MyPage() {
 
   const handleDownload = async (materialId: string, title: string) => {
     try {
-      const res = await fetch(`/api/download/${materialId}`);
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`/api/download/${materialId}`, {
+        headers: session?.access_token
+          ? { Authorization: `Bearer ${session.access_token}` }
+          : undefined,
+      });
       if (!res.ok) {
         toast.error("다운로드 링크 생성에 실패했습니다.");
         return;

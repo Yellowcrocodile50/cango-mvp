@@ -6,7 +6,6 @@ import {
   TrendingUp,
   Package,
   ClipboardList,
-  Settings,
   LogOut,
   ArrowLeft,
 } from "lucide-react";
@@ -47,11 +46,6 @@ const navItems = [
     title: "내 자료 관리",
     url: "/supplier/materials",
     icon: Package,
-  },
-  {
-    title: "설정",
-    url: "/supplier/settings",
-    icon: Settings,
   },
 ];
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { validatePhone, normalizePhone } from "@/lib/phone";
 
 const GRADES = ["고3/N수", "고2", "고1", "중3", "중2", "중1"];
 
@@ -31,12 +32,6 @@ function validatePassword(v: string) {
 function validateConfirm(password: string, confirm: string) {
   if (!confirm) return "";
   if (password !== confirm) return "비밀번호가 일치하지 않습니다.";
-  return "";
-}
-
-function validatePhone(v: string) {
-  if (!v) return "";
-  if (!/^010-?[0-9]{4}-?[0-9]{4}$/.test(v)) return "올바른 휴대폰 번호를 입력해주세요. (예: 010-1234-5678)";
   return "";
 }
 
@@ -122,7 +117,7 @@ export default function SignupPage() {
           name: username,
           username,
           role: "buyer",
-          phone,
+          phone: normalizePhone(phone),
           privacy_agreed: true,
           marketing_agreed: marketingAgreed,
           user_type: userType ?? "",

@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "인증에 실패했습니다." }, { status: 401 });
   }
 
-  const [materialRes, existingRes] = await Promise.all([
+  const [materialRes, existingRes, profileRes] = await Promise.all([
     supabaseAdmin
       .from("materials")
       .select("category")
@@ -35,6 +35,11 @@ export async function POST(req: NextRequest) {
       .eq("buyer_id", user.id)
       .eq("material_id", materialId)
       .eq("payment_status", "done")
+      .maybeSingle(),
+    supabaseAdmin
+      .from("profiles")
+      .select("phone")
+      .eq("id", user.id)
       .maybeSingle(),
   ]);
 
@@ -56,7 +61,7 @@ export async function POST(req: NextRequest) {
     material_id: materialId,
     buyer_id: user.id,
     buyer_email: user.email,
-    buyer_phone: null,
+    buyer_phone: profileRes.data?.phone ?? null,
     amount: 0,
     payment_status: "done",
     order_id: orderId,

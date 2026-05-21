@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
+import { isFreeCategory } from "@/data/categories";
 
 interface Order {
   id: string;
@@ -24,11 +25,22 @@ interface Order {
   payment_status: string;
   is_sent: boolean;
   created_at: string;
+  first_downloaded_at: string | null;
   material_title: string;
   material_category: string;
   material_id: string;
   user_type: string | null;
   grade: string | null;
+}
+
+function formatDownloadTime(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleString("ko-KR", {
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 export default function OrdersPage() {
@@ -128,41 +140,58 @@ export default function OrdersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {orders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.material_title}</TableCell>
-                    <TableCell className="text-muted-foreground">{order.material_category}</TableCell>
-                    <TableCell>{order.buyer_email}</TableCell>
-                    <TableCell>
-                      {order.user_type ? (
-                        <span>
-                          {order.user_type === "student" ? "학생" : "학부모"}
-                          {order.grade && (
-                            <span className="ml-1 text-muted-foreground">· {order.grade}</span>
-                          )}
-                        </span>
-                      ) : "-"}
-                    </TableCell>
-                    <TableCell>{order.buyer_phone || "-"}</TableCell>
-                    <TableCell>{order.amount.toLocaleString()}원</TableCell>
-                    <TableCell><OrderStatusBadge is_sent={order.is_sent} payment_status={order.payment_status} /></TableCell>
-                    <TableCell>
-                      {new Date(order.created_at).toLocaleDateString("ko-KR")}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {order.payment_status === "done" && !order.is_sent && (
-                        <Button
-                          size="sm"
-                          onClick={() => markAsSent(order.id)}
-                          className="bg-[#365927] hover:bg-[#4a7a38]"
-                        >
-                          <Send className="mr-1 h-3 w-3" />
-                          발송완료
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {orders.map((order) => {
+                  const isFree = isFreeCategory(order.material_category);
+                  return (
+                    <TableRow key={order.id}>
+                      <TableCell className="font-medium">{order.material_title}</TableCell>
+                      <TableCell className="text-muted-foreground">{order.material_category}</TableCell>
+                      <TableCell>{order.buyer_email}</TableCell>
+                      <TableCell>
+                        {order.user_type ? (
+                          <span>
+                            {order.user_type === "student" ? "학생" : "학부모"}
+                            {order.grade && (
+                              <span className="ml-1 text-muted-foreground">· {order.grade}</span>
+                            )}
+                          </span>
+                        ) : "-"}
+                      </TableCell>
+                      <TableCell>{order.buyer_phone || "-"}</TableCell>
+                      <TableCell>{isFree ? "무료" : `${order.amount.toLocaleString()}원`}</TableCell>
+                      <TableCell>
+                        {isFree ? (
+                          order.first_downloaded_at ? (
+                            <span className="inline-block text-xs font-medium text-[#365927] bg-[#eaf2e8] px-2 py-1 rounded-md whitespace-nowrap">
+                              다운로드 {formatDownloadTime(order.first_downloaded_at)}
+                            </span>
+                          ) : (
+                            <span className="inline-block text-xs text-[#8aab82] bg-[#f5f9f4] px-2 py-1 rounded-md whitespace-nowrap">
+                              미다운로드
+                            </span>
+                          )
+                        ) : (
+                          <OrderStatusBadge is_sent={order.is_sent} payment_status={order.payment_status} />
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {new Date(order.created_at).toLocaleDateString("ko-KR")}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {!isFree && order.payment_status === "done" && !order.is_sent && (
+                          <Button
+                            size="sm"
+                            onClick={() => markAsSent(order.id)}
+                            className="bg-[#365927] hover:bg-[#4a7a38]"
+                          >
+                            <Send className="mr-1 h-3 w-3" />
+                            발송완료
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}

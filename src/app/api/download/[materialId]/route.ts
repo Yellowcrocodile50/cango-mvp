@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { isFreeCategory } from "@/data/categories";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ materialId: string }> }
 ) {
   const { materialId } = await params;
@@ -12,6 +12,12 @@ export async function GET(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+
+  const authHeader = request.headers.get("Authorization");
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  const { data: { user } } = token
+    ? await supabaseAdmin.auth.getUser(token)
+    : { data: { user: null } };
 
   const { data: material, error: dbError } = await supabaseAdmin
     .from("materials")
@@ -44,6 +50,16 @@ export async function GET(
   if (signedError || !signedData) {
     console.error("[download] signed URL error:", signedError?.message);
     return NextResponse.json({ error: "스토리지 오류: " + signedError?.message }, { status: 500 });
+  }
+
+  if (user) {
+    await supabaseAdmin
+      .from("orders")
+      .update({ first_downloaded_at: new Date().toISOString() })
+      .eq("buyer_id", user.id)
+      .eq("material_id", materialId)
+      .eq("payment_status", "done")
+      .is("first_downloaded_at", null);
   }
 
   return NextResponse.json({ signedUrl: signedData.signedUrl });

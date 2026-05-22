@@ -22,9 +22,13 @@ export default function SupplierLayout({
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) {
         router.replace("/login?redirect=/supplier");
-      } else {
-        setUser(user);
+        return;
       }
+      if (user.user_metadata?.role !== "supplier") {
+        router.replace("/");
+        return;
+      }
+      setUser(user);
       setLoading(false);
     });
   }, [router]);

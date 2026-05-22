@@ -296,7 +296,7 @@ export default function SignupPage() {
             />
             <span className="text-sm text-[#365927]">
               <span className="font-medium">[필수]</span>{" "}
-              <Link href="/privacy-policy" target="_blank" className="hover:text-[#4a7a38]">
+              <Link href="/privacy" target="_blank" className="hover:text-[#4a7a38]">
                 개인정보 처리방침에 동의합니다
               </Link>
             </span>

@@ -83,9 +83,10 @@ export default function StatsPage() {
         .select("id, category")
         .eq("supplier_id", user.id);
 
-      const materialIds = (myMaterials ?? []).map((m) => m.id);
+      const materials = myMaterials ?? [];
+      const materialIds = materials.map((m) => m.id);
       const freeSet = new Set(
-        (myMaterials ?? []).filter((m) => isFreeCategory(m.category)).map((m) => m.id)
+        materials.filter((m) => isFreeCategory(m.category)).map((m) => m.id)
       );
       setFreeMaterialIds(freeSet);
 
@@ -157,7 +158,7 @@ export default function StatsPage() {
     return Math.max(0, ...dailyData.map((d) => d.paidCount + d.freeCount));
   }, [tab, dailyData]);
 
-  const yMax = niceMax(rawMax || 1);
+  const yMax = niceMax(rawMax);
   const yTicks = [0, 0.25, 0.5, 0.75, 1].map((r) => Math.round(yMax * r));
 
   const showXLabel = (idx: number, len: number) => {
@@ -233,8 +234,6 @@ export default function StatsPage() {
 
           {loading ? (
             <p className="text-sm text-muted-foreground py-20 text-center">로딩 중...</p>
-          ) : dailyData.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-20 text-center">데이터가 없습니다.</p>
           ) : (
             <div className="flex">
               <div className="flex flex-col justify-between h-64 pr-2 text-xs text-[#8aab82] text-right shrink-0">

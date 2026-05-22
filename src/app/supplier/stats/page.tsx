@@ -255,7 +255,7 @@ export default function StatsPage() {
                     />
                   ))}
 
-                  <div className="absolute inset-0 flex items-end gap-px px-1">
+                  <div className="absolute inset-0 flex items-stretch gap-px px-1">
                     {dailyData.map((d) => {
                       const paidH = yMax === 0 ? 0 : (d.paidAmount / yMax) * 100;
                       const countPaidH = yMax === 0 ? 0 : (d.paidCount / yMax) * 100;

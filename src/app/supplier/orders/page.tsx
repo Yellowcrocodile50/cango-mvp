@@ -31,6 +31,7 @@ interface Order {
   material_id: string;
   user_type: string | null;
   grade: string | null;
+  buyer_username: string | null;
 }
 
 function formatDownloadTime(iso: string): string {
@@ -79,12 +80,12 @@ export default function OrdersPage() {
     const { data: profiles } = buyerIds.length > 0
       ? await supabase
           .from("profiles")
-          .select("id, user_type, grade")
+          .select("id, username, user_type, grade")
           .in("id", buyerIds)
       : { data: [] };
 
     const profileMap = new Map(
-      (profiles || []).map((p) => [p.id, { user_type: p.user_type, grade: p.grade }])
+      (profiles || []).map((p) => [p.id, { username: p.username, user_type: p.user_type, grade: p.grade }])
     );
 
     setOrders(
@@ -92,6 +93,7 @@ export default function OrdersPage() {
         ...o,
         material_title: materialMap.get(o.material_id)?.title || "알 수 없음",
         material_category: materialMap.get(o.material_id)?.category || "-",
+        buyer_username: profileMap.get(o.buyer_id)?.username ?? null,
         user_type: profileMap.get(o.buyer_id)?.user_type ?? null,
         grade: profileMap.get(o.buyer_id)?.grade ?? null,
       }))
@@ -131,7 +133,8 @@ export default function OrdersPage() {
                 <TableRow>
                   <TableHead>자료명</TableHead>
                   <TableHead>카테고리</TableHead>
-                  <TableHead>구매자</TableHead>
+                  <TableHead>아이디</TableHead>
+                  <TableHead>이메일</TableHead>
                   <TableHead>구분 / 학년</TableHead>
                   <TableHead>전화번호</TableHead>
                   <TableHead>금액</TableHead>
@@ -147,6 +150,7 @@ export default function OrdersPage() {
                     <TableRow key={order.id}>
                       <TableCell className="font-medium">{order.material_title}</TableCell>
                       <TableCell className="text-muted-foreground">{order.material_category}</TableCell>
+                      <TableCell>{order.buyer_username || "-"}</TableCell>
                       <TableCell>{order.buyer_email}</TableCell>
                       <TableCell>
                         {order.user_type ? (

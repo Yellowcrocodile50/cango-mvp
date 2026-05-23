@@ -66,14 +66,16 @@ export default function StatsPage() {
   const [startDate, setStartDate] = useState(isoDate(monthAgo));
   const [endDate, setEndDate] = useState(isoDate(today));
   const [orders, setOrders] = useState<OrderRow[]>([]);
+  const [materialIds, setMaterialIds] = useState<string[] | null>(null);
   const [freeMaterialIds, setFreeMaterialIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
+  // materials는 mount 시 1회만 조회 (날짜 변경 시 재조회 방지)
   useEffect(() => {
     (async () => {
-      setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        setMaterialIds([]);
         setLoading(false);
         return;
       }
@@ -84,11 +86,19 @@ export default function StatsPage() {
         .eq("supplier_id", user.id);
 
       const materials = myMaterials ?? [];
-      const materialIds = materials.map((m) => m.id);
-      const freeSet = new Set(
-        materials.filter((m) => isFreeCategory(m.category)).map((m) => m.id)
+      setFreeMaterialIds(
+        new Set(materials.filter((m) => isFreeCategory(m.category)).map((m) => m.id))
       );
-      setFreeMaterialIds(freeSet);
+      setMaterialIds(materials.map((m) => m.id));
+    })();
+  }, []);
+
+  // orders는 materials 로드 후 + 날짜 변경 시 조회
+  useEffect(() => {
+    if (materialIds === null) return;
+
+    (async () => {
+      setLoading(true);
 
       if (materialIds.length === 0) {
         setOrders([]);
@@ -110,7 +120,7 @@ export default function StatsPage() {
       setOrders(rawOrders ?? []);
       setLoading(false);
     })();
-  }, [startDate, endDate]);
+  }, [materialIds, startDate, endDate]);
 
   const dailyData: DailyEntry[] = useMemo(() => {
     const start = new Date(`${startDate}T00:00:00+09:00`);

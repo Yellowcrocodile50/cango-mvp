@@ -70,7 +70,7 @@ export default function OrdersPage() {
 
     const { data: rawOrders } = await supabase
       .from("orders")
-      .select("*")
+      .select("id, buyer_id, buyer_email, buyer_phone, amount, payment_status, is_sent, created_at, first_downloaded_at, material_id")
       .in("material_id", materialIds)
       .order("created_at", { ascending: false });
 

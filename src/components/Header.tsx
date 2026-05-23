@@ -183,12 +183,6 @@ export default function Header() {
                     {user.user_metadata?.name || user.email}님
                   </span>
                   <Link
-                    href="/"
-                    className="text-[#5a7d50] hover:text-[#365927] transition font-medium"
-                  >
-                    돌아가기
-                  </Link>
-                  <Link
                     href="/supplier"
                     className="text-[#365927] hover:text-[#4a7a38] transition font-medium"
                   >

@@ -286,6 +286,21 @@ export default function SignupPage() {
 
         {/* 동의 */}
         <div className="space-y-3 pt-1">
+          <div className="flex items-start gap-3 pb-3 border-b border-[#d6e4d3]">
+            <input
+              id="agree-all"
+              type="checkbox"
+              checked={privacyAgreed && marketingAgreed}
+              onChange={(e) => {
+                setPrivacyAgreed(e.target.checked);
+                setMarketingAgreed(e.target.checked);
+              }}
+              className="mt-0.5 h-4 w-4 rounded border-[#d6e4d3] accent-[#365927] cursor-pointer"
+            />
+            <span className="text-sm font-semibold text-[#365927]">
+              전체 동의
+            </span>
+          </div>
           <div className="flex items-start gap-3">
             <input
               id="privacy"
@@ -307,7 +322,7 @@ export default function SignupPage() {
               type="checkbox"
               checked={marketingAgreed}
               onChange={(e) => setMarketingAgreed(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-[#d6e4d3] accent-[#365927] cursor-pointer"
+              className="mt-0.5 h-4 w-4 rounded border-[#d6e4d3] accent-[#5a7d50] cursor-pointer"
             />
             <span className="text-sm text-[#5a7d50]">
               <span className="font-medium">[선택]</span>{" "}

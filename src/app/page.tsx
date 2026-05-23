@@ -17,11 +17,21 @@ function ProductGrid() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    const applyUser = (user: { id: string; user_metadata?: { role?: string } } | null | undefined) => {
       if (user?.user_metadata?.role === "supplier") {
         setSupplierUserId(user.id);
+      } else {
+        setSupplierUserId(null);
       }
-    });
+    };
+
+    supabase.auth.getUser().then(({ data: { user } }) => applyUser(user));
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => applyUser(session?.user ?? null)
+    );
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const fetchMaterials = useCallback(() => {

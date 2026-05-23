@@ -9,6 +9,7 @@ import {
   BarChart3,
   LogOut,
   ArrowLeft,
+  Bell,
 } from "lucide-react";
 import {
   Sidebar,
@@ -52,6 +53,11 @@ const navItems = [
     title: "내 자료 관리",
     url: "/supplier/materials",
     icon: Package,
+  },
+  {
+    title: "마케팅 동의 여부",
+    url: "/supplier/marketing",
+    icon: Bell,
   },
 ];
 

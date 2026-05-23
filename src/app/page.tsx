@@ -6,7 +6,7 @@ import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
 import SupplierUploadSection from "@/components/SupplierUploadSection";
 import { supabase } from "@/lib/supabase";
-import { categoryGroups, getBreadcrumb } from "@/data/categories";
+import { categoryGroups, getBreadcrumb, isFreeCategory } from "@/data/categories";
 import type { Material } from "@/types/material";
 
 function ProductGrid() {
@@ -61,7 +61,7 @@ function ProductGrid() {
         if (subGroup) return subGroup.items.includes(m.category);
         return m.category === category;
       })
-    : materials;
+    : materials.filter((m) => !isFreeCategory(m.category));
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">

@@ -155,7 +155,7 @@ export default function StatsPage() {
     if (tab === "amount") {
       return Math.max(0, ...dailyData.map((d) => d.paidAmount));
     }
-    return Math.max(0, ...dailyData.map((d) => d.paidCount + d.freeCount));
+    return Math.max(0, ...dailyData.flatMap((d) => [d.paidCount, d.freeCount]));
   }, [tab, dailyData]);
 
   const yMax = niceMax(rawMax);
@@ -275,14 +275,14 @@ export default function StatsPage() {
                               style={{ height: `${paidH}%` }}
                             />
                           ) : (
-                            <div className="w-full flex flex-col justify-end" style={{ height: "100%" }}>
+                            <div className="w-full flex flex-row items-end gap-px h-full">
                               <div
-                                className="w-full bg-[#c8d8be] group-hover:bg-[#b5cba8] transition-colors"
-                                style={{ height: `${countFreeH}%` }}
+                                className="flex-1 bg-[#365927] hover:bg-[#4a7a38] rounded-t-sm transition-colors"
+                                style={{ height: `${countPaidH}%` }}
                               />
                               <div
-                                className="w-full bg-[#365927] group-hover:bg-[#4a7a38] rounded-t-sm transition-colors"
-                                style={{ height: `${countPaidH}%` }}
+                                className="flex-1 bg-[#c8d8be] hover:bg-[#b5cba8] rounded-t-sm transition-colors"
+                                style={{ height: `${countFreeH}%` }}
                               />
                             </div>
                           )}

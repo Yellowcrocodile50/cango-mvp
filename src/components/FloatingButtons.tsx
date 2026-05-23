@@ -1,6 +1,6 @@
 "use client";
 
-const KAKAO_CHANNEL_URL = "https://pf.kakao.com/_BpejX/friend";
+const KAKAO_CHANNEL_URL = "https://pf.kakao.com/_xnANbX/friend";
 
 export default function FloatingButtons() {
   return (

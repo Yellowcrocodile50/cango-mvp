@@ -35,6 +35,9 @@ export default function MyPage() {
   const [user, setUser] = useState<User | null>(null);
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [withdrawPassword, setWithdrawPassword] = useState("");
+  const [withdrawing, setWithdrawing] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -97,6 +100,39 @@ export default function MyPage() {
       URL.revokeObjectURL(blobUrl);
     } catch {
       toast.error("다운로드 중 오류가 발생했습니다.");
+    }
+  };
+
+  const handleWithdraw = async () => {
+    if (!withdrawPassword) {
+      toast.error("비밀번호를 입력해주세요.");
+      return;
+    }
+    setWithdrawing(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/account/withdraw", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.access_token
+            ? { Authorization: `Bearer ${session.access_token}` }
+            : {}),
+        },
+        body: JSON.stringify({ password: withdrawPassword }),
+      });
+      const result = await res.json();
+      if (!res.ok) {
+        toast.error(result.error ?? "탈퇴 처리 중 오류가 발생했습니다.");
+        setWithdrawing(false);
+        return;
+      }
+      await supabase.auth.signOut();
+      toast.success("탈퇴가 완료되었습니다.");
+      router.replace("/");
+    } catch {
+      toast.error("탈퇴 처리 중 오류가 발생했습니다.");
+      setWithdrawing(false);
     }
   };
 
@@ -256,6 +292,69 @@ export default function MyPage() {
           </div>
         );
       })()}
+
+      {!loading && user && (
+        <div className="mt-12 pt-6 border-t border-[#d6e4d3]">
+          <h2 className="text-sm font-semibold text-[#5a7d50] mb-3 flex items-center gap-2">
+            <span className="inline-block w-2 h-2 rounded-full bg-[#8aab82]" />
+            계정 관리
+          </h2>
+          <button
+            type="button"
+            onClick={() => {
+              setWithdrawPassword("");
+              setWithdrawOpen(true);
+            }}
+            className="text-sm text-[#8aab82] hover:text-red-600 underline underline-offset-4 decoration-[#d6e4d3] hover:decoration-red-400 transition"
+          >
+            회원 탈퇴
+          </button>
+        </div>
+      )}
+
+      {withdrawOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="bg-white rounded-xl border border-[#d6e4d3] w-full max-w-md p-6 shadow-lg">
+            <h3 className="text-lg font-bold text-[#1a2e16] mb-2">회원 탈퇴</h3>
+            <div className="text-sm text-[#5a7d50] space-y-2 mb-4">
+              <p>탈퇴 시 다음 내용이 처리됩니다.</p>
+              <ul className="list-disc pl-5 space-y-1 text-[#5a7d50]">
+                <li>로그인 정보 및 프로필이 즉시 삭제됩니다.</li>
+                <li>구매 이력은 회계·세무 목적으로 익명화되어 보존됩니다.</li>
+                <li>발송 대기 중인 주문이 있으면 탈퇴할 수 없습니다.</li>
+              </ul>
+              <p className="text-[#8aab82]">계속 진행하려면 비밀번호를 입력해주세요.</p>
+            </div>
+            <input
+              type="password"
+              value={withdrawPassword}
+              onChange={(e) => setWithdrawPassword(e.target.value)}
+              placeholder="비밀번호"
+              autoComplete="current-password"
+              disabled={withdrawing}
+              className="w-full border border-[#d6e4d3] rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#365927] disabled:bg-[#f5f9f4]"
+            />
+            <div className="flex justify-end gap-2 mt-5">
+              <button
+                type="button"
+                onClick={() => setWithdrawOpen(false)}
+                disabled={withdrawing}
+                className="px-4 py-2 text-sm font-medium text-[#5a7d50] border border-[#d6e4d3] rounded-md hover:bg-[#f5f9f4] transition disabled:opacity-50"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={handleWithdraw}
+                disabled={withdrawing}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition disabled:opacity-50"
+              >
+                {withdrawing ? "처리 중..." : "회원 탈퇴"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

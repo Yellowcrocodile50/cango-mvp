@@ -8,7 +8,7 @@ import { validatePhone, normalizePhone } from "@/lib/phone";
 
 const GRADES = ["고3/N수", "고2", "고1", "중3", "중2", "중1"];
 
-function validateUsername(v: string) {
+function validateUserid(v: string) {
   if (!v) return "";
   if (!/^[a-z0-9]{6,16}$/.test(v)) return "6~16자, 영문 소문자·숫자만 사용 가능합니다.";
   return "";
@@ -38,7 +38,7 @@ function validateConfirm(password: string, confirm: string) {
 export default function SignupPage() {
   const router = useRouter();
 
-  const [username, setUsername] = useState("");
+  const [userid, setUserid] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -48,7 +48,7 @@ export default function SignupPage() {
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
   const [marketingAgreed, setMarketingAgreed] = useState(false);
 
-  const [usernameError, setUsernameError] = useState("");
+  const [useridError, setUseridError] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [confirmError, setConfirmError] = useState("");
@@ -70,14 +70,14 @@ export default function SignupPage() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const uErr = validateUsername(username) || (!username ? "아이디를 입력해주세요." : "");
+    const uErr = validateUserid(userid) || (!userid ? "아이디를 입력해주세요." : "");
     const eErr = validateEmail(email) || (!email ? "이메일을 입력해주세요." : "");
     const pErr = validatePassword(password) || (!password ? "비밀번호를 입력해주세요." : "");
     const cErr = validateConfirm(password, confirmPassword) || (!confirmPassword ? "비밀번호를 다시 입력해 주세요." : "");
     const phErr = validatePhone(phone) || (!phone ? "전화번호를 입력해주세요." : "");
     const utErr = !userType ? "구분을 선택해주세요." : "";
 
-    setUsernameError(uErr);
+    setUseridError(uErr);
     setEmailError(eErr);
     setPasswordError(pErr);
     setConfirmError(cErr);
@@ -100,11 +100,11 @@ export default function SignupPage() {
     const { data: existing } = await supabase
       .from("profiles")
       .select("userid")
-      .eq("userid", username)
+      .eq("userid", userid)
       .maybeSingle();
 
     if (existing) {
-      setUsernameError("이미 사용 중인 아이디입니다.");
+      setUseridError("이미 사용 중인 아이디입니다.");
       setLoading(false);
       return;
     }
@@ -114,7 +114,7 @@ export default function SignupPage() {
       password,
       options: {
         data: {
-          userid: username,
+          userid,
           role: "buyer",
           phone: normalizePhone(phone),
           privacy_agreed: true,
@@ -155,15 +155,15 @@ export default function SignupPage() {
           <label className="block text-sm font-medium mb-1 text-[#365927]">아이디</label>
           <input
             type="text"
-            value={username}
+            value={userid}
             onChange={(e) => {
-              setUsername(e.target.value);
-              setUsernameError(validateUsername(e.target.value));
+              setUserid(e.target.value);
+              setUseridError(validateUserid(e.target.value));
             }}
             placeholder="6~16자, 영문 소문자·숫자 사용 가능"
-            className={`w-full h-12 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white ${usernameError ? "border-red-400" : "border-[#d6e4d3]"}`}
+            className={`w-full h-12 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white ${useridError ? "border-red-400" : "border-[#d6e4d3]"}`}
           />
-          {usernameError && <p className="text-red-500 text-xs mt-1">{usernameError}</p>}
+          {useridError && <p className="text-red-500 text-xs mt-1">{useridError}</p>}
         </div>
 
         {/* 이메일 */}

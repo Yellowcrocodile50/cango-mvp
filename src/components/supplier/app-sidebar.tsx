@@ -61,7 +61,7 @@ const navItems = [
   },
 ];
 
-export function AppSidebar({ user }: { user: { email: string; name?: string } }) {
+export function AppSidebar({ user }: { user: { email: string; userid?: string } }) {
   const pathname = usePathname();
 
   const handleLogout = async () => {
@@ -120,11 +120,11 @@ export function AppSidebar({ user }: { user: { email: string; name?: string } })
           <SidebarMenuItem>
             <SidebarMenuButton size="lg">
               <div className="flex aspect-square size-8 items-center justify-center rounded-full bg-[#365927] text-white text-xs font-bold">
-                {(user.name || user.email)[0].toUpperCase()}
+                {(user.userid || user.email)[0].toUpperCase()}
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">
-                  {user.name || "공급자"}
+                  {user.userid || "공급자"}
                 </span>
                 <span className="truncate text-xs text-muted-foreground">
                   {user.email}

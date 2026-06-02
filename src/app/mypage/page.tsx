@@ -147,11 +147,11 @@ export default function MyPage() {
       {!loading && user && (
         <div className="flex items-center gap-4 bg-white border border-[#d6e4d3] rounded-xl p-5 mb-6">
           <div className="w-12 h-12 rounded-full bg-[#eaf2e8] flex items-center justify-center text-[#365927] font-bold text-lg flex-shrink-0">
-            {(meta?.username as string | undefined)?.[0]?.toUpperCase() ?? "U"}
+            {(meta?.userid as string | undefined)?.[0]?.toUpperCase() ?? "U"}
           </div>
           <div className="min-w-0">
             <p className="font-semibold text-[#1a2e16] text-base truncate">
-              {meta?.username ?? user.email}
+              {meta?.userid ?? user.email}
             </p>
             {typeLabel && (
               <p className="text-sm text-[#5a7d50] mt-0.5">

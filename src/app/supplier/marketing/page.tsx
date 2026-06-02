@@ -14,7 +14,7 @@ import {
 
 interface Profile {
   id: string;
-  username: string | null;
+  userid: string | null;
   email: string | null;
   user_type: string | null;
   grade: string | null;
@@ -30,7 +30,7 @@ export default function MarketingPage() {
   const fetchProfiles = useCallback(async () => {
     const { data } = await supabase
       .from("profiles")
-      .select("id, username, email, user_type, grade, phone, marketing_agreed, created_at")
+      .select("id, userid, email, user_type, grade, phone, marketing_agreed, created_at")
       .eq("role", "buyer")
       .order("created_at", { ascending: false });
 
@@ -87,7 +87,7 @@ export default function MarketingPage() {
                         : "bg-red-50 hover:bg-red-100"
                     }
                   >
-                    <TableCell className="font-medium">{p.username || "-"}</TableCell>
+                    <TableCell className="font-medium">{p.userid || "-"}</TableCell>
                     <TableCell>{p.email || "-"}</TableCell>
                     <TableCell>
                       {p.user_type ? (

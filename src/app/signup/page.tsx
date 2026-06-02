@@ -99,8 +99,8 @@ export default function SignupPage() {
 
     const { data: existing } = await supabase
       .from("profiles")
-      .select("username")
-      .eq("username", username)
+      .select("userid")
+      .eq("userid", username)
       .maybeSingle();
 
     if (existing) {
@@ -114,8 +114,7 @@ export default function SignupPage() {
       password,
       options: {
         data: {
-          name: username,
-          username,
+          userid: username,
           role: "buyer",
           phone: normalizePhone(phone),
           privacy_agreed: true,

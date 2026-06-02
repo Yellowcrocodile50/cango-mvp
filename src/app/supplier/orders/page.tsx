@@ -31,7 +31,7 @@ interface Order {
   material_id: string;
   user_type: string | null;
   grade: string | null;
-  buyer_username: string | null;
+  buyer_userid: string | null;
 }
 
 function formatDownloadTime(iso: string): string {
@@ -80,12 +80,12 @@ export default function OrdersPage() {
     const { data: profiles } = buyerIds.length > 0
       ? await supabase
           .from("profiles")
-          .select("id, username, user_type, grade")
+          .select("id, userid, user_type, grade")
           .in("id", buyerIds)
       : { data: [] };
 
     const profileMap = new Map(
-      (profiles || []).map((p) => [p.id, { username: p.username, user_type: p.user_type, grade: p.grade }])
+      (profiles || []).map((p) => [p.id, { userid: p.userid, user_type: p.user_type, grade: p.grade }])
     );
 
     setOrders(
@@ -93,7 +93,7 @@ export default function OrdersPage() {
         ...o,
         material_title: materialMap.get(o.material_id)?.title || "알 수 없음",
         material_category: materialMap.get(o.material_id)?.category || "-",
-        buyer_username: profileMap.get(o.buyer_id)?.username ?? null,
+        buyer_userid: profileMap.get(o.buyer_id)?.userid ?? null,
         user_type: profileMap.get(o.buyer_id)?.user_type ?? null,
         grade: profileMap.get(o.buyer_id)?.grade ?? null,
       }))
@@ -150,7 +150,7 @@ export default function OrdersPage() {
                     <TableRow key={order.id}>
                       <TableCell className="font-medium">{order.material_title}</TableCell>
                       <TableCell className="text-muted-foreground">{order.material_category}</TableCell>
-                      <TableCell>{order.buyer_username || "-"}</TableCell>
+                      <TableCell>{order.buyer_userid || "-"}</TableCell>
                       <TableCell>{order.buyer_email}</TableCell>
                       <TableCell>
                         {order.user_type ? (

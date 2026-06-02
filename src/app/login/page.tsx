@@ -23,7 +23,7 @@ function LoginForm() {
     const { data: profile } = await supabase
       .from("profiles")
       .select("email")
-      .eq("username", identifier)
+      .eq("userid", identifier)
       .maybeSingle();
 
     if (!profile) {

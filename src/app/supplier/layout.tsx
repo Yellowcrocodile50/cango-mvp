@@ -49,7 +49,7 @@ export default function SupplierLayout({
         <AppSidebar
           user={{
             email: user.email || "",
-            name: user.user_metadata?.name,
+            userid: user.user_metadata?.userid,
           }}
         />
         <SidebarInset>

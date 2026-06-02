@@ -178,7 +178,7 @@ export default function Header() {
               user.user_metadata?.role === "supplier" ? (
                 <>
                   <span className="text-[#365927] font-medium">
-                    {user.user_metadata?.name || user.email}님
+                    {user.user_metadata?.userid || user.email}님
                   </span>
                   <Link
                     href="/supplier"
@@ -202,7 +202,7 @@ export default function Header() {
                       aria-haspopup="menu"
                       aria-expanded={menuOpen}
                     >
-                      <span>{user.user_metadata?.name || user.email}님</span>
+                      <span>{user.user_metadata?.userid || user.email}님</span>
                       <ChevronDown
                         className={`h-4 w-4 transition-transform ${
                           menuOpen ? "rotate-180" : ""

@@ -105,7 +105,17 @@ function BankPendingContent() {
       <div className="space-y-3 text-sm text-[#5a7d50] bg-[#f5f9f4] rounded-lg p-4 mb-8">
         <p>✓ 입금 확인 후 <strong className="text-[#365927]">24시간 이내</strong> 등록 이메일로 자료를 발송해드립니다.</p>
         <p>✓ 주문 후 <strong className="text-[#365927]">2일 이내</strong> 입금하지 않으면 주문이 자동 취소됩니다.</p>
-        <p>✓ 입금자명을 다르게 입력한 경우 고객센터로 문의해 주세요.</p>
+        <p>✓ 입금자명이 다를 경우{" "}
+          <a
+            href="https://pf.kakao.com/_xnANbX/chat"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#365927] font-medium underline"
+          >
+            카카오톡 채널 · CANGO 캔고
+          </a>
+          로 문의해 주세요.
+        </p>
       </div>
 
       <div className="space-y-3">

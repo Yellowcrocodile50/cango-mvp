@@ -19,6 +19,7 @@ import { isFreeCategory } from "@/data/categories";
 interface Order {
   id: string;
   order_id: string | null;
+  depositor_name: string | null;
   buyer_id: string | null;
   buyer_email: string;
   buyer_phone: string | null;
@@ -72,7 +73,7 @@ export default function OrdersPage() {
 
     const { data: rawOrders } = await supabase
       .from("orders")
-      .select("id, order_id, buyer_id, buyer_email, buyer_phone, amount, payment_status, payment_method, is_sent, created_at, first_downloaded_at, material_id")
+      .select("id, order_id, depositor_name, buyer_id, buyer_email, buyer_phone, amount, payment_status, payment_method, is_sent, created_at, first_downloaded_at, material_id")
       .in("material_id", materialIds)
       .order("created_at", { ascending: false });
 
@@ -181,7 +182,17 @@ export default function OrdersPage() {
                     <TableRow key={order.id} className={order.payment_method === "bank_transfer" && order.payment_status === "pending" ? "bg-blue-50/50" : ""}>
                       <TableCell className="font-medium">{order.material_title}</TableCell>
                       <TableCell className="text-muted-foreground">{order.material_category}</TableCell>
-                      <TableCell>{order.buyer_userid || "-"}</TableCell>
+                      <TableCell>
+                        <div>{order.buyer_userid || "-"}</div>
+                        {order.payment_method === "bank_transfer" && (
+                          <div className="text-xs mt-0.5">
+                            {order.depositor_name
+                              ? <span className="text-blue-600">입금자: {order.depositor_name}</span>
+                              : <span className="text-[#8aab82]">입금자명 미입력</span>
+                            }
+                          </div>
+                        )}
+                      </TableCell>
                       <TableCell>{order.buyer_email}</TableCell>
                       <TableCell>
                         {order.user_type ? (

@@ -14,6 +14,7 @@ interface OrderRow {
   id: string;
   amount: number;
   payment_status: string;
+  payment_method: string;
   is_sent: boolean;
   created_at: string;
   materials: {
@@ -60,10 +61,10 @@ export default function MyPage() {
       const { data } = await supabase
         .from("orders")
         .select(
-          "id, amount, payment_status, is_sent, created_at, materials(id, title, category, thumbnail_url)"
+          "id, amount, payment_status, payment_method, is_sent, created_at, materials(id, title, category, thumbnail_url)"
         )
         .eq("buyer_id", authUser.id)
-        .eq("payment_status", "done")
+        .or("payment_status.eq.done,and(payment_status.eq.pending,payment_method.eq.bank_transfer)")
         .order("created_at", { ascending: false });
 
       setOrders((data as unknown as OrderRow[]) || []);
@@ -251,6 +252,10 @@ export default function MyPage() {
                     <Download className="w-3.5 h-3.5" />
                     다운로드
                   </button>
+                ) : order.payment_method === "bank_transfer" && order.payment_status === "pending" ? (
+                  <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md">
+                    입금 확인 중
+                  </span>
                 ) : order.is_sent ? (
                   <span className="text-xs font-medium text-[#365927] bg-[#eaf2e8] px-2.5 py-1 rounded-md">
                     이메일 발송 완료

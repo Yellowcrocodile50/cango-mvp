@@ -15,6 +15,22 @@ function BankPendingContent() {
   const [depositorName, setDepositorName] = useState("");
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [transferred, setTransferred] = useState(false);
+
+  const saveDepositorName = async (): Promise<boolean> => {
+    if (!depositorName.trim() || !orderId) return false;
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch("/api/set-depositor", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session?.access_token}`,
+      },
+      body: JSON.stringify({ orderId, depositorName }),
+    });
+    if (res.ok) setSaved(true);
+    return res.ok;
+  };
 
   const handleSave = async () => {
     if (!depositorName.trim()) {
@@ -26,24 +42,17 @@ function BankPendingContent() {
       return;
     }
     setSaving(true);
-
-    const { data: { session } } = await supabase.auth.getSession();
-    const res = await fetch("/api/set-depositor", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session?.access_token}`,
-      },
-      body: JSON.stringify({ orderId, depositorName }),
-    });
-
-    if (res.ok) {
-      setSaved(true);
-      toast.success("입금자명이 저장되었습니다.");
-    } else {
-      toast.error("저장에 실패했습니다. 다시 시도해주세요.");
-    }
+    const ok = await saveDepositorName();
+    if (ok) toast.success("입금자명이 저장되었습니다.");
+    else toast.error("저장에 실패했습니다. 다시 시도해주세요.");
     setSaving(false);
+  };
+
+  const handleTransfer = async () => {
+    if (depositorName.trim() && !saved) {
+      await saveDepositorName();
+    }
+    setTransferred(true);
   };
 
   return (
@@ -102,7 +111,7 @@ function BankPendingContent() {
       </div>
 
       {/* 안내 문구 */}
-      <div className="space-y-3 text-sm text-[#5a7d50] bg-[#f5f9f4] rounded-lg p-4 mb-8">
+      <div className="space-y-3 text-sm text-[#5a7d50] bg-[#f5f9f4] rounded-lg p-4 mb-6">
         <p>✓ 입금 확인 후 <strong className="text-[#365927]">24시간 이내</strong> 등록 이메일로 자료를 발송해드립니다.</p>
         <p>✓ 주문 후 <strong className="text-[#365927]">2일 이내</strong> 입금하지 않으면 주문이 자동 취소됩니다.</p>
         <p>✓ 입금자명이 다를 경우{" "}
@@ -117,6 +126,28 @@ function BankPendingContent() {
           로 문의해 주세요.
         </p>
       </div>
+
+      {/* 입금 완료 버튼 / 완료 메시지 */}
+      {transferred ? (
+        <div className="bg-[#eaf2e8] border border-[#b8d9b4] rounded-xl p-6 mb-6 text-center">
+          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-xl mx-auto mb-3 text-[#365927] font-bold">
+            ✓
+          </div>
+          <p className="font-semibold text-[#1a2e16] mb-1">
+            입금 내역 확인 후 자료를 보내드리겠습니다.
+          </p>
+          <p className="text-sm text-[#5a7d50]">
+            자료의 발송 상태는 마이페이지에서 확인할 수 있습니다!
+          </p>
+        </div>
+      ) : (
+        <button
+          onClick={handleTransfer}
+          className="w-full h-12 bg-[#365927] text-white rounded-lg font-medium hover:bg-[#4a7a38] transition mb-6 cursor-pointer"
+        >
+          입금 완료했어요
+        </button>
+      )}
 
       <div className="space-y-3">
         <Link

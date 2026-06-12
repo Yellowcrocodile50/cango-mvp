@@ -12,6 +12,7 @@ import type { User } from "@supabase/supabase-js";
 
 interface OrderRow {
   id: string;
+  order_id: string | null;
   amount: number;
   payment_status: string;
   payment_method: string;
@@ -61,7 +62,7 @@ export default function MyPage() {
       const { data } = await supabase
         .from("orders")
         .select(
-          "id, amount, payment_status, payment_method, is_sent, created_at, materials(id, title, category, thumbnail_url)"
+          "id, order_id, amount, payment_status, payment_method, is_sent, created_at, materials(id, title, category, thumbnail_url)"
         )
         .eq("buyer_id", authUser.id)
         .or("payment_status.eq.done,and(payment_status.eq.pending,payment_method.eq.bank_transfer)")
@@ -253,9 +254,28 @@ export default function MyPage() {
                     다운로드
                   </button>
                 ) : order.payment_method === "bank_transfer" && order.payment_status === "pending" ? (
-                  <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md">
-                    입금 확인 중
-                  </span>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md">
+                      입금 확인 중
+                    </span>
+                    {order.order_id && (
+                      <Link
+                        href={`/checkout/bank-pending?orderId=${order.order_id}&amount=${order.amount}`}
+                        className="text-xs text-[#8aab82] hover:text-[#365927] underline underline-offset-2"
+                      >
+                        입금 안내 다시 보기
+                      </Link>
+                    )}
+                  </div>
+                ) : order.payment_method === "bank_transfer" && order.payment_status === "done" && !order.is_sent ? (
+                  <div className="flex flex-col items-end gap-1.5">
+                    <span className="text-xs font-medium text-[#365927] bg-[#eaf2e8] px-2.5 py-1 rounded-md">
+                      ✓ 입금 확인됨
+                    </span>
+                    <span className="text-xs text-[#8aab82] bg-[#f5f9f4] px-2.5 py-1 rounded-md">
+                      이메일 발송 예정
+                    </span>
+                  </div>
                 ) : order.is_sent ? (
                   <span className="text-xs font-medium text-[#365927] bg-[#eaf2e8] px-2.5 py-1 rounded-md">
                     이메일 발송 완료

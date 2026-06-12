@@ -13,7 +13,7 @@ import { toast } from "sonner";
 type PayMethod = "CARD" | "EASY_PAY" | "BANK_TRANSFER";
 
 function CheckoutContent() {
-  const { items } = useCart();
+  const { items, removeItems } = useCart();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -101,6 +101,7 @@ function CheckoutContent() {
 
     // 계좌이체: PortOne 없이 바로 안내 페이지로
     if (payMethod === "BANK_TRANSFER") {
+      removeItems(checkoutItems.map((i) => i.id));
       router.push(`/checkout/bank-pending?orderId=${orderId}&amount=${checkoutTotal}`);
       return;
     }
@@ -269,7 +270,7 @@ function CheckoutContent() {
           disabled={submitting}
           className="w-full h-14 bg-[#365927] text-white rounded-lg font-medium hover:bg-[#4a7a38] transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {submitting ? "처리 중..." : `결제하기 (${checkoutTotal.toLocaleString()}원)`}
+          {submitting ? "처리 중..." : payMethod === "BANK_TRANSFER" ? `주문하기 (${checkoutTotal.toLocaleString()}원)` : `결제하기 (${checkoutTotal.toLocaleString()}원)`}
         </button>
       </form>
     </div>

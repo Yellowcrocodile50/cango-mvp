@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Send, CheckCircle } from "lucide-react";
+import { Send, CheckCircle, RefreshCw } from "lucide-react";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { isFreeCategory } from "@/data/categories";
 
@@ -139,7 +139,17 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-[#365927]">주문 관리</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-[#365927]">주문 관리</h1>
+        <button
+          onClick={() => { setLoading(true); fetchOrders(); }}
+          disabled={loading}
+          className="p-1.5 rounded-md text-[#8aab82] hover:text-[#365927] hover:bg-[#f5f9f4] transition cursor-pointer disabled:opacity-50"
+          aria-label="새로고침"
+        >
+          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+        </button>
+      </div>
 
       {orders.filter(o => o.payment_method === "bank_transfer" && o.payment_status === "pending").length > 0 && (
         <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm">

@@ -16,6 +16,7 @@ function BankPendingContent() {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [transferred, setTransferred] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const saveDepositorName = async (): Promise<boolean> => {
     if (!depositorName.trim() || !orderId) return false;
@@ -48,9 +49,25 @@ function BankPendingContent() {
     setSaving(false);
   };
 
+  const copyAccountNumber = async () => {
+    await navigator.clipboard.writeText(BANK_ACCOUNT.number.replace(/-/g, ""));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const handleTransfer = async () => {
-    if (depositorName.trim() && !saved) {
-      await saveDepositorName();
+    if (!depositorName.trim()) {
+      toast.error("입금자명을 입력해주세요. 입금 확인에 꼭 필요합니다.");
+      return;
+    }
+    if (!saved) {
+      setSaving(true);
+      const ok = await saveDepositorName();
+      setSaving(false);
+      if (!ok) {
+        toast.error("저장에 실패했습니다. 다시 시도해주세요.");
+        return;
+      }
     }
     setTransferred(true);
   };
@@ -68,9 +85,15 @@ function BankPendingContent() {
       {/* 계좌 정보 */}
       <div className="bg-[#eaf2e8] rounded-xl p-6 mb-6 text-center">
         <p className="text-sm text-[#5a7d50] mb-1">{BANK_ACCOUNT.bank}</p>
-        <p className="text-2xl font-bold text-[#1a2e16] font-mono tracking-wider mb-1">
+        <p className="text-2xl font-bold text-[#1a2e16] font-mono tracking-wider mb-2">
           {BANK_ACCOUNT.number}
         </p>
+        <button
+          onClick={copyAccountNumber}
+          className="text-xs text-[#365927] bg-white border border-[#b8d9b4] px-3 py-1 rounded-full hover:bg-[#d6edcf] transition cursor-pointer mb-2"
+        >
+          {copied ? "✓ 복사됨" : "계좌번호 복사"}
+        </button>
         <p className="text-sm text-[#5a7d50]">예금주: {BANK_ACCOUNT.holder}</p>
       </div>
 
@@ -143,9 +166,10 @@ function BankPendingContent() {
       ) : (
         <button
           onClick={handleTransfer}
-          className="w-full h-12 bg-[#365927] text-white rounded-lg font-medium hover:bg-[#4a7a38] transition mb-6 cursor-pointer"
+          disabled={saving}
+          className="w-full h-12 bg-[#365927] text-white rounded-lg font-medium hover:bg-[#4a7a38] transition mb-6 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          입금 완료했어요
+          {saving ? "저장 중..." : "입금 완료했어요"}
         </button>
       )}
 

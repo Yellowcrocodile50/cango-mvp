@@ -12,6 +12,7 @@ interface Stats {
   pendingDelivery: number;
   paidOrders: number;
   totalRevenue: number;
+  bankPending: number;
 }
 
 const EMPTY_STATS: Stats = {
@@ -21,6 +22,7 @@ const EMPTY_STATS: Stats = {
   pendingDelivery: 0,
   paidOrders: 0,
   totalRevenue: 0,
+  bankPending: 0,
 };
 
 export default function SupplierDashboard() {
@@ -47,7 +49,7 @@ export default function SupplierDashboard() {
 
     const { data: orderRows, count: ordersCount } = await supabase
       .from("orders")
-      .select("payment_status, is_sent, amount", { count: "exact" })
+      .select("payment_status, is_sent, amount, payment_method", { count: "exact" })
       .in("material_id", materialIds);
 
     // 단일 패스로 통계 집계
@@ -55,7 +57,11 @@ export default function SupplierDashboard() {
     let pendingDelivery = 0;
     let paidOrders = 0;
     let totalRevenue = 0;
+    let bankPending = 0;
     for (const o of orderRows ?? []) {
+      if (o.payment_method === "bank_transfer" && o.payment_status === "pending") {
+        bankPending += 1;
+      }
       if (o.payment_status !== "done") continue;
       paidOrders += 1;
       totalRevenue += o.amount;
@@ -70,6 +76,7 @@ export default function SupplierDashboard() {
       pendingDelivery,
       paidOrders,
       totalRevenue,
+      bankPending,
     });
     setLoading(false);
   }, []);
@@ -89,6 +96,15 @@ export default function SupplierDashboard() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-[#365927]">대시보드</h1>
+
+      {stats.bankPending > 0 && (
+        <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm">
+          <span className="text-blue-600 font-semibold">
+            💰 입금 확인 대기 {stats.bankPending}건
+          </span>
+          <span className="text-blue-500">카카오뱅크 3333-23-1624402 확인 후 주문 관리에서 승인해주세요.</span>
+        </div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {statCards.map((card) => (

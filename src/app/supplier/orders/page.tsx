@@ -12,17 +12,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Send } from "lucide-react";
+import { Send, CheckCircle } from "lucide-react";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { isFreeCategory } from "@/data/categories";
 
 interface Order {
   id: string;
+  order_id: string | null;
   buyer_id: string | null;
   buyer_email: string;
   buyer_phone: string | null;
   amount: number;
   payment_status: string;
+  payment_method: string;
   is_sent: boolean;
   created_at: string;
   first_downloaded_at: string | null;
@@ -70,7 +72,7 @@ export default function OrdersPage() {
 
     const { data: rawOrders } = await supabase
       .from("orders")
-      .select("id, buyer_id, buyer_email, buyer_phone, amount, payment_status, is_sent, created_at, first_downloaded_at, material_id")
+      .select("id, order_id, buyer_id, buyer_email, buyer_phone, amount, payment_status, payment_method, is_sent, created_at, first_downloaded_at, material_id")
       .in("material_id", materialIds)
       .order("created_at", { ascending: false });
 
@@ -113,10 +115,39 @@ export default function OrdersPage() {
     );
   }
 
+  async function confirmBankTransfer(order: Order) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session || !order.order_id) return;
+
+    const res = await fetch("/api/confirm-bank", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ orderId: order.order_id }),
+    });
+
+    if (res.ok) {
+      setOrders((prev) =>
+        prev.map((o) => (o.id === order.id ? { ...o, payment_status: "done" } : o))
+      );
+    }
+  }
+
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-[#365927]">주문 관리</h1>
+
+      {orders.filter(o => o.payment_method === "bank_transfer" && o.payment_status === "pending").length > 0 && (
+        <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm">
+          <span className="text-blue-600 font-semibold">
+            💰 입금 확인 대기 {orders.filter(o => o.payment_method === "bank_transfer" && o.payment_status === "pending").length}건
+          </span>
+          <span className="text-blue-500">카카오뱅크 3333-23-1624402 입금 확인 후 아래에서 승인해주세요.</span>
+        </div>
+      )}
 
       <Card>
         <CardHeader>
@@ -147,7 +178,7 @@ export default function OrdersPage() {
                 {orders.map((order) => {
                   const isFree = isFreeCategory(order.material_category);
                   return (
-                    <TableRow key={order.id}>
+                    <TableRow key={order.id} className={order.payment_method === "bank_transfer" && order.payment_status === "pending" ? "bg-blue-50/50" : ""}>
                       <TableCell className="font-medium">{order.material_title}</TableCell>
                       <TableCell className="text-muted-foreground">{order.material_category}</TableCell>
                       <TableCell>{order.buyer_userid || "-"}</TableCell>
@@ -176,23 +207,36 @@ export default function OrdersPage() {
                             </span>
                           )
                         ) : (
-                          <OrderStatusBadge is_sent={order.is_sent} payment_status={order.payment_status} />
+                          <OrderStatusBadge is_sent={order.is_sent} payment_status={order.payment_status} payment_method={order.payment_method} />
                         )}
                       </TableCell>
                       <TableCell>
                         {new Date(order.created_at).toLocaleDateString("ko-KR")}
                       </TableCell>
                       <TableCell className="text-right">
-                        {!isFree && order.payment_status === "done" && !order.is_sent && (
-                          <Button
-                            size="sm"
-                            onClick={() => markAsSent(order.id)}
-                            className="bg-[#365927] hover:bg-[#4a7a38]"
-                          >
-                            <Send className="mr-1 h-3 w-3" />
-                            발송완료
-                          </Button>
-                        )}
+                        <div className="flex justify-end gap-2">
+                          {!isFree && order.payment_method === "bank_transfer" && order.payment_status === "pending" && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => confirmBankTransfer(order)}
+                              className="border-[#365927] text-[#365927] hover:bg-[#eaf2e8]"
+                            >
+                              <CheckCircle className="mr-1 h-3 w-3" />
+                              입금확인
+                            </Button>
+                          )}
+                          {!isFree && order.payment_status === "done" && !order.is_sent && (
+                            <Button
+                              size="sm"
+                              onClick={() => markAsSent(order.id)}
+                              className="bg-[#365927] hover:bg-[#4a7a38]"
+                            >
+                              <Send className="mr-1 h-3 w-3" />
+                              발송완료
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   );

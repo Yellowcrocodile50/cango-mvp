@@ -6,10 +6,11 @@ import * as PortOne from "@portone/browser-sdk/v2";
 import type { User } from "@supabase/supabase-js";
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/lib/supabase";
+import { BANK_ACCOUNT } from "@/lib/companyInfo";
 import Link from "next/link";
 import { toast } from "sonner";
 
-type PayMethod = "CARD" | "EASY_PAY";
+type PayMethod = "CARD" | "EASY_PAY" | "BANK_TRANSFER";
 
 function CheckoutContent() {
   const { items } = useCart();
@@ -88,12 +89,19 @@ function CheckoutContent() {
       amount: i.price * i.quantity,
       payment_status: "pending",
       order_id: orderId,
+      payment_method: payMethod === "BANK_TRANSFER" ? "bank_transfer" : "portone",
     }));
 
     const { error } = await supabase.from("orders").insert(rows);
     if (error) {
       toast.error("주문 저장 중 오류가 발생했습니다: " + error.message);
       setSubmitting(false);
+      return;
+    }
+
+    // 계좌이체: PortOne 없이 바로 안내 페이지로
+    if (payMethod === "BANK_TRANSFER") {
+      router.push(`/checkout/bank-pending?orderId=${orderId}&amount=${checkoutTotal}`);
       return;
     }
 
@@ -194,7 +202,7 @@ function CheckoutContent() {
         <label className="block mb-3 text-sm font-medium text-[#365927]">
           결제 수단
         </label>
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-3 gap-3 mb-6">
           <button
             type="button"
             onClick={() => setPayMethod("CARD")}
@@ -217,7 +225,31 @@ function CheckoutContent() {
           >
             카카오페이
           </button>
+          <button
+            type="button"
+            onClick={() => setPayMethod("BANK_TRANSFER")}
+            className={`h-12 rounded-lg border-2 text-sm font-medium transition cursor-pointer ${
+              payMethod === "BANK_TRANSFER"
+                ? "border-[#365927] bg-[#eaf2e8] text-[#365927]"
+                : "border-[#d6e4d3] text-[#5a7d50] hover:border-[#5a7d50]"
+            }`}
+          >
+            계좌이체
+          </button>
         </div>
+
+        {payMethod === "BANK_TRANSFER" && (
+          <div className="mb-6 p-4 bg-[#f5f9f4] border border-[#d6e4d3] rounded-lg text-sm">
+            <p className="font-medium text-[#365927] mb-2">입금 계좌 안내</p>
+            <p className="text-[#1a2e16] font-mono text-base font-semibold">
+              {BANK_ACCOUNT.bank} {BANK_ACCOUNT.number}
+            </p>
+            <p className="text-[#5a7d50] mt-1">예금주: {BANK_ACCOUNT.holder}</p>
+            <p className="text-[#8aab82] text-xs mt-2">
+              주문 후 2일 이내 입금하지 않으면 주문이 자동 취소됩니다.
+            </p>
+          </div>
+        )}
 
         <div className="mb-4 p-3 bg-[#f5f9f4] border border-[#d6e4d3] rounded-lg text-xs text-[#5a7d50] leading-relaxed">
           <p className="font-medium text-[#365927] mb-1">환불 안내</p>

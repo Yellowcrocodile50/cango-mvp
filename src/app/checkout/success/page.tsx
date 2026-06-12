@@ -9,17 +9,25 @@ function SuccessContent() {
   const searchParams = useSearchParams();
   const { removeItems } = useCart();
 
-  const paymentKey = searchParams.get("paymentKey");
-  const orderId = searchParams.get("orderId");
-  const amount = Number(searchParams.get("amount"));
-  const paramsValid = !!(paymentKey && orderId && amount);
+  // 팝업 성공 또는 포트원 리다이렉트 성공: ?paymentId=xxx
+  // 포트원 리다이렉트 실패: ?code=xxx&message=xxx
+  const paymentId = searchParams.get("paymentId");
+  const code = searchParams.get("code");
+  const message = searchParams.get("message");
 
-  const [status, setStatus] = useState<"loading" | "success" | "error">(
-    () => (paramsValid ? "loading" : "error")
-  );
-  const [errorMsg, setErrorMsg] = useState(
-    () => (paramsValid ? "" : "잘못된 접근입니다.")
-  );
+  const isRedirectError = code != null;
+  const paramsValid = !!paymentId && !isRedirectError;
+
+  const [status, setStatus] = useState<"loading" | "success" | "error">(() => {
+    if (isRedirectError) return "error";
+    if (paramsValid) return "loading";
+    return "error";
+  });
+  const [errorMsg, setErrorMsg] = useState(() => {
+    if (isRedirectError) return message ?? "결제가 실패했습니다.";
+    if (!paramsValid) return "잘못된 접근입니다.";
+    return "";
+  });
   const hasRun = useRef(false);
 
   useEffect(() => {
@@ -29,7 +37,7 @@ function SuccessContent() {
     fetch("/api/confirm", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ paymentKey, orderId, amount }),
+      body: JSON.stringify({ paymentId }),
     })
       .then((res) => res.json())
       .then((data) => {
@@ -45,7 +53,7 @@ function SuccessContent() {
         setStatus("error");
         setErrorMsg("네트워크 오류가 발생했습니다.");
       });
-  }, [paramsValid, paymentKey, orderId, amount, removeItems]);
+  }, [paramsValid, paymentId, removeItems]);
 
   if (status === "loading") {
     return (

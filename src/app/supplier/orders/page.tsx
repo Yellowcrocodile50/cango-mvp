@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -50,6 +50,11 @@ function formatDownloadTime(iso: string): string {
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const bankPendingCount = useMemo(
+    () => orders.filter((o) => o.payment_method === "bank_transfer" && o.payment_status === "pending").length,
+    [orders]
+  );
 
   const fetchOrders = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -151,10 +156,10 @@ export default function OrdersPage() {
         </button>
       </div>
 
-      {orders.filter(o => o.payment_method === "bank_transfer" && o.payment_status === "pending").length > 0 && (
+      {bankPendingCount > 0 && (
         <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm">
           <span className="text-blue-600 font-semibold">
-            💰 입금 확인 대기 {orders.filter(o => o.payment_method === "bank_transfer" && o.payment_status === "pending").length}건
+            💰 입금 확인 대기 {bankPendingCount}건
           </span>
           <span className="text-blue-500">카카오뱅크 3333-23-1624402 입금 확인 후 아래에서 승인해주세요.</span>
         </div>

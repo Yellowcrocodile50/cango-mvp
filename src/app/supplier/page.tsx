@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, ShoppingCart, CheckCircle, Clock, RefreshCw, ChevronRight } from "lucide-react";
@@ -86,12 +86,12 @@ export default function SupplierDashboard() {
     fetchData();
   }, [fetchData]);
 
-  const statCards = [
+  const statCards = useMemo(() => [
     { title: "등록 자료", value: stats.totalMaterials, icon: Package, description: "등록된 PDF 자료 수" },
     { title: "총 주문", value: stats.totalOrders, icon: ShoppingCart, description: "전체 주문 건수" },
     { title: "발송 완료", value: stats.completedOrders, icon: CheckCircle, description: "파일 발송 완료" },
     { title: "발송 대기", value: stats.pendingDelivery, icon: Clock, description: "결제 완료, 발송 필요", highlight: true },
-  ];
+  ], [stats]);
 
   return (
     <div className="space-y-6">

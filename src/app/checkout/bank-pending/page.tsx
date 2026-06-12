@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { BANK_ACCOUNT } from "@/lib/companyInfo";
@@ -15,19 +15,6 @@ function BankPendingContent() {
   const [depositorName, setDepositorName] = useState("");
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
-
-  // 로그인 유저의 userid를 기본값으로 설정
-  useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return;
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("userid")
-        .eq("id", user.id)
-        .maybeSingle();
-      if (profile?.userid) setDepositorName(profile.userid);
-    });
-  }, []);
 
   const handleSave = async () => {
     if (!depositorName.trim()) {
@@ -97,7 +84,7 @@ function BankPendingContent() {
             type="text"
             value={depositorName}
             onChange={(e) => { setDepositorName(e.target.value); setSaved(false); }}
-            placeholder="입금자명 입력"
+            placeholder="홍길동"
             className="flex-1 h-10 px-3 border border-[#d6e4d3] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white"
           />
           <button

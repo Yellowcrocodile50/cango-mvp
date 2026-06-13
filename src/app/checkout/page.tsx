@@ -12,8 +12,9 @@ import { toast } from "sonner";
 
 type PayMethod = "CARD" | "EASY_PAY" | "BANK_TRANSFER";
 
-// KG이니시스 카드 채널 심사 완료 후 true로 변경
+// PG 심사 완료 후 각각 true로 변경
 const CARD_LIVE = false;
+const EASY_PAY_LIVE = false;
 
 function CheckoutContent() {
   const { items, removeItems } = useCart();
@@ -36,7 +37,7 @@ function CheckoutContent() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [payMethod, setPayMethod] = useState<PayMethod>(CARD_LIVE ? "CARD" : "EASY_PAY");
+  const [payMethod, setPayMethod] = useState<PayMethod>("BANK_TRANSFER");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -225,14 +226,18 @@ function CheckoutContent() {
           </button>
           <button
             type="button"
+            disabled={!EASY_PAY_LIVE}
             onClick={() => setPayMethod("EASY_PAY")}
-            className={`h-12 rounded-lg border-2 text-sm font-medium transition cursor-pointer ${
-              payMethod === "EASY_PAY"
-                ? "border-[#365927] bg-[#eaf2e8] text-[#365927]"
-                : "border-[#d6e4d3] text-[#5a7d50] hover:border-[#5a7d50]"
+            className={`h-12 rounded-lg border-2 text-sm font-medium transition ${
+              !EASY_PAY_LIVE
+                ? "border-[#d6e4d3] text-[#b0c8ab] cursor-not-allowed bg-[#f5f9f4]"
+                : payMethod === "EASY_PAY"
+                ? "border-[#365927] bg-[#eaf2e8] text-[#365927] cursor-pointer"
+                : "border-[#d6e4d3] text-[#5a7d50] hover:border-[#5a7d50] cursor-pointer"
             }`}
           >
             카카오페이
+            {!EASY_PAY_LIVE && <span className="block text-[10px] mt-0.5">준비 중</span>}
           </button>
           <button
             type="button"

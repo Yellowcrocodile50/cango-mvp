@@ -12,6 +12,9 @@ import { toast } from "sonner";
 
 type PayMethod = "CARD" | "EASY_PAY" | "BANK_TRANSFER";
 
+// KG이니시스 카드 채널 심사 완료 후 true로 변경
+const CARD_LIVE = false;
+
 function CheckoutContent() {
   const { items, removeItems } = useCart();
   const router = useRouter();
@@ -33,7 +36,7 @@ function CheckoutContent() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [payMethod, setPayMethod] = useState<PayMethod>("CARD");
+  const [payMethod, setPayMethod] = useState<PayMethod>(CARD_LIVE ? "CARD" : "EASY_PAY");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -146,7 +149,8 @@ function CheckoutContent() {
 
       // 팝업 방식 성공 — success 페이지로 이동
       router.push(`/checkout/success?paymentId=${orderId}`);
-    } catch {
+    } catch (error) {
+      console.error("[PortOne] requestPayment threw:", error);
       fetch("/api/cancel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -206,14 +210,18 @@ function CheckoutContent() {
         <div className="grid grid-cols-3 gap-3 mb-6">
           <button
             type="button"
+            disabled={!CARD_LIVE}
             onClick={() => setPayMethod("CARD")}
-            className={`h-12 rounded-lg border-2 text-sm font-medium transition cursor-pointer ${
-              payMethod === "CARD"
-                ? "border-[#365927] bg-[#eaf2e8] text-[#365927]"
-                : "border-[#d6e4d3] text-[#5a7d50] hover:border-[#5a7d50]"
+            className={`h-12 rounded-lg border-2 text-sm font-medium transition ${
+              !CARD_LIVE
+                ? "border-[#d6e4d3] text-[#b0c8ab] cursor-not-allowed bg-[#f5f9f4]"
+                : payMethod === "CARD"
+                ? "border-[#365927] bg-[#eaf2e8] text-[#365927] cursor-pointer"
+                : "border-[#d6e4d3] text-[#5a7d50] hover:border-[#5a7d50] cursor-pointer"
             }`}
           >
             신용/체크카드
+            {!CARD_LIVE && <span className="block text-[10px] mt-0.5">준비 중</span>}
           </button>
           <button
             type="button"

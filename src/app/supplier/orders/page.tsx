@@ -35,6 +35,8 @@ interface Order {
   user_type: string | null;
   grade: string | null;
   buyer_userid: string | null;
+  cash_receipt_requested: boolean;
+  cash_receipt_phone: string | null;
 }
 
 function formatDownloadTime(iso: string): string {
@@ -78,7 +80,7 @@ export default function OrdersPage() {
 
     const { data: rawOrders } = await supabase
       .from("orders")
-      .select("id, order_id, depositor_name, buyer_id, buyer_email, buyer_phone, amount, payment_status, payment_method, is_sent, created_at, first_downloaded_at, material_id")
+      .select("id, order_id, depositor_name, buyer_id, buyer_email, buyer_phone, amount, payment_status, payment_method, is_sent, created_at, first_downloaded_at, material_id, cash_receipt_requested, cash_receipt_phone")
       .in("material_id", materialIds)
       .order("created_at", { ascending: false });
 
@@ -200,11 +202,16 @@ export default function OrdersPage() {
                       <TableCell>
                         <div>{order.buyer_userid || "-"}</div>
                         {order.payment_method === "bank_transfer" && (
-                          <div className="text-xs mt-0.5">
+                          <div className="text-xs mt-0.5 space-y-0.5">
                             {order.depositor_name
                               ? <span className="text-blue-600">입금자: {order.depositor_name}</span>
                               : <span className="text-[#8aab82]">입금자명 미입력</span>
                             }
+                            {order.cash_receipt_requested && (
+                              <div className="text-emerald-600 font-medium">
+                                현금영수증: {order.cash_receipt_phone || "-"}
+                              </div>
+                            )}
                           </div>
                         )}
                       </TableCell>

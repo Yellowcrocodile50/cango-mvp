@@ -38,6 +38,8 @@ function CheckoutContent() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [payMethod, setPayMethod] = useState<PayMethod>("BANK_TRANSFER");
+  const [cashReceiptWanted, setCashReceiptWanted] = useState(false);
+  const [cashReceiptPhone, setCashReceiptPhone] = useState("");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -80,6 +82,10 @@ function CheckoutContent() {
       alert("이메일을 입력해주세요.");
       return;
     }
+    if (payMethod === "BANK_TRANSFER" && cashReceiptWanted && !cashReceiptPhone.trim()) {
+      alert("현금영수증 발행을 위한 휴대폰 번호를 입력해주세요.");
+      return;
+    }
 
     setSubmitting(true);
 
@@ -94,6 +100,8 @@ function CheckoutContent() {
       payment_status: "pending",
       order_id: orderId,
       payment_method: payMethod === "BANK_TRANSFER" ? "bank_transfer" : "portone",
+      cash_receipt_requested: payMethod === "BANK_TRANSFER" ? cashReceiptWanted : false,
+      cash_receipt_phone: payMethod === "BANK_TRANSFER" && cashReceiptWanted ? cashReceiptPhone.trim() : null,
     }));
 
     const { error } = await supabase.from("orders").insert(rows);
@@ -253,16 +261,54 @@ function CheckoutContent() {
         </div>
 
         {payMethod === "BANK_TRANSFER" && (
-          <div className="mb-6 p-4 bg-[#f5f9f4] border border-[#d6e4d3] rounded-lg text-sm">
-            <p className="font-medium text-[#365927] mb-2">입금 계좌 안내</p>
-            <p className="text-[#1a2e16] font-mono text-base font-semibold">
-              {BANK_ACCOUNT.bank} {BANK_ACCOUNT.number}
-            </p>
-            <p className="text-[#5a7d50] mt-1">예금주: {BANK_ACCOUNT.holder}</p>
-            <p className="text-[#8aab82] text-xs mt-2">
-              주문 후 2일 이내 입금하지 않으면 주문이 자동 취소됩니다.
-            </p>
-          </div>
+          <>
+            <div className="mb-4 p-4 bg-[#f5f9f4] border border-[#d6e4d3] rounded-lg text-sm">
+              <p className="font-medium text-[#365927] mb-2">입금 계좌 안내</p>
+              <p className="text-[#1a2e16] font-mono text-base font-semibold">
+                {BANK_ACCOUNT.bank} {BANK_ACCOUNT.number}
+              </p>
+              <p className="text-[#5a7d50] mt-1">예금주: {BANK_ACCOUNT.holder}</p>
+              <p className="text-[#8aab82] text-xs mt-2">
+                주문 후 2일 이내 입금하지 않으면 주문이 자동 취소됩니다.
+              </p>
+            </div>
+
+            <div className="mb-6 p-4 bg-white border border-[#d6e4d3] rounded-lg text-sm">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={cashReceiptWanted}
+                  onChange={(e) => {
+                    setCashReceiptWanted(e.target.checked);
+                    if (!e.target.checked) setCashReceiptPhone("");
+                  }}
+                  className="w-4 h-4 accent-[#365927] cursor-pointer"
+                />
+                <span className="font-medium text-[#1a2e16]">현금영수증 발행 신청</span>
+              </label>
+              {cashReceiptWanted && (
+                <div className="mt-3">
+                  <p className="text-xs text-[#8aab82] mb-2">
+                    소득공제용 현금영수증을 발행해 드립니다. 입금 확인 후 처리됩니다.
+                  </p>
+                  <input
+                    type="tel"
+                    value={cashReceiptPhone}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, "").slice(0, 11);
+                      const formatted =
+                        digits.length <= 3 ? digits
+                        : digits.length <= 7 ? `${digits.slice(0, 3)}-${digits.slice(3)}`
+                        : `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+                      setCashReceiptPhone(formatted);
+                    }}
+                    placeholder="010-0000-0000"
+                    className="w-full h-10 px-3 border border-[#d6e4d3] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white"
+                  />
+                </div>
+              )}
+            </div>
+          </>
         )}
 
         <div className="mb-4 p-3 bg-[#f5f9f4] border border-[#d6e4d3] rounded-lg text-xs text-[#5a7d50] leading-relaxed">

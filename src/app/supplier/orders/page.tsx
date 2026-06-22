@@ -12,7 +12,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Send, CheckCircle, RefreshCw } from "lucide-react";
+import { Send, CheckCircle, RefreshCw, Receipt } from "lucide-react";
+import { toast } from "sonner";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { isFreeCategory } from "@/data/categories";
 
@@ -37,6 +38,7 @@ interface Order {
   buyer_userid: string | null;
   cash_receipt_requested: boolean;
   cash_receipt_phone: string | null;
+  cash_receipt_issued: boolean;
 }
 
 function formatDownloadTime(iso: string): string {
@@ -59,7 +61,7 @@ export default function OrdersPage() {
   );
 
   const cashReceiptPendingCount = useMemo(
-    () => orders.filter((o) => o.cash_receipt_requested && o.payment_status === "done").length,
+    () => orders.filter((o) => o.cash_receipt_requested && o.payment_status === "done" && !o.cash_receipt_issued).length,
     [orders]
   );
 
@@ -85,7 +87,7 @@ export default function OrdersPage() {
 
     const { data: rawOrders } = await supabase
       .from("orders")
-      .select("id, order_id, depositor_name, buyer_id, buyer_email, buyer_phone, amount, payment_status, payment_method, is_sent, created_at, first_downloaded_at, material_id, cash_receipt_requested, cash_receipt_phone")
+      .select("id, order_id, depositor_name, buyer_id, buyer_email, buyer_phone, amount, payment_status, payment_method, is_sent, created_at, first_downloaded_at, material_id, cash_receipt_requested, cash_receipt_phone, cash_receipt_issued")
       .in("material_id", materialIds)
       .order("created_at", { ascending: false });
 
@@ -122,15 +124,25 @@ export default function OrdersPage() {
   }, [fetchOrders]);
 
   async function markAsSent(orderId: string) {
-    await supabase.from("orders").update({ is_sent: true }).eq("id", orderId);
+    if (!window.confirm("자료를 발송 완료로 표시할까요? 발송 후에는 되돌릴 수 없습니다.")) return;
+    const { error } = await supabase.from("orders").update({ is_sent: true }).eq("id", orderId);
+    if (error) {
+      toast.error("발송 완료 처리에 실패했습니다. 다시 시도해주세요.");
+      return;
+    }
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, is_sent: true } : o))
     );
+    toast.success("발송 완료로 표시했습니다.");
   }
 
   async function confirmBankTransfer(order: Order) {
+    if (!window.confirm(`실제 입금을 확인하셨나요?\n입금확인 시 결제 완료 처리되어 자료 발송 단계로 넘어갑니다.`)) return;
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session || !order.order_id) return;
+    if (!session || !order.order_id) {
+      toast.error("세션이 만료되었습니다. 새로고침 후 다시 시도해주세요.");
+      return;
+    }
 
     const res = await fetch("/api/confirm-bank", {
       method: "POST",
@@ -139,13 +151,29 @@ export default function OrdersPage() {
         Authorization: `Bearer ${session.access_token}`,
       },
       body: JSON.stringify({ orderId: order.order_id }),
-    });
+    }).catch(() => null);
 
-    if (res.ok) {
+    if (res?.ok) {
       setOrders((prev) =>
         prev.map((o) => (o.id === order.id ? { ...o, payment_status: "done" } : o))
       );
+      toast.success("입금이 확인되었습니다.");
+    } else {
+      toast.error("입금 확인 처리에 실패했습니다. 다시 시도해주세요.");
     }
+  }
+
+  async function markCashReceiptIssued(orderId: string) {
+    if (!window.confirm("현금영수증을 발행 완료로 표시할까요?\n홈택스에서 실제로 발행하신 뒤 체크해주세요.")) return;
+    const { error } = await supabase.from("orders").update({ cash_receipt_issued: true }).eq("id", orderId);
+    if (error) {
+      toast.error("발행 완료 처리에 실패했습니다. 다시 시도해주세요.");
+      return;
+    }
+    setOrders((prev) =>
+      prev.map((o) => (o.id === orderId ? { ...o, cash_receipt_issued: true } : o))
+    );
+    toast.success("현금영수증 발행 완료로 표시했습니다.");
   }
 
 
@@ -254,9 +282,15 @@ export default function OrdersPage() {
                           )}
                           {order.cash_receipt_requested && (
                             <div>
-                              <span className="inline-block text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md whitespace-nowrap">
-                                🧾 현금영수증 {order.cash_receipt_phone || "번호 미입력"}
-                              </span>
+                              {order.cash_receipt_issued ? (
+                                <span className="inline-block text-xs font-medium text-[#8aab82] bg-[#f5f9f4] border border-[#d6e4d3] px-2 py-0.5 rounded-md whitespace-nowrap">
+                                  🧾 현금영수증 발행완료
+                                </span>
+                              ) : (
+                                <span className="inline-block text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md whitespace-nowrap">
+                                  🧾 현금영수증 {order.cash_receipt_phone || "번호 미입력"}
+                                </span>
+                              )}
                             </div>
                           )}
                         </div>
@@ -285,6 +319,17 @@ export default function OrdersPage() {
                             >
                               <Send className="mr-1 h-3 w-3" />
                               발송완료
+                            </Button>
+                          )}
+                          {order.cash_receipt_requested && order.payment_status === "done" && !order.cash_receipt_issued && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => markCashReceiptIssued(order.id)}
+                              className="border-emerald-600 text-emerald-700 hover:bg-emerald-50"
+                            >
+                              <Receipt className="mr-1 h-3 w-3" />
+                              영수증발행
                             </Button>
                           )}
                         </div>

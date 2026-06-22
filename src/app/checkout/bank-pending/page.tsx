@@ -11,6 +11,7 @@ function BankPendingContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get("orderId") ?? "";
   const amount = Number(searchParams.get("amount") || 0);
+  const cashReceiptRequested = searchParams.get("receipt") === "1";
 
   const [depositorName, setDepositorName] = useState("");
   const [saved, setSaved] = useState(false);
@@ -102,6 +103,16 @@ function BankPendingContent() {
         <div className="flex justify-between items-center bg-white border border-[#d6e4d3] rounded-lg px-5 py-4 mb-6">
           <span className="text-[#5a7d50] font-medium">입금 금액</span>
           <span className="text-xl font-bold text-[#365927]">{amount.toLocaleString()}원</span>
+        </div>
+      )}
+
+      {/* 현금영수증 신청 접수 안내 */}
+      {cashReceiptRequested && (
+        <div className="flex items-start gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 mb-6 text-sm">
+          <span className="text-base leading-none">🧾</span>
+          <p className="text-emerald-700">
+            <strong>현금영수증 신청이 접수되었습니다.</strong> 입금 확인 후 소득공제용으로 발행해 드립니다.
+          </p>
         </div>
       )}
 

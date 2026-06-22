@@ -130,7 +130,8 @@ function CheckoutContent() {
     // 계좌이체: PortOne 없이 바로 안내 페이지로
     if (payMethod === "BANK_TRANSFER") {
       removeItems(checkoutItems.map((i) => i.id));
-      router.push(`/checkout/bank-pending?orderId=${orderId}&amount=${checkoutTotal}`);
+      const receiptParam = cashReceiptWanted ? "&receipt=1" : "";
+      router.push(`/checkout/bank-pending?orderId=${orderId}&amount=${checkoutTotal}${receiptParam}`);
       return;
     }
 

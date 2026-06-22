@@ -58,6 +58,11 @@ export default function OrdersPage() {
     [orders]
   );
 
+  const cashReceiptPendingCount = useMemo(
+    () => orders.filter((o) => o.cash_receipt_requested && o.payment_status === "done").length,
+    [orders]
+  );
+
   const fetchOrders = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -167,6 +172,15 @@ export default function OrdersPage() {
         </div>
       )}
 
+      {cashReceiptPendingCount > 0 && (
+        <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 text-sm">
+          <span className="text-emerald-700 font-semibold">
+            🧾 현금영수증 발행 대기 {cashReceiptPendingCount}건
+          </span>
+          <span className="text-emerald-600">입금 확인된 주문 중 현금영수증 신청 건입니다. 홈택스에서 발행해주세요.</span>
+        </div>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">전체 주문 목록</CardTitle>
@@ -229,19 +243,26 @@ export default function OrdersPage() {
                       <TableCell>{order.buyer_phone || "-"}</TableCell>
                       <TableCell>{isFree ? "무료" : `${order.amount.toLocaleString()}원`}</TableCell>
                       <TableCell>
-                        {isFree ? (
-                          order.first_downloaded_at ? (
-                            <span className="inline-block text-xs font-medium text-[#365927] bg-[#eaf2e8] px-2 py-1 rounded-md whitespace-nowrap">
-                              다운로드 {formatDownloadTime(order.first_downloaded_at)}
-                            </span>
+                        <div className="space-y-1">
+                          {isFree ? (
+                            order.first_downloaded_at ? (
+                              <span className="inline-block text-xs font-medium text-[#365927] bg-[#eaf2e8] px-2 py-1 rounded-md whitespace-nowrap">
+                                다운로드 {formatDownloadTime(order.first_downloaded_at)}
+                              </span>
+                            ) : (
+                              <span className="inline-block text-xs text-[#8aab82] bg-[#f5f9f4] px-2 py-1 rounded-md whitespace-nowrap">
+                                미다운로드
+                              </span>
+                            )
                           ) : (
-                            <span className="inline-block text-xs text-[#8aab82] bg-[#f5f9f4] px-2 py-1 rounded-md whitespace-nowrap">
-                              미다운로드
-                            </span>
-                          )
-                        ) : (
-                          <OrderStatusBadge is_sent={order.is_sent} payment_status={order.payment_status} payment_method={order.payment_method} />
-                        )}
+                            <OrderStatusBadge is_sent={order.is_sent} payment_status={order.payment_status} payment_method={order.payment_method} />
+                          )}
+                          {order.cash_receipt_requested && (
+                            <div className="inline-block text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md whitespace-nowrap">
+                              🧾 현금영수증 {order.cash_receipt_phone || "번호 미입력"}
+                            </div>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         {new Date(order.created_at).toLocaleDateString("ko-KR")}

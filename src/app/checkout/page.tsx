@@ -41,6 +41,7 @@ function CheckoutContent() {
   const [cashReceiptWanted, setCashReceiptWanted] = useState(false);
   const [cashReceiptPhone, setCashReceiptPhone] = useState("");
   const [cashReceiptPhoneTouched, setCashReceiptPhoneTouched] = useState(false);
+  const [accountCopied, setAccountCopied] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -266,9 +267,22 @@ function CheckoutContent() {
           <>
             <div className="mb-4 p-4 bg-[#f5f9f4] border border-[#d6e4d3] rounded-lg text-sm">
               <p className="font-medium text-[#365927] mb-2">입금 계좌 안내</p>
-              <p className="text-[#1a2e16] font-mono text-base font-semibold">
-                {BANK_ACCOUNT.bank} {BANK_ACCOUNT.number}
-              </p>
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="text-[#1a2e16] font-mono text-base font-semibold">
+                  {BANK_ACCOUNT.bank} {BANK_ACCOUNT.number}
+                </p>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(BANK_ACCOUNT.number.replace(/-/g, ""));
+                    setAccountCopied(true);
+                    setTimeout(() => setAccountCopied(false), 2000);
+                  }}
+                  className="text-xs text-[#365927] bg-white border border-[#b8d9b4] px-2.5 py-0.5 rounded-full hover:bg-[#d6edcf] transition cursor-pointer"
+                >
+                  {accountCopied ? "✓ 복사됨" : "복사"}
+                </button>
+              </div>
               <p className="text-[#5a7d50] mt-1">예금주: {BANK_ACCOUNT.holder}</p>
               <p className="text-[#8aab82] text-xs mt-2">
                 주문 후 2일 이내 입금하지 않으면 주문이 자동 취소됩니다.

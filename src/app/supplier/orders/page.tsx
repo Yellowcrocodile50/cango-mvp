@@ -197,7 +197,7 @@ export default function OrdersPage() {
                   <TableHead>자료명</TableHead>
                   <TableHead>카테고리</TableHead>
                   <TableHead>아이디</TableHead>
-                  <TableHead>이메일</TableHead>
+                  <TableHead className="w-40">이메일</TableHead>
                   <TableHead>구분 / 학년</TableHead>
                   <TableHead>전화번호</TableHead>
                   <TableHead>금액</TableHead>
@@ -229,7 +229,7 @@ export default function OrdersPage() {
                           </div>
                         )}
                       </TableCell>
-                      <TableCell>{order.buyer_email}</TableCell>
+                      <TableCell className="max-w-[10rem] truncate" title={order.buyer_email}>{order.buyer_email}</TableCell>
                       <TableCell>
                         {order.user_type ? (
                           <span>

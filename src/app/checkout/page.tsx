@@ -43,6 +43,19 @@ function CheckoutContent() {
   const [cashReceiptPhoneTouched, setCashReceiptPhoneTouched] = useState(false);
   const [accountCopied, setAccountCopied] = useState(false);
 
+  // 현금영수증 전화번호 11자리 미충족 여부 (제출/입력 검증 공통 사용)
+  const cashReceiptPhoneIncomplete = cashReceiptPhone.replace(/\D/g, "").length !== 11;
+
+  const copyAccountNumber = async () => {
+    try {
+      await navigator.clipboard.writeText(BANK_ACCOUNT.number.replace(/-/g, ""));
+      setAccountCopied(true);
+      setTimeout(() => setAccountCopied(false), 2000);
+    } catch {
+      toast.error("계좌번호 복사에 실패했습니다. 직접 입력해주세요.");
+    }
+  };
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) {
@@ -84,7 +97,7 @@ function CheckoutContent() {
       alert("이메일을 입력해주세요.");
       return;
     }
-    if (payMethod === "BANK_TRANSFER" && cashReceiptWanted && cashReceiptPhone.replace(/\D/g, "").length !== 11) {
+    if (payMethod === "BANK_TRANSFER" && cashReceiptWanted && cashReceiptPhoneIncomplete) {
       setCashReceiptPhoneTouched(true);
       alert("현금영수증 발행을 위한 휴대폰 번호 11자리를 입력해주세요.");
       return;
@@ -273,11 +286,7 @@ function CheckoutContent() {
                 </p>
                 <button
                   type="button"
-                  onClick={async () => {
-                    await navigator.clipboard.writeText(BANK_ACCOUNT.number.replace(/-/g, ""));
-                    setAccountCopied(true);
-                    setTimeout(() => setAccountCopied(false), 2000);
-                  }}
+                  onClick={copyAccountNumber}
                   className="text-xs text-[#365927] bg-white border border-[#b8d9b4] px-2.5 py-0.5 rounded-full hover:bg-[#d6edcf] transition cursor-pointer"
                 >
                   {accountCopied ? "✓ 복사됨" : "복사"}
@@ -321,12 +330,12 @@ function CheckoutContent() {
                     onBlur={() => setCashReceiptPhoneTouched(true)}
                     placeholder="010-0000-0000"
                     className={`w-full h-10 px-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:border-transparent bg-white ${
-                      cashReceiptPhoneTouched && cashReceiptPhone.replace(/\D/g, "").length !== 11
+                      cashReceiptPhoneTouched && cashReceiptPhoneIncomplete
                         ? "border-red-400 focus:ring-red-400"
                         : "border-[#d6e4d3] focus:ring-[#365927]"
                     }`}
                   />
-                  {cashReceiptPhoneTouched && cashReceiptPhone.replace(/\D/g, "").length !== 11 && (
+                  {cashReceiptPhoneTouched && cashReceiptPhoneIncomplete && (
                     <p className="mt-1.5 text-xs text-red-500">
                       010 포함 11자리를 모두 입력해주세요. (예: 010-1234-5678)
                     </p>

@@ -221,11 +221,6 @@ export default function OrdersPage() {
                               ? <span className="text-blue-600">입금자: {order.depositor_name}</span>
                               : <span className="text-[#8aab82]">입금자명 미입력</span>
                             }
-                            {order.cash_receipt_requested && (
-                              <div className="text-emerald-600 font-medium">
-                                현금영수증: {order.cash_receipt_phone || "-"}
-                              </div>
-                            )}
                           </div>
                         )}
                       </TableCell>
@@ -258,8 +253,10 @@ export default function OrdersPage() {
                             <OrderStatusBadge is_sent={order.is_sent} payment_status={order.payment_status} payment_method={order.payment_method} />
                           )}
                           {order.cash_receipt_requested && (
-                            <div className="inline-block text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md whitespace-nowrap">
-                              🧾 현금영수증 {order.cash_receipt_phone || "번호 미입력"}
+                            <div>
+                              <span className="inline-block text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md whitespace-nowrap">
+                                🧾 현금영수증 {order.cash_receipt_phone || "번호 미입력"}
+                              </span>
                             </div>
                           )}
                         </div>

@@ -40,6 +40,7 @@ function CheckoutContent() {
   const [payMethod, setPayMethod] = useState<PayMethod>("BANK_TRANSFER");
   const [cashReceiptWanted, setCashReceiptWanted] = useState(false);
   const [cashReceiptPhone, setCashReceiptPhone] = useState("");
+  const [cashReceiptPhoneTouched, setCashReceiptPhoneTouched] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -82,8 +83,9 @@ function CheckoutContent() {
       alert("이메일을 입력해주세요.");
       return;
     }
-    if (payMethod === "BANK_TRANSFER" && cashReceiptWanted && !cashReceiptPhone.trim()) {
-      alert("현금영수증 발행을 위한 휴대폰 번호를 입력해주세요.");
+    if (payMethod === "BANK_TRANSFER" && cashReceiptWanted && cashReceiptPhone.replace(/\D/g, "").length !== 11) {
+      setCashReceiptPhoneTouched(true);
+      alert("현금영수증 발행을 위한 휴대폰 번호 11자리를 입력해주세요.");
       return;
     }
 
@@ -280,7 +282,7 @@ function CheckoutContent() {
                   checked={cashReceiptWanted}
                   onChange={(e) => {
                     setCashReceiptWanted(e.target.checked);
-                    if (!e.target.checked) setCashReceiptPhone("");
+                    if (!e.target.checked) { setCashReceiptPhone(""); setCashReceiptPhoneTouched(false); }
                   }}
                   className="w-4 h-4 accent-[#365927] cursor-pointer"
                 />
@@ -302,9 +304,19 @@ function CheckoutContent() {
                         : `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
                       setCashReceiptPhone(formatted);
                     }}
+                    onBlur={() => setCashReceiptPhoneTouched(true)}
                     placeholder="010-0000-0000"
-                    className="w-full h-10 px-3 border border-[#d6e4d3] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white"
+                    className={`w-full h-10 px-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:border-transparent bg-white ${
+                      cashReceiptPhoneTouched && cashReceiptPhone.replace(/\D/g, "").length !== 11
+                        ? "border-red-400 focus:ring-red-400"
+                        : "border-[#d6e4d3] focus:ring-[#365927]"
+                    }`}
                   />
+                  {cashReceiptPhoneTouched && cashReceiptPhone.replace(/\D/g, "").length !== 11 && (
+                    <p className="mt-1.5 text-xs text-red-500">
+                      010 포함 11자리를 모두 입력해주세요. (예: 010-1234-5678)
+                    </p>
+                  )}
                 </div>
               )}
             </div>

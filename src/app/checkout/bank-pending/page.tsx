@@ -5,22 +5,39 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { BANK_ACCOUNT } from "@/lib/companyInfo";
 import { supabase } from "@/lib/supabase";
+import { useCart } from "@/context/CartContext";
+import { BANK_ORDER_KEY, type BankOrderStash } from "@/lib/bankOrder";
 import { toast } from "sonner";
 
 function BankPendingContent() {
   const searchParams = useSearchParams();
+  const { removeItems } = useCart();
   const orderId = searchParams.get("orderId") ?? "";
   const amount = Number(searchParams.get("amount") || 0);
   const cashReceiptRequested = searchParams.get("receipt") === "1";
 
+  // 체크아웃에서 넘어온 주문 데이터(아직 DB에 미생성). orderId가 일치하면 "생성 모드".
+  const [stash, setStash] = useState<BankOrderStash | null>(() => {
+    if (typeof window === "undefined" || !orderId) return null;
+    try {
+      const raw = sessionStorage.getItem(BANK_ORDER_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as BankOrderStash;
+      return parsed.orderId === orderId ? parsed : null;
+    } catch {
+      return null;
+    }
+  });
   const [depositorName, setDepositorName] = useState("");
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [transferred, setTransferred] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const saveDepositorName = async (): Promise<boolean> => {
-    if (!depositorName.trim() || !orderId) return false;
+  const isCreateMode = stash !== null;
+
+  // 뷰 모드(이미 생성된 주문)에서 입금자명을 서버에 저장
+  const saveDepositorRemote = async (): Promise<boolean> => {
     const { data: { session } } = await supabase.auth.getSession();
     const res = await fetch("/api/set-depositor", {
       method: "POST",
@@ -30,7 +47,6 @@ function BankPendingContent() {
       },
       body: JSON.stringify({ orderId, depositorName }),
     });
-    if (res.ok) setSaved(true);
     return res.ok;
   };
 
@@ -43,11 +59,21 @@ function BankPendingContent() {
       toast.error("주문 정보가 올바르지 않습니다.");
       return;
     }
+    // 생성 모드에서는 아직 주문 레코드가 없으므로 입력값만 확정한다.
+    if (isCreateMode) {
+      setSaved(true);
+      toast.success("입금자명이 저장되었습니다.");
+      return;
+    }
     setSaving(true);
-    const ok = await saveDepositorName();
-    if (ok) toast.success("입금자명이 저장되었습니다.");
-    else toast.error("저장에 실패했습니다. 다시 시도해주세요.");
+    const ok = await saveDepositorRemote();
     setSaving(false);
+    if (ok) {
+      setSaved(true);
+      toast.success("입금자명이 저장되었습니다.");
+    } else {
+      toast.error("저장에 실패했습니다. 다시 시도해주세요.");
+    }
   };
 
   const copyAccountNumber = async () => {
@@ -61,17 +87,82 @@ function BankPendingContent() {
       toast.error("입금자명을 입력해주세요. 입금 확인에 꼭 필요합니다.");
       return;
     }
-    if (!saved) {
-      setSaving(true);
-      const ok = await saveDepositorName();
-      setSaving(false);
+    if (!orderId) {
+      toast.error("주문 정보가 올바르지 않습니다.");
+      return;
+    }
+
+    setSaving(true);
+
+    if (isCreateMode && stash) {
+      // 입금 완료 시점에 비로소 주문 레코드를 생성한다.
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setSaving(false);
+        toast.error("세션이 만료되었습니다. 다시 로그인해주세요.");
+        return;
+      }
+      const rowsToInsert = stash.rows.map((r) => ({
+        ...r,
+        buyer_id: user.id,
+        depositor_name: depositorName.trim(),
+      }));
+      const { error } = await supabase.from("orders").insert(rowsToInsert);
+      if (error) {
+        setSaving(false);
+        toast.error("주문 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
+        return;
+      }
+      removeItems(stash.materialIds);
+      sessionStorage.removeItem(BANK_ORDER_KEY);
+      setStash(null);
+    } else if (!saved) {
+      // 뷰 모드: 아직 저장 안 된 입금자명만 갱신
+      const ok = await saveDepositorRemote();
       if (!ok) {
+        setSaving(false);
         toast.error("저장에 실패했습니다. 다시 시도해주세요.");
         return;
       }
     }
+
+    setSaving(false);
     setTransferred(true);
   };
+
+  // 입금 완료 후: 마무리 화면 (안내 멘트 + 마이페이지/홈 버튼)
+  if (transferred) {
+    return (
+      <div className="max-w-lg mx-auto px-4 sm:px-6 py-16">
+        <div className="w-16 h-16 bg-[#eaf2e8] rounded-full flex items-center justify-center text-3xl mx-auto mb-6 text-[#365927] font-bold">
+          ✓
+        </div>
+        <h1 className="text-2xl font-bold text-center mb-3 text-[#365927]">
+          입금 완료 접수되었습니다
+        </h1>
+        <p className="text-center text-[#5a7d50] mb-2">
+          입금 내역을 확인한 후 등록하신 이메일로 자료를 보내드리겠습니다.
+        </p>
+        <p className="text-center text-sm text-[#8aab82] mb-10">
+          발송 상태는 마이페이지에서 언제든 확인할 수 있습니다.
+        </p>
+        <div className="space-y-3">
+          <Link
+            href="/mypage"
+            className="block w-full h-12 bg-[#365927] text-white rounded-lg font-medium hover:bg-[#4a7a38] transition flex items-center justify-center"
+          >
+            마이페이지 보기
+          </Link>
+          <Link
+            href="/"
+            className="block w-full h-12 border border-[#d6e4d3] text-[#5a7d50] rounded-lg font-medium hover:bg-[#f5f9f4] transition flex items-center justify-center"
+          >
+            홈으로 돌아가기
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-lg mx-auto px-4 sm:px-6 py-12">
@@ -161,43 +252,14 @@ function BankPendingContent() {
         </p>
       </div>
 
-      {/* 입금 완료 버튼 / 완료 메시지 */}
-      {transferred ? (
-        <div className="bg-[#eaf2e8] border border-[#b8d9b4] rounded-xl p-6 mb-6 text-center">
-          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-xl mx-auto mb-3 text-[#365927] font-bold">
-            ✓
-          </div>
-          <p className="font-semibold text-[#1a2e16] mb-1">
-            입금 내역 확인 후 자료를 보내드리겠습니다.
-          </p>
-          <p className="text-sm text-[#5a7d50]">
-            자료의 발송 상태는 마이페이지에서 확인할 수 있습니다!
-          </p>
-        </div>
-      ) : (
-        <button
-          onClick={handleTransfer}
-          disabled={saving}
-          className="w-full h-12 bg-[#365927] text-white rounded-lg font-medium hover:bg-[#4a7a38] transition mb-6 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {saving ? "저장 중..." : "입금 완료했어요"}
-        </button>
-      )}
-
-      <div className="space-y-3">
-        <Link
-          href="/mypage"
-          className="block w-full h-12 bg-[#365927] text-white rounded-lg font-medium hover:bg-[#4a7a38] transition flex items-center justify-center"
-        >
-          마이페이지 보기
-        </Link>
-        <Link
-          href="/"
-          className="block w-full h-12 border border-[#d6e4d3] text-[#5a7d50] rounded-lg font-medium hover:bg-[#f5f9f4] transition flex items-center justify-center"
-        >
-          홈으로 돌아가기
-        </Link>
-      </div>
+      {/* 입금 완료 버튼 */}
+      <button
+        onClick={handleTransfer}
+        disabled={saving}
+        className="w-full h-12 bg-[#365927] text-white rounded-lg font-medium hover:bg-[#4a7a38] transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {saving ? "처리 중..." : "입금 완료했어요"}
+      </button>
     </div>
   );
 }

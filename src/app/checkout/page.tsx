@@ -7,6 +7,7 @@ import type { User } from "@supabase/supabase-js";
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/lib/supabase";
 import { BANK_ACCOUNT } from "@/lib/companyInfo";
+import { BANK_ORDER_KEY } from "@/lib/bankOrder";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -17,7 +18,7 @@ const CARD_LIVE = false;
 const EASY_PAY_LIVE = false;
 
 function CheckoutContent() {
-  const { items, removeItems } = useCart();
+  const { items } = useCart();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -120,18 +121,29 @@ function CheckoutContent() {
       cash_receipt_phone: payMethod === "BANK_TRANSFER" && cashReceiptWanted ? cashReceiptPhone.trim() : null,
     }));
 
+    // 계좌이체: 주문 레코드는 "입금 완료했어요" 시점에 생성한다.
+    // 여기서는 주문 데이터만 세션에 담아 입금 안내 페이지로 넘긴다.
+    if (payMethod === "BANK_TRANSFER") {
+      try {
+        sessionStorage.setItem(
+          BANK_ORDER_KEY,
+          JSON.stringify({ orderId, rows, materialIds: checkoutItems.map((i) => i.id) })
+        );
+      } catch {
+        toast.error("주문 정보를 준비하는 중 오류가 발생했습니다. 다시 시도해주세요.");
+        setSubmitting(false);
+        return;
+      }
+      const receiptParam = cashReceiptWanted ? "&receipt=1" : "";
+      router.push(`/checkout/bank-pending?orderId=${orderId}&amount=${checkoutTotal}${receiptParam}`);
+      return;
+    }
+
+    // 카드/간편결제(PortOne): 결제 요청 전에 주문을 생성한다.
     const { error } = await supabase.from("orders").insert(rows);
     if (error) {
       toast.error("주문 저장 중 오류가 발생했습니다: " + error.message);
       setSubmitting(false);
-      return;
-    }
-
-    // 계좌이체: PortOne 없이 바로 안내 페이지로
-    if (payMethod === "BANK_TRANSFER") {
-      removeItems(checkoutItems.map((i) => i.id));
-      const receiptParam = cashReceiptWanted ? "&receipt=1" : "";
-      router.push(`/checkout/bank-pending?orderId=${orderId}&amount=${checkoutTotal}${receiptParam}`);
       return;
     }
 

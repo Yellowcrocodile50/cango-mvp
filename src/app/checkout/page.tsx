@@ -157,6 +157,15 @@ function CheckoutContent() {
         ? process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_KAKAO!
         : process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_CARD!;
 
+    // 결제 취소/실패 시 방금 생성한 주문을 정리한다.
+    const cancelOrder = () => {
+      fetch("/api/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, buyerId: user.id }),
+      }).catch(() => {});
+    };
+
     try {
       const response = await PortOne.requestPayment({
         storeId: process.env.NEXT_PUBLIC_PORTONE_STORE_ID!,
@@ -175,11 +184,7 @@ function CheckoutContent() {
 
       // 결제 취소 또는 실패 (팝업 방식)
       if (response.code != null) {
-        fetch("/api/cancel", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orderId, buyerId: user.id }),
-        }).catch(() => {});
+        cancelOrder();
         toast.error(response.message ?? "결제가 취소되었습니다.");
         setSubmitting(false);
         return;
@@ -189,11 +194,7 @@ function CheckoutContent() {
       router.push(`/checkout/success?paymentId=${orderId}`);
     } catch (error) {
       console.error("[PortOne] requestPayment threw:", error);
-      fetch("/api/cancel", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId, buyerId: user.id }),
-      }).catch(() => {});
+      cancelOrder();
       toast.error("결제 요청 중 오류가 발생했습니다. 다시 시도해주세요.");
       setSubmitting(false);
     }

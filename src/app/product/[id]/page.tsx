@@ -178,7 +178,7 @@ export default function ProductDetail() {
             </span>
           </div>
 
-          <div className="space-y-3 mb-6 pr-20 sm:pr-0">
+          <div className="space-y-3 mb-6">
             {isFree ? (
               <button
                 onClick={handleFreeDownload}

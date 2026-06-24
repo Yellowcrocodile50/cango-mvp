@@ -7,7 +7,17 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-sm text-[#5a7d50]">
           <div>
-            <h3 className="font-bold text-[#365927] mb-3">CANGO</h3>
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="font-bold text-[#365927]">CANGO</h3>
+              <a
+                href="https://docs.google.com/forms/d/e/1FAIpQLSeg2gKeJGpj69NgoBLwNc4TMaiwsZqAO5alFPZVp1-loOtBxw/viewform"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs border border-[#5a7d50] text-[#5a7d50] rounded-full px-2.5 py-0.5 hover:bg-[#365927] hover:text-white transition"
+              >
+                신규 자료 제안
+              </a>
+            </div>
             <p>선배들이 만든 입시 자료 마켓플레이스</p>
             <p className="text-xs mt-1 text-[#8aab82]">수시·정시·공부법까지 검증된 자료를<br />쉽게 구매하고 즉시 다운로드하세요.</p>
           </div>

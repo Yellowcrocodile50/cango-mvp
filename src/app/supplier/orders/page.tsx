@@ -263,6 +263,21 @@ export default function OrdersPage() {
           ) : orders.length === 0 ? (
             <p className="text-sm text-muted-foreground py-8 text-center">아직 주문이 없습니다.</p>
           ) : (
+            <>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mb-3 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="inline-block w-3 h-3 rounded-sm bg-emerald-100 border border-emerald-300" />
+                무료 자료
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="inline-block w-3 h-3 rounded-sm bg-white border border-gray-300" />
+                유료 자료
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="inline-block w-3 h-3 rounded-sm bg-blue-100 border border-blue-300" />
+                입금 확인 대기
+              </span>
+            </div>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -296,8 +311,16 @@ export default function OrdersPage() {
               <TableBody>
                 {sortedOrders.map((order) => {
                   const isFree = isFreeCategory(order.material_category);
+                  const isBankPending =
+                    order.payment_method === "bank_transfer" && order.payment_status === "pending";
+                  // 입금 대기(파랑) > 무료(초록) > 유료(기본) 순으로 행 배경 구분
+                  const rowClass = isBankPending
+                    ? "bg-blue-50/60"
+                    : isFree
+                      ? "bg-emerald-50/60"
+                      : "";
                   return (
-                    <TableRow key={order.id} className={order.payment_method === "bank_transfer" && order.payment_status === "pending" ? "bg-blue-50/50" : ""}>
+                    <TableRow key={order.id} className={rowClass}>
                       <TableCell className="font-medium">{order.material_title}</TableCell>
                       <TableCell className="text-muted-foreground">{order.material_category}</TableCell>
                       <TableCell>
@@ -398,6 +421,7 @@ export default function OrdersPage() {
                 })}
               </TableBody>
             </Table>
+            </>
           )}
         </CardContent>
       </Card>

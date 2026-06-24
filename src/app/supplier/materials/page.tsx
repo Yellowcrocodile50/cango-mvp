@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -59,6 +59,34 @@ export default function MaterialsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const previewInputRef = useRef<HTMLInputElement>(null);
+
+  type SortKey = "created_at" | "price" | "title";
+  const [sortKey, setSortKey] = useState<SortKey>("created_at");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
+  const sortedMaterials = useMemo(() => {
+    const arr = [...materials];
+    arr.sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === "price") cmp = a.price - b.price;
+      else if (sortKey === "title") cmp = a.title.localeCompare(b.title, "ko");
+      else cmp = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return arr;
+  }, [materials, sortKey, sortDir]);
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir(key === "title" ? "asc" : "desc");
+    }
+  }
+
+  const sortArrow = (key: SortKey) =>
+    sortKey === key ? (sortDir === "asc" ? " ▲" : " ▼") : "";
 
   function validateAndSetPdf(file: File) {
     if (file.type !== "application/pdf") {
@@ -691,17 +719,32 @@ export default function MaterialsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>자료명</TableHead>
+                  <TableHead
+                    className="cursor-pointer select-none whitespace-nowrap"
+                    onClick={() => toggleSort("title")}
+                  >
+                    자료명{sortArrow("title")}
+                  </TableHead>
                   <TableHead>카테고리</TableHead>
                   <TableHead>설명</TableHead>
-                  <TableHead>가격</TableHead>
+                  <TableHead
+                    className="cursor-pointer select-none whitespace-nowrap"
+                    onClick={() => toggleSort("price")}
+                  >
+                    가격{sortArrow("price")}
+                  </TableHead>
                   <TableHead>파일</TableHead>
-                  <TableHead>등록일</TableHead>
+                  <TableHead
+                    className="cursor-pointer select-none whitespace-nowrap"
+                    onClick={() => toggleSort("created_at")}
+                  >
+                    등록일{sortArrow("created_at")}
+                  </TableHead>
                   <TableHead className="text-right">액션</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {materials.map((m) => (
+                {sortedMaterials.map((m) => (
                   <TableRow key={m.id}>
                     <TableCell className="font-medium">{m.title}</TableCell>
                     <TableCell>

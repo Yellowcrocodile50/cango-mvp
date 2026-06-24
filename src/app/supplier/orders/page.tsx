@@ -51,6 +51,16 @@ function formatDownloadTime(iso: string): string {
   });
 }
 
+// 처리 우선순위: 낮을수록 위로 (입금확인 → 발송 → 영수증발행 → 완료 → 취소)
+function actionPriority(o: Order): number {
+  if (o.payment_status === "pending") return 0; // 입금 확인 대기
+  if (o.payment_status === "done" && !o.is_sent) return 1; // 발송 대기
+  if (o.cash_receipt_requested && o.payment_status === "done" && !o.cash_receipt_issued)
+    return 2; // 현금영수증 발행 대기
+  if (o.payment_status === "canceled") return 4; // 취소 (맨 뒤)
+  return 3; // 처리 완료
+}
+
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,6 +74,38 @@ export default function OrdersPage() {
     () => orders.filter((o) => o.cash_receipt_requested && o.payment_status === "done" && !o.cash_receipt_issued).length,
     [orders]
   );
+
+  type SortKey = "created_at" | "amount" | "status";
+  const [sortKey, setSortKey] = useState<SortKey>("created_at");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
+  const sortedOrders = useMemo(() => {
+    const arr = [...orders];
+    arr.sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === "amount") cmp = a.amount - b.amount;
+      else if (sortKey === "status") cmp = actionPriority(a) - actionPriority(b);
+      else cmp = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      const primary = sortDir === "asc" ? cmp : -cmp;
+      if (primary !== 0 || sortKey === "created_at") return primary;
+      // 동순위 tie-break: 최신 주문 먼저
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+    return arr;
+  }, [orders, sortKey, sortDir]);
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      // 상태는 '처리 필요 먼저'(asc), 나머지는 큰 값/최신 먼저(desc)
+      setSortDir(key === "status" ? "asc" : "desc");
+    }
+  }
+
+  const sortArrow = (key: SortKey) =>
+    sortKey === key ? (sortDir === "asc" ? " ▲" : " ▼") : "";
 
   const fetchOrders = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -228,14 +270,29 @@ export default function OrdersPage() {
                   <TableHead className="w-40">이메일</TableHead>
                   <TableHead>구분 / 학년</TableHead>
                   <TableHead>전화번호</TableHead>
-                  <TableHead>금액</TableHead>
-                  <TableHead>상태</TableHead>
-                  <TableHead>주문일</TableHead>
+                  <TableHead
+                    className="cursor-pointer select-none whitespace-nowrap"
+                    onClick={() => toggleSort("amount")}
+                  >
+                    금액{sortArrow("amount")}
+                  </TableHead>
+                  <TableHead
+                    className="cursor-pointer select-none whitespace-nowrap"
+                    onClick={() => toggleSort("status")}
+                  >
+                    상태{sortArrow("status")}
+                  </TableHead>
+                  <TableHead
+                    className="cursor-pointer select-none whitespace-nowrap"
+                    onClick={() => toggleSort("created_at")}
+                  >
+                    주문일{sortArrow("created_at")}
+                  </TableHead>
                   <TableHead className="text-right">액션</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {orders.map((order) => {
+                {sortedOrders.map((order) => {
                   const isFree = isFreeCategory(order.material_category);
                   return (
                     <TableRow key={order.id} className={order.payment_method === "bank_transfer" && order.payment_status === "pending" ? "bg-blue-50/50" : ""}>

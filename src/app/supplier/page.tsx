@@ -3,24 +3,25 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, ShoppingCart, CheckCircle, Clock, RefreshCw, ChevronRight } from "lucide-react";
+import { Package, ShoppingCart, Clock, Download, RefreshCw, ChevronRight } from "lucide-react";
+import { isFreeCategory } from "@/data/categories";
 
 interface Stats {
   totalMaterials: number;
-  totalOrders: number;
-  completedOrders: number;
-  pendingDelivery: number;
-  paidOrders: number;
+  paidCount: number; // 유료 결제 완료 건수
+  paidPending: number; // 유료 결제 완료 & 미발송 (상품 준비중)
+  paidCompleted: number; // 유료 결제 완료 & 발송 완료
+  freeDownloads: number; // 무료 자료 다운로드(결제 완료) 건수
   totalRevenue: number;
   bankPending: number;
 }
 
 const EMPTY_STATS: Stats = {
   totalMaterials: 0,
-  totalOrders: 0,
-  completedOrders: 0,
-  pendingDelivery: 0,
-  paidOrders: 0,
+  paidCount: 0,
+  paidPending: 0,
+  paidCompleted: 0,
+  freeDownloads: 0,
   totalRevenue: 0,
   bankPending: 0,
 };
@@ -35,11 +36,12 @@ export default function SupplierDashboard() {
 
     const { data: myMaterials, count: materialsCount } = await supabase
       .from("materials")
-      .select("id", { count: "exact" })
+      .select("id, category", { count: "exact" })
       .eq("supplier_id", user.id)
       .eq("is_deleted", false);
 
     const materialIds = (myMaterials ?? []).map((m) => m.id);
+    const categoryMap = new Map((myMaterials ?? []).map((m) => [m.id, m.category]));
 
     if (materialIds.length === 0) {
       setStats({ ...EMPTY_STATS, totalMaterials: materialsCount || 0 });
@@ -47,34 +49,42 @@ export default function SupplierDashboard() {
       return;
     }
 
-    const { data: orderRows, count: ordersCount } = await supabase
+    const { data: orderRows } = await supabase
       .from("orders")
-      .select("payment_status, is_sent, amount, payment_method", { count: "exact" })
+      .select("payment_status, is_sent, amount, payment_method, material_id")
       .in("material_id", materialIds);
 
-    // 단일 패스로 통계 집계
-    let completedOrders = 0;
-    let pendingDelivery = 0;
-    let paidOrders = 0;
+    // 단일 패스로 통계 집계 (유료 결제 / 무료 다운로드 분리)
+    let paidCount = 0;
+    let paidPending = 0;
+    let paidCompleted = 0;
+    let freeDownloads = 0;
     let totalRevenue = 0;
     let bankPending = 0;
     for (const o of orderRows ?? []) {
-      if (o.payment_method === "bank_transfer" && o.payment_status === "pending") {
+      const free = isFreeCategory(categoryMap.get(o.material_id) ?? "");
+      // 무료 자료는 직접 다운로드 → 입금/발송 개념 없음. 유료 주문만 입금 대기 집계
+      if (!free && o.payment_method === "bank_transfer" && o.payment_status === "pending") {
         bankPending += 1;
       }
       if (o.payment_status !== "done") continue;
-      paidOrders += 1;
+      if (free) {
+        // 무료 다운로드는 발송 대기/정산에서 제외하고 별도 카운트
+        freeDownloads += 1;
+        continue;
+      }
+      paidCount += 1;
       totalRevenue += o.amount;
-      if (o.is_sent) completedOrders += 1;
-      else pendingDelivery += 1;
+      if (o.is_sent) paidCompleted += 1;
+      else paidPending += 1;
     }
 
     setStats({
       totalMaterials: materialsCount || 0,
-      totalOrders: ordersCount || 0,
-      completedOrders,
-      pendingDelivery,
-      paidOrders,
+      paidCount,
+      paidPending,
+      paidCompleted,
+      freeDownloads,
       totalRevenue,
       bankPending,
     });
@@ -88,9 +98,9 @@ export default function SupplierDashboard() {
 
   const statCards = useMemo(() => [
     { title: "등록 자료", value: stats.totalMaterials, icon: Package, description: "등록된 PDF 자료 수" },
-    { title: "총 주문", value: stats.totalOrders, icon: ShoppingCart, description: "전체 주문 건수" },
-    { title: "발송 완료", value: stats.completedOrders, icon: CheckCircle, description: "파일 발송 완료" },
-    { title: "발송 대기", value: stats.pendingDelivery, icon: Clock, description: "결제 완료, 발송 필요", highlight: true },
+    { title: "유료 결제", value: stats.paidCount, icon: ShoppingCart, description: "유료 자료 결제 건수" },
+    { title: "무료 다운로드", value: stats.freeDownloads, icon: Download, description: "무료 자료 다운로드 수" },
+    { title: "발송 대기", value: stats.paidPending, icon: Clock, description: "결제 완료, 발송 필요", highlight: true },
   ], [stats]);
 
   return (
@@ -110,7 +120,7 @@ export default function SupplierDashboard() {
         {statCards.map((card) => (
           <Card
             key={card.title}
-            className={card.highlight && stats.pendingDelivery > 0 ? "border-yellow-300 bg-yellow-50/50" : ""}
+            className={card.highlight && stats.paidPending > 0 ? "border-yellow-300 bg-yellow-50/50" : ""}
           >
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">{card.title}</CardTitle>
@@ -124,11 +134,11 @@ export default function SupplierDashboard() {
         ))}
       </div>
 
-      {/* 판매 현황 */}
+      {/* 유료 결제 현황 */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-3 border-b">
           <CardTitle className="text-base font-bold text-[#365927] flex items-center gap-2">
-            🏷️ 판매 현황
+            🏷️ 유료 결제 현황
           </CardTitle>
           <button
             onClick={fetchData}
@@ -140,36 +150,23 @@ export default function SupplierDashboard() {
           </button>
         </CardHeader>
         <CardContent className="pt-4">
-          {/* 총합 행 + 흐름 행 - 동일 컬럼 너비로 정렬 */}
-          <div>
-            {/* 총합 행 */}
-            <div className="flex items-center bg-[#f5f9f4] rounded-lg py-2 text-xs text-muted-foreground mb-3">
-              <span className="w-12 text-center font-medium text-[#5a7d50] shrink-0">총합</span>
-              <div className="flex-1 text-center font-medium text-[#365927]">{stats.paidOrders}</div>
-              <div className="w-5 shrink-0" />
-              <div className="flex-1 text-center font-medium text-amber-500">{stats.pendingDelivery}</div>
-              <div className="w-5 shrink-0" />
-              <div className="flex-1 text-center font-medium text-[#5a7d50]">{stats.completedOrders}</div>
+          {/* 결제 완료 → 상품 준비중 → 발송 완료 흐름 */}
+          <div className="flex items-center">
+            <div className="flex-1 flex flex-col items-center gap-1 py-3">
+              <span className="text-3xl font-bold text-[#365927]">{stats.paidCount}</span>
+              <span className="text-xs text-muted-foreground whitespace-nowrap">결제 완료</span>
             </div>
-            {/* 흐름 행 */}
-            <div className="flex items-center">
-              <div className="w-12 shrink-0" />
-              <div className="flex-1 flex flex-col items-center gap-1 py-3">
-                <span className="text-3xl font-bold text-[#365927]">{stats.paidOrders}</span>
-                <span className="text-xs text-muted-foreground whitespace-nowrap">결제 완료</span>
-              </div>
-              <ChevronRight className="w-5 h-5 text-[#d6e4d3] shrink-0" />
-              <div className="flex-1 flex flex-col items-center gap-1 py-3">
-                <span className={`text-3xl font-bold ${stats.pendingDelivery > 0 ? "text-amber-500" : "text-[#8aab82]"}`}>
-                  {stats.pendingDelivery}
-                </span>
-                <span className="text-xs text-muted-foreground whitespace-nowrap">상품 준비중</span>
-              </div>
-              <ChevronRight className="w-5 h-5 text-[#d6e4d3] shrink-0" />
-              <div className="flex-1 flex flex-col items-center gap-1 py-3">
-                <span className="text-3xl font-bold text-[#5a7d50]">{stats.completedOrders}</span>
-                <span className="text-xs text-muted-foreground whitespace-nowrap">발송 완료</span>
-              </div>
+            <ChevronRight className="w-5 h-5 text-[#d6e4d3] shrink-0" />
+            <div className="flex-1 flex flex-col items-center gap-1 py-3">
+              <span className={`text-3xl font-bold ${stats.paidPending > 0 ? "text-amber-500" : "text-[#8aab82]"}`}>
+                {stats.paidPending}
+              </span>
+              <span className="text-xs text-muted-foreground whitespace-nowrap">상품 준비중</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-[#d6e4d3] shrink-0" />
+            <div className="flex-1 flex flex-col items-center gap-1 py-3">
+              <span className="text-3xl font-bold text-[#5a7d50]">{stats.paidCompleted}</span>
+              <span className="text-xs text-muted-foreground whitespace-nowrap">발송 완료</span>
             </div>
           </div>
 
@@ -180,6 +177,24 @@ export default function SupplierDashboard() {
               {stats.totalRevenue.toLocaleString()}원
             </span>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* 무료 자료 다운로드 (유료 결제와 분리) */}
+      <Card>
+        <CardHeader className="pb-3 border-b">
+          <CardTitle className="text-base font-bold text-[#365927] flex items-center gap-2">
+            📥 무료 자료 다운로드
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-[#5a7d50] font-medium">총 다운로드</span>
+            <span className="text-2xl font-bold text-[#365927]">{stats.freeDownloads}건</span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            무료 자료는 구매자가 사이트에서 직접 내려받으므로 별도 발송이 필요하지 않습니다.
+          </p>
         </CardContent>
       </Card>
 

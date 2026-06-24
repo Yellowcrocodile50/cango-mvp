@@ -52,13 +52,15 @@ function formatDownloadTime(iso: string): string {
 }
 
 // 처리 우선순위: 낮을수록 위로 (입금확인 → 발송 → 영수증발행 → 완료 → 취소)
+// 무료 자료는 직접 다운로드 → 발송 개념이 없으므로 '발송 대기'로 치지 않음
 function actionPriority(o: Order): number {
-  if (o.payment_status === "pending") return 0; // 입금 확인 대기
-  if (o.payment_status === "done" && !o.is_sent) return 1; // 발송 대기
+  const free = isFreeCategory(o.material_category);
+  if (!free && o.payment_status === "pending") return 0; // 입금 확인 대기
+  if (!free && o.payment_status === "done" && !o.is_sent) return 1; // 발송 대기
   if (o.cash_receipt_requested && o.payment_status === "done" && !o.cash_receipt_issued)
     return 2; // 현금영수증 발행 대기
   if (o.payment_status === "canceled") return 4; // 취소 (맨 뒤)
-  return 3; // 처리 완료
+  return 3; // 처리 완료(무료 다운로드 포함)
 }
 
 export default function OrdersPage() {

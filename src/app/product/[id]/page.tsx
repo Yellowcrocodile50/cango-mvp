@@ -39,7 +39,7 @@ export async function generateMetadata(
     `${categoryLabel} ${priceText} 입시 자료. 선배들이 직접 만든 검증된 자료를 CANGO에서 확인하세요.`;
 
   return {
-    title,
+    title: { absolute: title },
     description,
     alternates: { canonical: url },
     openGraph: {

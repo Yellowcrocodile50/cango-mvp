@@ -13,9 +13,9 @@ export default function Footer() {
                 href="https://docs.google.com/forms/d/e/1FAIpQLSeg2gKeJGpj69NgoBLwNc4TMaiwsZqAO5alFPZVp1-loOtBxw/viewform"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs border border-[#5a7d50] text-[#5a7d50] rounded-full px-2.5 py-0.5 hover:bg-[#365927] hover:text-white transition"
+                className="text-xs font-semibold bg-[#365927] text-white rounded-full px-3 py-1 hover:bg-[#4a7a38] transition shadow-sm"
               >
-                신규 자료 제안
+                ✏️ 신규 자료 제안
               </a>
             </div>
             <p>선배들이 만든 입시 자료 마켓플레이스</p>

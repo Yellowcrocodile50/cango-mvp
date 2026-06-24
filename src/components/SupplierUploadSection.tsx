@@ -263,7 +263,7 @@ export default function SupplierUploadSection({
                 type="number"
                 value={form.price}
                 onChange={(e) => setForm({ ...form, price: e.target.value })}
-                placeholder="5000"
+                placeholder="10000"
                 required
                 min="0"
                 className="w-full h-10 px-3 border border-[#d6e4d3] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white"

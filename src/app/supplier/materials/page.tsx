@@ -379,7 +379,7 @@ export default function MaterialsPage() {
                   type="number"
                   value={form.price}
                   onChange={(e) => setForm({ ...form, price: e.target.value })}
-                  placeholder="5000"
+                  placeholder="10000"
                   required
                   min="0"
                 />

@@ -202,7 +202,7 @@ export default function Header() {
                       aria-haspopup="menu"
                       aria-expanded={menuOpen}
                     >
-                      <span>{user.user_metadata?.userid || user.email}님</span>
+                      <span className="max-w-[72px] sm:max-w-[120px] truncate inline-block">{user.user_metadata?.userid || user.email}님</span>
                       <ChevronDown
                         className={`h-4 w-4 transition-transform ${
                           menuOpen ? "rotate-180" : ""

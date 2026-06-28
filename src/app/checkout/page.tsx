@@ -251,7 +251,7 @@ function CheckoutContent() {
             type="button"
             disabled={!CARD_LIVE}
             onClick={() => setPayMethod("CARD")}
-            className={`h-12 rounded-lg border-2 text-sm font-medium transition ${
+            className={`min-h-[3rem] py-2 rounded-lg border-2 text-sm font-medium transition ${
               !CARD_LIVE
                 ? "border-[#d6e4d3] text-[#b0c8ab] cursor-not-allowed bg-[#f5f9f4]"
                 : payMethod === "CARD"
@@ -259,14 +259,14 @@ function CheckoutContent() {
                 : "border-[#d6e4d3] text-[#5a7d50] hover:border-[#5a7d50] cursor-pointer"
             }`}
           >
-            신용/체크카드
+            신용카드
             {!CARD_LIVE && <span className="block text-[10px] mt-0.5">준비 중</span>}
           </button>
           <button
             type="button"
             disabled={!EASY_PAY_LIVE}
             onClick={() => setPayMethod("EASY_PAY")}
-            className={`h-12 rounded-lg border-2 text-sm font-medium transition ${
+            className={`min-h-[3rem] py-2 rounded-lg border-2 text-sm font-medium transition ${
               !EASY_PAY_LIVE
                 ? "border-[#d6e4d3] text-[#b0c8ab] cursor-not-allowed bg-[#f5f9f4]"
                 : payMethod === "EASY_PAY"
@@ -280,7 +280,7 @@ function CheckoutContent() {
           <button
             type="button"
             onClick={() => setPayMethod("BANK_TRANSFER")}
-            className={`h-12 rounded-lg border-2 text-sm font-medium transition cursor-pointer ${
+            className={`min-h-[3rem] py-2 rounded-lg border-2 text-sm font-medium transition cursor-pointer ${
               payMethod === "BANK_TRANSFER"
                 ? "border-[#365927] bg-[#eaf2e8] text-[#365927]"
                 : "border-[#d6e4d3] text-[#5a7d50] hover:border-[#5a7d50]"

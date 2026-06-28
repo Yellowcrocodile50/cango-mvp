@@ -228,7 +228,7 @@ export default function StatsPage() {
           </div>
         </CardHeader>
 
-        <CardContent className="pt-6">
+        <CardContent className="pt-6 pb-4">
           <div className="flex justify-end gap-4 mb-3 text-xs">
             <div className="flex items-center gap-1.5">
               <span className="inline-block w-3 h-3 rounded-sm bg-[#365927]" />
@@ -246,7 +246,7 @@ export default function StatsPage() {
             <p className="text-sm text-muted-foreground py-20 text-center">로딩 중...</p>
           ) : (
             <div className="flex">
-              <div className="flex flex-col justify-between h-64 pr-2 text-xs text-[#8aab82] text-right shrink-0">
+              <div className="flex flex-col justify-between h-64 pr-2 pb-[6px] text-xs text-[#8aab82] text-right shrink-0">
                 {[...yTicks].reverse().map((v) => (
                   <span key={v} className="leading-none">
                     {tab === "amount" ? formatAmount(v) : v}

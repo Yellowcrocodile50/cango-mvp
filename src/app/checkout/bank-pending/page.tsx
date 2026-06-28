@@ -224,7 +224,7 @@ function BankPendingContent() {
           <button
             onClick={handleSave}
             disabled={saving || saved}
-            className={`h-10 px-4 rounded-lg text-sm font-medium transition cursor-pointer disabled:cursor-not-allowed ${
+            className={`h-10 px-4 rounded-lg text-sm font-medium transition cursor-pointer disabled:cursor-not-allowed shrink-0 whitespace-nowrap ${
               saved
                 ? "bg-[#eaf2e8] text-[#365927] border border-[#365927]"
                 : "bg-[#365927] text-white hover:bg-[#4a7a38] disabled:opacity-50"

@@ -246,7 +246,7 @@ export default function ProductDetailClient({ material }: { material: Material }
       {showLoginModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl p-8 max-w-sm w-full mx-4 text-center shadow-xl">
-            <h2 className="text-2xl font-bold text-[#365927] mb-3">로그인이 필요합니다</h2>
+            <h2 className="text-2xl font-bold text-[#365927] mb-3">로그인이 필요합니다!</h2>
             <p className="text-[#5a7d50] text-xs mb-6">
               무료 자료는 로그인 후 마이페이지에서 다운로드할 수 있어요.
             </p>

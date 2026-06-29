@@ -27,7 +27,7 @@ export const categoryGroups: CategoryGroup[] = [
     items: ["기타"],
   },
   {
-    label: "무료 내신 자료",
+    label: "무료 입시 자료",
     items: [
       "공통국어", "문학", "비문학", "화법과작문", "언어와매체",
       "고1영어", "고2영어", "고3영어",
@@ -49,7 +49,7 @@ export const categoryGroups: CategoryGroup[] = [
 
 export const allCategories = categoryGroups.flatMap((g) => g.items);
 
-export const FREE_PARENT_CATEGORY = "무료 내신 자료";
+export const FREE_PARENT_CATEGORY = "무료 입시 자료";
 
 export function isFreeCategory(category: string): boolean {
   const freeGroup = categoryGroups.find((g) => g.label === FREE_PARENT_CATEGORY);
@@ -91,14 +91,14 @@ export function getBreadcrumb(category: string | null): BreadcrumbItem[] {
   const topGroup = categoryGroups.find((g) => g.label === category);
   if (topGroup) return [{ name: category, href: null }];
 
-  // 무료 내신 자료 하위 계층 처리 (2단계 / 3단계)
-  const freeGroup = categoryGroups.find((g) => g.label === "무료 내신 자료");
+  // 무료 입시 자료 하위 계층 처리 (2단계 / 3단계)
+  const freeGroup = categoryGroups.find((g) => g.label === "무료 입시 자료");
   if (freeGroup?.subGroups) {
     // 2단계: 국어/영어/수학 등 subGroup 라벨
     const subGroup = freeGroup.subGroups.find((sg) => sg.label === category);
     if (subGroup) {
       return [
-        { name: "무료 내신 자료", href: "/?category=무료 내신 자료" },
+        { name: "무료 입시 자료", href: "/?category=무료 입시 자료" },
         { name: category, href: null },
       ];
     }
@@ -106,7 +106,7 @@ export function getBreadcrumb(category: string | null): BreadcrumbItem[] {
     for (const sg of freeGroup.subGroups) {
       if (sg.items.includes(category)) {
         return [
-          { name: "무료 내신 자료", href: "/?category=무료 내신 자료" },
+          { name: "무료 입시 자료", href: "/?category=무료 입시 자료" },
           { name: sg.label, href: `/?category=${sg.label}` },
           { name: category, href: null },
         ];
@@ -116,7 +116,7 @@ export function getBreadcrumb(category: string | null): BreadcrumbItem[] {
 
   // 고등학생/중학생 하위 항목 (수시/정시/공부법/고교입시)
   for (const group of categoryGroups) {
-    if (group.label === "무료 내신 자료") continue;
+    if (group.label === "무료 입시 자료") continue;
     if (group.items.includes(category) && group.label !== category) {
       return [
         { name: group.label, href: `/?category=${group.label}` },

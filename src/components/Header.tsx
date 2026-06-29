@@ -42,8 +42,8 @@ const categories: NavItem[] = [
   { name: "진로/직업", href: "/?category=진로/직업" },
   { name: "기타", href: "/?category=기타" },
   {
-    name: "무료 내신 자료",
-    href: "/?category=무료 내신 자료",
+    name: "무료 입시 자료",
+    href: "/?category=무료 입시 자료",
     children: [
       {
         name: "국어",
@@ -268,7 +268,7 @@ export default function Header() {
                 <Link
                   href={cat.href}
                   className={`whitespace-nowrap transition inline-block py-1 ${
-                    cat.name === "무료 내신 자료"
+                    cat.name === "무료 입시 자료"
                       ? "text-[#8aab82] hover:text-[#5a7d50]"
                       : "text-[#5a7d50] hover:text-[#365927]"
                   }`}
@@ -337,7 +337,7 @@ export default function Header() {
                       }
                     }}
                     className={`whitespace-nowrap py-1 transition flex items-center gap-0.5 ${
-                      cat.name === "무료 내신 자료"
+                      cat.name === "무료 입시 자료"
                         ? openCat === cat.name ? "text-[#5a7d50] font-semibold" : "text-[#8aab82]"
                         : openCat === cat.name ? "text-[#365927] font-semibold" : "text-[#5a7d50]"
                     }`}

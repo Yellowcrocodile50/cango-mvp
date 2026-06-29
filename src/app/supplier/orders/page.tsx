@@ -320,7 +320,7 @@ export default function OrdersPage() {
                     order.payment_method === "bank_transfer" && order.payment_status === "pending";
                   // 비로그인(노랑) > 입금 대기(파랑, 로그인만) > 무료(초록) > 유료(기본)
                   const rowClass = isGuest
-                    ? "bg-yellow-50/60"
+                    ? "bg-yellow-100/70"
                     : isBankPending
                       ? "bg-blue-50/60"
                       : isFree

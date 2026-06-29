@@ -119,7 +119,7 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Top bar */}
         <div className="flex items-center justify-between h-20">
-          <Link href="/" className="flex items-center gap-4">
+          <Link href="/" className="flex items-center gap-4" onClick={(e) => { if (window.location.search) { e.preventDefault(); window.location.href = "/"; } }}>
             <Image
               src="/cango-logo.png"
               alt="CANGO"
@@ -228,6 +228,7 @@ export default function Header() {
               <div key={cat.name} className="relative group">
                 <Link
                   href={cat.href}
+                  onClick={cat.href === "/" ? (e) => { if (window.location.search) { e.preventDefault(); window.location.href = "/"; } } : undefined}
                   className={`whitespace-nowrap transition inline-block py-1 ${
                     cat.name === "무료 입시 자료"
                       ? "text-[#8aab82] hover:text-[#5a7d50]"
@@ -293,7 +294,11 @@ export default function Header() {
                         setOpenCat(openCat === cat.name ? null : cat.name);
                         setOpenSubCat(null);
                       } else {
-                        router.push(cat.href);
+                        if (cat.href === "/" && window.location.search) {
+                          window.location.href = "/";
+                        } else {
+                          router.push(cat.href);
+                        }
                         setOpenCat(null);
                       }
                     }}

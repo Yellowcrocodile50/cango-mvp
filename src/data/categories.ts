@@ -109,6 +109,13 @@ export function getBreadcrumb(category: string | null): BreadcrumbItem[] {
     for (const sg of freeGroup.subGroups) {
       if (sg.items.includes(category)) {
         const displaySgLabel = FREE_SUB_DISPLAY[sg.label] ?? stripFreePrefix(sg.label);
+        // subGroup 이름과 항목 이름이 같으면(진로/직업, 기타) 중간 단계 생략
+        if (displaySgLabel === displayCat) {
+          return [
+            { name: FREE_PARENT_CATEGORY, href: `/?category=${encodeURIComponent(FREE_PARENT_CATEGORY)}` },
+            { name: displayCat, href: null },
+          ];
+        }
         return [
           { name: FREE_PARENT_CATEGORY, href: `/?category=${encodeURIComponent(FREE_PARENT_CATEGORY)}` },
           { name: displaySgLabel, href: `/?category=${encodeURIComponent(sg.label)}` },

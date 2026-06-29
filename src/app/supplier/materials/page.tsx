@@ -423,13 +423,21 @@ export default function MaterialsPage() {
                 >
                   {categoryGroups.flatMap((group) =>
                     group.subGroups
-                      ? group.subGroups.map((sub) => (
-                          <optgroup key={`${group.label}-${sub.label}`} label={`${group.label} › ${FREE_SUB_DISPLAY[sub.label] ?? sub.label}`}>
-                            {sub.items.map((item) => (
-                              <option key={item} value={item}>{item.startsWith("무료-") ? item.slice(3) : item}</option>
-                            ))}
-                          </optgroup>
-                        ))
+                      ? group.subGroups.map((sub) => {
+                          const subLabel = `${group.label} › ${FREE_SUB_DISPLAY[sub.label] ?? sub.label}`;
+                          if (sub.items.length === 1) {
+                            return (
+                              <option key={sub.items[0]} value={sub.items[0]}>{subLabel}</option>
+                            );
+                          }
+                          return (
+                            <optgroup key={`${group.label}-${sub.label}`} label={subLabel}>
+                              {sub.items.map((item) => (
+                                <option key={item} value={item}>{item.startsWith("무료-") ? item.slice(3) : item}</option>
+                              ))}
+                            </optgroup>
+                          );
+                        })
                       : [
                           <optgroup key={group.label} label={group.label}>
                             {group.items.map((item) => (

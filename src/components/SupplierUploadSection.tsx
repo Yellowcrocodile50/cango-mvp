@@ -291,7 +291,7 @@ export default function SupplierUploadSection({
                       return (
                         <optgroup key={`${group.label}-${sub.label}`} label={subLabel}>
                           {sub.items.map((item) => (
-                            <option key={item} value={item}>{item.startsWith("무료-") ? item.slice(3) : item}</option>
+                            <option key={item} value={item}>{item.startsWith("무료-") ? `${item.slice(3)} (무료)` : item}</option>
                           ))}
                         </optgroup>
                       );

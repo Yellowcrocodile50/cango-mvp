@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { Upload, FileText, Plus, X, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
-import { categoryGroups } from "@/data/categories";
+import { categoryGroups, FREE_SUB_DISPLAY } from "@/data/categories";
 import { toast } from "sonner";
 
 const THUMBNAIL_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -282,7 +282,7 @@ export default function SupplierUploadSection({
               {categoryGroups.flatMap((group) =>
                 group.subGroups
                   ? group.subGroups.map((sub) => (
-                      <optgroup key={`${group.label}-${sub.label}`} label={`${group.label} › ${sub.label}`}>
+                      <optgroup key={`${group.label}-${sub.label}`} label={`${group.label} › ${FREE_SUB_DISPLAY[sub.label] ?? sub.label}`}>
                         {sub.items.map((item) => (
                           <option key={item} value={item}>{item.startsWith("무료-") ? item.slice(3) : item}</option>
                         ))}

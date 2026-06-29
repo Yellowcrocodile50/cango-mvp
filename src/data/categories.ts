@@ -42,6 +42,12 @@ export const allCategories = categoryGroups.flatMap((g) => g.items);
 
 export const FREE_PARENT_CATEGORY = "무료 입시 자료";
 
+// 무료 입시 자료 subGroup 내부 label → UI 표시 이름
+export const FREE_SUB_DISPLAY: Record<string, string> = {
+  "고등": "고등학생(대학입시)",
+  "중학": "중학생",
+};
+
 // "무료-수시" → "수시" 처리
 function stripFreePrefix(s: string): string {
   return s.startsWith("무료-") ? s.slice(3) : s;

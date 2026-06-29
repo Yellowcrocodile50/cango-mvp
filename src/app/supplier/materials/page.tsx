@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Pencil, Upload, FileText, Image as ImageIcon, X } from "lucide-react";
-import { categoryGroups } from "@/data/categories";
+import { categoryGroups, FREE_SUB_DISPLAY } from "@/data/categories";
 import { toast } from "sonner";
 
 const THUMBNAIL_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -424,7 +424,7 @@ export default function MaterialsPage() {
                   {categoryGroups.flatMap((group) =>
                     group.subGroups
                       ? group.subGroups.map((sub) => (
-                          <optgroup key={`${group.label}-${sub.label}`} label={`${group.label} › ${sub.label}`}>
+                          <optgroup key={`${group.label}-${sub.label}`} label={`${group.label} › ${FREE_SUB_DISPLAY[sub.label] ?? sub.label}`}>
                             {sub.items.map((item) => (
                               <option key={item} value={item}>{item.startsWith("무료-") ? item.slice(3) : item}</option>
                             ))}

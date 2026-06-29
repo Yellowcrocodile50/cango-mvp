@@ -46,7 +46,7 @@ const categories: NavItem[] = [
     href: "/?category=무료 입시 자료",
     children: [
       {
-        name: "고등",
+        name: "고등학생(대학입시)",
         href: "/?category=고등",
         children: [
           { name: "수시", href: "/?category=무료-수시" },
@@ -54,7 +54,7 @@ const categories: NavItem[] = [
         ],
       },
       {
-        name: "중학",
+        name: "중학생",
         href: "/?category=중학",
         children: [
           { name: "공부법", href: "/?category=무료-공부법" },

@@ -11,6 +11,7 @@ interface OrderRow {
   amount: number;
   created_at: string;
   material_id: string;
+  buyer_id: string | null;
 }
 
 interface DailyEntry {
@@ -18,6 +19,8 @@ interface DailyEntry {
   paidAmount: number;
   paidCount: number;
   freeCount: number;
+  loggedInPaidCount: number;
+  guestPaidCount: number;
 }
 
 function pad(n: number): string {
@@ -111,7 +114,7 @@ export default function StatsPage() {
 
       const { data: rawOrders } = await supabase
         .from("orders")
-        .select("amount, created_at, material_id")
+        .select("amount, created_at, material_id, buyer_id")
         .in("material_id", materialIds)
         .eq("payment_status", "done")
         .gte("created_at", startISO)
@@ -132,7 +135,7 @@ export default function StatsPage() {
 
     const map = new Map<string, DailyEntry>();
     for (const day of days) {
-      map.set(day, { day, paidAmount: 0, paidCount: 0, freeCount: 0 });
+      map.set(day, { day, paidAmount: 0, paidCount: 0, freeCount: 0, loggedInPaidCount: 0, guestPaidCount: 0 });
     }
 
     for (const o of orders) {
@@ -144,6 +147,11 @@ export default function StatsPage() {
       } else {
         entry.paidAmount += o.amount;
         entry.paidCount += 1;
+        if (o.buyer_id) {
+          entry.loggedInPaidCount += 1;
+        } else {
+          entry.guestPaidCount += 1;
+        }
       }
     }
 
@@ -156,8 +164,10 @@ export default function StatsPage() {
         paidAmount: acc.paidAmount + d.paidAmount,
         paidCount: acc.paidCount + d.paidCount,
         freeCount: acc.freeCount + d.freeCount,
+        loggedInPaidCount: acc.loggedInPaidCount + d.loggedInPaidCount,
+        guestPaidCount: acc.guestPaidCount + d.guestPaidCount,
       }),
-      { paidAmount: 0, paidCount: 0, freeCount: 0 }
+      { paidAmount: 0, paidCount: 0, freeCount: 0, loggedInPaidCount: 0, guestPaidCount: 0 }
     );
   }, [dailyData]);
 
@@ -165,7 +175,7 @@ export default function StatsPage() {
     if (tab === "amount") {
       return Math.max(0, ...dailyData.map((d) => d.paidAmount));
     }
-    return Math.max(0, ...dailyData.flatMap((d) => [d.paidCount, d.freeCount]));
+    return Math.max(0, ...dailyData.flatMap((d) => [d.loggedInPaidCount, d.guestPaidCount, d.freeCount]));
   }, [tab, dailyData]);
 
   const yMax = niceMax(rawMax);
@@ -223,22 +233,33 @@ export default function StatsPage() {
             <span className="ml-auto text-xs text-[#5a7d50]">
               {tab === "amount"
                 ? `합계 ${totals.paidAmount.toLocaleString()}원`
-                : `합계 ${totals.paidCount + totals.freeCount}건 (유료 ${totals.paidCount} / 무료 ${totals.freeCount})`}
+                : `유료 ${totals.paidCount}건 (로그인 ${totals.loggedInPaidCount} / 비로그인 ${totals.guestPaidCount}) · 무료 ${totals.freeCount}건`}
             </span>
           </div>
         </CardHeader>
 
         <CardContent className="pt-6 pb-4">
           <div className="flex justify-end gap-4 mb-3 text-xs">
-            <div className="flex items-center gap-1.5">
-              <span className="inline-block w-3 h-3 rounded-sm bg-[#365927]" />
-              <span className="text-[#5a7d50]">유료</span>
-            </div>
-            {tab === "count" && (
+            {tab === "amount" ? (
               <div className="flex items-center gap-1.5">
-                <span className="inline-block w-3 h-3 rounded-sm bg-[#c8d8be]" />
-                <span className="text-[#5a7d50]">무료</span>
+                <span className="inline-block w-3 h-3 rounded-sm bg-[#365927]" />
+                <span className="text-[#5a7d50]">유료 결제금액</span>
               </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-block w-3 h-3 rounded-sm bg-[#365927]" />
+                  <span className="text-[#5a7d50]">로그인+유료</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-block w-3 h-3 rounded-sm bg-amber-400" />
+                  <span className="text-[#5a7d50]">비로그인+유료</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-block w-3 h-3 rounded-sm bg-[#c8d8be]" />
+                  <span className="text-[#5a7d50]">무료</span>
+                </div>
+              </>
             )}
           </div>
 
@@ -267,12 +288,13 @@ export default function StatsPage() {
                   <div className="absolute inset-0 flex items-stretch gap-px px-1">
                     {dailyData.map((d) => {
                       const paidH = yMax === 0 ? 0 : (d.paidAmount / yMax) * 100;
-                      const countPaidH = yMax === 0 ? 0 : (d.paidCount / yMax) * 100;
+                      const loggedInH = yMax === 0 ? 0 : (d.loggedInPaidCount / yMax) * 100;
+                      const guestH = yMax === 0 ? 0 : (d.guestPaidCount / yMax) * 100;
                       const countFreeH = yMax === 0 ? 0 : (d.freeCount / yMax) * 100;
                       const title =
                         tab === "amount"
                           ? `${d.day}\n결제금액 ${d.paidAmount.toLocaleString()}원`
-                          : `${d.day}\n유료 ${d.paidCount}건 / 무료 ${d.freeCount}건`;
+                          : `${d.day}\n로그인+유료 ${d.loggedInPaidCount}건 / 비로그인+유료 ${d.guestPaidCount}건 / 무료 ${d.freeCount}건`;
                       return (
                         <div
                           key={d.day}
@@ -288,7 +310,11 @@ export default function StatsPage() {
                             <div className="w-full flex flex-row items-end gap-px h-full">
                               <div
                                 className="flex-1 bg-[#365927] hover:bg-[#4a7a38] rounded-t-sm transition-colors"
-                                style={{ height: `${countPaidH}%` }}
+                                style={{ height: `${loggedInH}%` }}
+                              />
+                              <div
+                                className="flex-1 bg-amber-400 hover:bg-amber-500 rounded-t-sm transition-colors"
+                                style={{ height: `${guestH}%` }}
                               />
                               <div
                                 className="flex-1 bg-[#c8d8be] hover:bg-[#b5cba8] rounded-t-sm transition-colors"

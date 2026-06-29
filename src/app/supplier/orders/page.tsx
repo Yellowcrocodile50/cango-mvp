@@ -271,7 +271,11 @@ export default function OrdersPage() {
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <span className="inline-block w-3 h-3 rounded-sm bg-white border border-gray-300" />
-                유료 자료
+                유료 자료 (로그인)
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="inline-block w-3 h-3 rounded-sm bg-yellow-100 border border-yellow-300" />
+                비로그인 주문
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <span className="inline-block w-3 h-3 rounded-sm bg-blue-100 border border-blue-300" />
@@ -311,14 +315,17 @@ export default function OrdersPage() {
               <TableBody>
                 {sortedOrders.map((order) => {
                   const isFree = isFreeCategory(order.material_category);
+                  const isGuest = order.buyer_id === null;
                   const isBankPending =
                     order.payment_method === "bank_transfer" && order.payment_status === "pending";
-                  // 입금 대기(파랑) > 무료(초록) > 유료(기본) 순으로 행 배경 구분
-                  const rowClass = isBankPending
-                    ? "bg-blue-50/60"
-                    : isFree
-                      ? "bg-emerald-50/60"
-                      : "";
+                  // 비로그인(노랑) > 입금 대기(파랑, 로그인만) > 무료(초록) > 유료(기본)
+                  const rowClass = isGuest
+                    ? "bg-yellow-50/60"
+                    : isBankPending
+                      ? "bg-blue-50/60"
+                      : isFree
+                        ? "bg-emerald-50/60"
+                        : "";
                   return (
                     <TableRow key={order.id} className={rowClass}>
                       <TableCell className="font-medium">{order.material_title}</TableCell>

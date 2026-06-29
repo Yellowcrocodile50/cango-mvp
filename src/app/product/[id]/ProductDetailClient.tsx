@@ -14,7 +14,7 @@ import { toast } from "sonner";
 export default function ProductDetailClient({ material }: { material: Material }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { addItem } = useCart();
+  const { addItem, clearCart } = useCart();
   const [user, setUser] = useState<User | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [previewExpanded, setPreviewExpanded] = useState(false);
@@ -78,7 +78,12 @@ export default function ProductDetailClient({ material }: { material: Material }
   };
 
   const handleBuyNow = () => {
-    addItem(cartItem);
+    if (user) {
+      addItem(cartItem);
+    } else {
+      clearCart();
+      addItem(cartItem);
+    }
     router.push("/checkout");
   };
 

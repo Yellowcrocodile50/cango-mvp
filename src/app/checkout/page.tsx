@@ -135,6 +135,7 @@ function CheckoutContent() {
       order_id: orderId,
       payment_method: payMethod === "BANK_TRANSFER" ? "bank_transfer" : "portone",
       marketing_agreed: isGuest ? marketingAgreed : false,
+      privacy_agreed: isGuest ? privacyAgreed : false,
       cash_receipt_requested: payMethod === "BANK_TRANSFER" ? cashReceiptWanted : false,
       cash_receipt_phone: payMethod === "BANK_TRANSFER" && cashReceiptWanted ? cashReceiptPhone.trim() : null,
     }));

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { BANK_ACCOUNT } from "@/lib/companyInfo";
@@ -17,6 +17,8 @@ function BankPendingContent() {
   const cashReceiptRequested = searchParams.get("receipt") === "1";
 
   // 체크아웃에서 넘어온 주문 데이터(아직 DB에 미생성). orderId가 일치하면 "생성 모드".
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
   const [stash, setStash] = useState<BankOrderStash | null>(() => {
     if (typeof window === "undefined" || !orderId) return null;
     try {
@@ -35,6 +37,10 @@ function BankPendingContent() {
   const [copied, setCopied] = useState(false);
 
   const isCreateMode = stash !== null;
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => setIsLoggedIn(!!user));
+  }, []);
 
   // 뷰 모드(이미 생성된 주문)에서 입금자명을 서버에 저장
   const saveDepositorRemote = async (): Promise<boolean> => {
@@ -95,16 +101,11 @@ function BankPendingContent() {
     setSaving(true);
 
     if (isCreateMode && stash) {
-      // 입금 완료 시점에 비로소 주문 레코드를 생성한다.
+      // 입금 완료 시점에 비로소 주문 레코드를 생성한다. (로그인/비로그인 모두 가능)
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setSaving(false);
-        toast.error("세션이 만료되었습니다. 다시 로그인해주세요.");
-        return;
-      }
       const rowsToInsert = stash.rows.map((r) => ({
         ...r,
-        buyer_id: user.id,
+        buyer_id: user?.id ?? null,
         depositor_name: depositorName.trim(),
       }));
       const { error } = await supabase.from("orders").insert(rowsToInsert);
@@ -144,18 +145,26 @@ function BankPendingContent() {
           입금 내역을 확인한 후 등록하신 이메일로 자료를 보내드리겠습니다.
         </p>
         <p className="text-center text-sm text-[#8aab82] mb-10">
-          발송 상태는 마이페이지에서 언제든 확인할 수 있습니다.
+          {isLoggedIn
+            ? "발송 상태는 마이페이지에서 언제든 확인할 수 있습니다."
+            : "입금 확인 후 기재하신 이메일로 자료를 보내드립니다."}
         </p>
         <div className="space-y-3">
-          <Link
-            href="/mypage"
-            className="block w-full h-12 bg-[#365927] text-white rounded-lg font-medium hover:bg-[#4a7a38] transition flex items-center justify-center"
-          >
-            마이페이지 보기
-          </Link>
+          {isLoggedIn && (
+            <Link
+              href="/mypage"
+              className="block w-full h-12 bg-[#365927] text-white rounded-lg font-medium hover:bg-[#4a7a38] transition flex items-center justify-center"
+            >
+              마이페이지 보기
+            </Link>
+          )}
           <Link
             href="/"
-            className="block w-full h-12 border border-[#d6e4d3] text-[#5a7d50] rounded-lg font-medium hover:bg-[#f5f9f4] transition flex items-center justify-center"
+            className={`block w-full h-12 rounded-lg font-medium transition flex items-center justify-center ${
+              isLoggedIn
+                ? "border border-[#d6e4d3] text-[#5a7d50] hover:bg-[#f5f9f4]"
+                : "bg-[#365927] text-white hover:bg-[#4a7a38]"
+            }`}
           >
             홈으로 돌아가기
           </Link>

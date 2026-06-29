@@ -44,7 +44,12 @@ function CheckoutContent() {
   const [cashReceiptPhoneTouched, setCashReceiptPhoneTouched] = useState(false);
   const [accountCopied, setAccountCopied] = useState(false);
 
-  // 현금영수증 전화번호 11자리 미충족 여부 (제출/입력 검증 공통 사용)
+  // 비로그인 전용 상태
+  const [guestEmail, setGuestEmail] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
+  const [privacyAgreed, setPrivacyAgreed] = useState(false);
+  const [marketingAgreed, setMarketingAgreed] = useState(false);
+
   const cashReceiptPhoneIncomplete = cashReceiptPhone.replace(/\D/g, "").length !== 11;
 
   const copyAccountNumber = async () => {
@@ -59,15 +64,11 @@ function CheckoutContent() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) {
-        router.replace("/login?redirect=/checkout");
-      } else {
-        setUser(user);
-        setEmail(user.email || "");
-        setLoading(false);
-      }
+      setUser(user);
+      if (user) setEmail(user.email || "");
+      setLoading(false);
     });
-  }, [router]);
+  }, []);
 
   if (loading) {
     return (
@@ -91,28 +92,37 @@ function CheckoutContent() {
     );
   }
 
+  const isGuest = !user;
+
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
-    if (!email) {
-      alert("이메일을 입력해주세요.");
-      return;
+
+    if (isGuest) {
+      if (!guestEmail) { toast.error("이메일을 입력해주세요."); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail)) { toast.error("올바른 이메일 형식으로 입력해주세요."); return; }
+      if (!guestPhone || guestPhone.replace(/\D/g, "").length < 10) { toast.error("전화번호를 올바르게 입력해주세요."); return; }
+      if (!privacyAgreed) { toast.error("개인정보 수집 및 이용에 동의해주세요."); return; }
+    } else {
+      if (!email) { toast.error("이메일을 입력해주세요."); return; }
     }
+
     if (payMethod === "BANK_TRANSFER" && cashReceiptWanted && cashReceiptPhoneIncomplete) {
       setCashReceiptPhoneTouched(true);
-      alert("현금영수증 발행을 위한 휴대폰 번호 11자리를 입력해주세요.");
+      toast.error("현금영수증 발행을 위한 휴대폰 번호 11자리를 입력해주세요.");
       return;
     }
 
     setSubmitting(true);
 
     const orderId = `order-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const buyerEmail = isGuest ? guestEmail : email;
+    const buyerPhone = isGuest ? guestPhone : (user?.user_metadata?.phone || null);
 
     const rows = checkoutItems.map((i) => ({
       material_id: i.id,
-      buyer_id: user.id,
-      buyer_email: email,
-      buyer_phone: user.user_metadata?.phone || null,
+      buyer_id: isGuest ? null : user!.id,
+      buyer_email: buyerEmail,
+      buyer_phone: buyerPhone,
       amount: i.price * i.quantity,
       payment_status: "pending",
       order_id: orderId,
@@ -121,8 +131,6 @@ function CheckoutContent() {
       cash_receipt_phone: payMethod === "BANK_TRANSFER" && cashReceiptWanted ? cashReceiptPhone.trim() : null,
     }));
 
-    // 계좌이체: 주문 레코드는 "입금 완료했어요" 시점에 생성한다.
-    // 여기서는 주문 데이터만 세션에 담아 입금 안내 페이지로 넘긴다.
     if (payMethod === "BANK_TRANSFER") {
       try {
         sessionStorage.setItem(
@@ -139,7 +147,7 @@ function CheckoutContent() {
       return;
     }
 
-    // 카드/간편결제(PortOne): 결제 요청 전에 주문을 생성한다.
+    // 카드/간편결제 — 로그인 사용자 전용
     const { error } = await supabase.from("orders").insert(rows);
     if (error) {
       toast.error("주문 저장 중 오류가 발생했습니다: " + error.message);
@@ -157,12 +165,11 @@ function CheckoutContent() {
         ? process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_KAKAO!
         : process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_CARD!;
 
-    // 결제 취소/실패 시 방금 생성한 주문을 정리한다.
     const cancelOrder = () => {
       fetch("/api/cancel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId, buyerId: user.id }),
+        body: JSON.stringify({ orderId, buyerId: user!.id }),
       }).catch(() => {});
     };
 
@@ -175,14 +182,12 @@ function CheckoutContent() {
         totalAmount: checkoutTotal,
         currency: "CURRENCY_KRW",
         payMethod,
-        customer: { email, customerId: user.id },
+        customer: { email, customerId: user!.id },
         redirectUrl: `${window.location.origin}/checkout/success`,
       });
 
-      // 모바일 리다이렉트 방식(카카오페이 모바일 등)은 undefined 반환 — 브라우저가 redirectUrl로 이동
       if (response === undefined) return;
 
-      // 결제 취소 또는 실패 (팝업 방식)
       if (response.code != null) {
         cancelOrder();
         toast.error(response.message ?? "결제가 취소되었습니다.");
@@ -190,7 +195,6 @@ function CheckoutContent() {
         return;
       }
 
-      // 팝업 방식 성공 — success 페이지로 이동
       router.push(`/checkout/success?paymentId=${orderId}`);
     } catch (error) {
       console.error("[PortOne] requestPayment threw:", error);
@@ -204,6 +208,7 @@ function CheckoutContent() {
     <div className="max-w-lg mx-auto px-4 sm:px-6 py-8">
       <h1 className="text-2xl font-bold mb-8 text-[#365927]">결제하기</h1>
 
+      {/* 주문 내역 */}
       <div className="bg-[#eaf2e8] rounded-lg p-5 mb-8">
         <h2 className="font-medium mb-4 text-[#365927]">주문 내역</h2>
         <div className="space-y-3">
@@ -228,69 +233,126 @@ function CheckoutContent() {
       </div>
 
       <form onSubmit={handlePayment}>
-        <label className="block mb-2 text-sm font-medium text-[#365927]">
-          이메일 주소
-        </label>
-        <p className="text-xs text-[#5a7d50] mb-3">
-          결제 완료 후 이 이메일로 PDF 자료를 보내드립니다.
-        </p>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="example@email.com"
-          required
-          className="w-full h-12 px-4 border border-[#d6e4d3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent mb-6 bg-white"
-        />
+        {/* 비로그인: 주문자 정보 입력 */}
+        {isGuest ? (
+          <div className="mb-6 space-y-4">
+            <h2 className="text-sm font-medium text-[#365927]">주문자 정보</h2>
+            <div>
+              <label className="block mb-1 text-sm text-[#5a7d50]">이메일</label>
+              <p className="text-xs text-[#8aab82] mb-2">
+                결제 완료 후 이 이메일로 PDF 자료를 보내드립니다.
+              </p>
+              <input
+                type="email"
+                value={guestEmail}
+                onChange={(e) => setGuestEmail(e.target.value)}
+                placeholder="example@email.com"
+                required
+                className="w-full h-12 px-4 border border-[#d6e4d3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white"
+              />
+            </div>
+            <div>
+              <label className="block mb-1 text-sm text-[#5a7d50]">전화번호</label>
+              <input
+                type="tel"
+                value={guestPhone}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, "").slice(0, 11);
+                  const formatted =
+                    digits.length <= 3 ? digits
+                    : digits.length <= 7 ? `${digits.slice(0, 3)}-${digits.slice(3)}`
+                    : `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+                  setGuestPhone(formatted);
+                }}
+                placeholder="010-1234-5678"
+                required
+                className="w-full h-12 px-4 border border-[#d6e4d3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white"
+              />
+            </div>
+          </div>
+        ) : (
+          /* 로그인: 이메일 확인 */
+          <div className="mb-6">
+            <label className="block mb-2 text-sm font-medium text-[#365927]">
+              이메일 주소
+            </label>
+            <p className="text-xs text-[#5a7d50] mb-3">
+              결제 완료 후 이 이메일로 PDF 자료를 보내드립니다.
+            </p>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="example@email.com"
+              required
+              className="w-full h-12 px-4 border border-[#d6e4d3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white"
+            />
+          </div>
+        )}
 
+        {/* 결제 수단 */}
         <label className="block mb-3 text-sm font-medium text-[#365927]">
           결제 수단
         </label>
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          <button
-            type="button"
-            disabled={!CARD_LIVE}
-            onClick={() => setPayMethod("CARD")}
-            className={`min-h-[3rem] py-2 rounded-lg border-2 text-sm font-medium transition ${
-              !CARD_LIVE
-                ? "border-[#d6e4d3] text-[#b0c8ab] cursor-not-allowed bg-[#f5f9f4]"
-                : payMethod === "CARD"
-                ? "border-[#365927] bg-[#eaf2e8] text-[#365927] cursor-pointer"
-                : "border-[#d6e4d3] text-[#5a7d50] hover:border-[#5a7d50] cursor-pointer"
-            }`}
-          >
-            신용카드
-            {!CARD_LIVE && <span className="block text-[10px] mt-0.5">준비 중</span>}
-          </button>
-          <button
-            type="button"
-            disabled={!EASY_PAY_LIVE}
-            onClick={() => setPayMethod("EASY_PAY")}
-            className={`min-h-[3rem] py-2 rounded-lg border-2 text-sm font-medium transition ${
-              !EASY_PAY_LIVE
-                ? "border-[#d6e4d3] text-[#b0c8ab] cursor-not-allowed bg-[#f5f9f4]"
-                : payMethod === "EASY_PAY"
-                ? "border-[#365927] bg-[#eaf2e8] text-[#365927] cursor-pointer"
-                : "border-[#d6e4d3] text-[#5a7d50] hover:border-[#5a7d50] cursor-pointer"
-            }`}
-          >
-            카카오페이
-            {!EASY_PAY_LIVE && <span className="block text-[10px] mt-0.5">준비 중</span>}
-          </button>
-          <button
-            type="button"
-            onClick={() => setPayMethod("BANK_TRANSFER")}
-            className={`min-h-[3rem] py-2 rounded-lg border-2 text-sm font-medium transition cursor-pointer ${
-              payMethod === "BANK_TRANSFER"
-                ? "border-[#365927] bg-[#eaf2e8] text-[#365927]"
-                : "border-[#d6e4d3] text-[#5a7d50] hover:border-[#5a7d50]"
-            }`}
-          >
-            계좌이체
-          </button>
-        </div>
+        {isGuest ? (
+          /* 비로그인: 계좌이체만 */
+          <div className="mb-6">
+            <div className="h-12 flex items-center justify-center rounded-lg border-2 border-[#365927] bg-[#eaf2e8] text-[#365927] text-sm font-medium">
+              계좌이체
+            </div>
+            <p className="text-xs text-[#8aab82] mt-2">
+              회원가입 후 로그인하시면 카드·카카오페이 결제도 이용하실 수 있습니다.
+            </p>
+          </div>
+        ) : (
+          /* 로그인: 전체 결제 수단 */
+          <div className="grid grid-cols-3 gap-3 mb-6">
+            <button
+              type="button"
+              disabled={!CARD_LIVE}
+              onClick={() => setPayMethod("CARD")}
+              className={`min-h-[3rem] py-2 rounded-lg border-2 text-sm font-medium transition ${
+                !CARD_LIVE
+                  ? "border-[#d6e4d3] text-[#b0c8ab] cursor-not-allowed bg-[#f5f9f4]"
+                  : payMethod === "CARD"
+                  ? "border-[#365927] bg-[#eaf2e8] text-[#365927] cursor-pointer"
+                  : "border-[#d6e4d3] text-[#5a7d50] hover:border-[#5a7d50] cursor-pointer"
+              }`}
+            >
+              신용카드
+              {!CARD_LIVE && <span className="block text-[10px] mt-0.5">준비 중</span>}
+            </button>
+            <button
+              type="button"
+              disabled={!EASY_PAY_LIVE}
+              onClick={() => setPayMethod("EASY_PAY")}
+              className={`min-h-[3rem] py-2 rounded-lg border-2 text-sm font-medium transition ${
+                !EASY_PAY_LIVE
+                  ? "border-[#d6e4d3] text-[#b0c8ab] cursor-not-allowed bg-[#f5f9f4]"
+                  : payMethod === "EASY_PAY"
+                  ? "border-[#365927] bg-[#eaf2e8] text-[#365927] cursor-pointer"
+                  : "border-[#d6e4d3] text-[#5a7d50] hover:border-[#5a7d50] cursor-pointer"
+              }`}
+            >
+              카카오페이
+              {!EASY_PAY_LIVE && <span className="block text-[10px] mt-0.5">준비 중</span>}
+            </button>
+            <button
+              type="button"
+              onClick={() => setPayMethod("BANK_TRANSFER")}
+              className={`min-h-[3rem] py-2 rounded-lg border-2 text-sm font-medium transition cursor-pointer ${
+                payMethod === "BANK_TRANSFER"
+                  ? "border-[#365927] bg-[#eaf2e8] text-[#365927]"
+                  : "border-[#d6e4d3] text-[#5a7d50] hover:border-[#5a7d50]"
+              }`}
+            >
+              계좌이체
+            </button>
+          </div>
+        )}
 
-        {payMethod === "BANK_TRANSFER" && (
+        {/* 계좌이체: 입금 안내 + 현금영수증 */}
+        {(isGuest || payMethod === "BANK_TRANSFER") && (
           <>
             <div className="mb-4 p-4 bg-[#f5f9f4] border border-[#d6e4d3] rounded-lg text-sm">
               <p className="font-medium text-[#365927] mb-2">입금 계좌 안내</p>
@@ -360,6 +422,7 @@ function CheckoutContent() {
           </>
         )}
 
+        {/* 환불 안내 */}
         <div className="mb-4 p-3 bg-[#f5f9f4] border border-[#d6e4d3] rounded-lg text-xs text-[#5a7d50] leading-relaxed">
           <p className="font-medium text-[#365927] mb-1">환불 안내</p>
           <p>
@@ -373,13 +436,79 @@ function CheckoutContent() {
           <p className="mt-2 text-[#8aab82]">결제 시 위 환불정책에 동의한 것으로 간주됩니다.</p>
         </div>
 
+        {/* 비로그인 동의 항목 */}
+        {isGuest && (
+          <div className="mb-6 space-y-3 p-4 bg-white border border-[#d6e4d3] rounded-lg text-sm">
+            {/* 전체 동의 */}
+            <div className="flex items-center gap-3 pb-3 border-b border-[#d6e4d3]">
+              <input
+                id="agree-all"
+                type="checkbox"
+                checked={privacyAgreed && marketingAgreed}
+                onChange={(e) => {
+                  setPrivacyAgreed(e.target.checked);
+                  setMarketingAgreed(e.target.checked);
+                }}
+                className="h-4 w-4 rounded border-[#d6e4d3] accent-[#365927] cursor-pointer"
+              />
+              <label htmlFor="agree-all" className="font-semibold text-[#365927] cursor-pointer">
+                전체 동의
+              </label>
+            </div>
+            {/* 개인정보 필수 */}
+            <div className="flex items-start gap-3">
+              <input
+                id="privacy"
+                type="checkbox"
+                checked={privacyAgreed}
+                onChange={(e) => setPrivacyAgreed(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-[#d6e4d3] accent-[#365927] cursor-pointer"
+              />
+              <label htmlFor="privacy" className="text-[#365927] cursor-pointer leading-snug">
+                <span className="font-medium">[필수]</span>{" "}
+                <Link href="/privacy" target="_blank" className="underline hover:text-[#4a7a38]">
+                  개인정보 수집 및 이용에 동의합니다
+                </Link>
+              </label>
+            </div>
+            {/* 마케팅 선택 */}
+            <div className="flex items-start gap-3">
+              <input
+                id="marketing"
+                type="checkbox"
+                checked={marketingAgreed}
+                onChange={(e) => setMarketingAgreed(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-[#d6e4d3] accent-[#5a7d50] cursor-pointer"
+              />
+              <label htmlFor="marketing" className="text-[#5a7d50] cursor-pointer leading-snug">
+                <span className="font-medium">[선택]</span>{" "}
+                <Link href="/marketing-terms" target="_blank" className="underline hover:text-[#365927]">
+                  마케팅 정보 수신에 동의합니다
+                </Link>
+              </label>
+            </div>
+          </div>
+        )}
+
         <button
           type="submit"
           disabled={submitting}
           className="w-full h-14 bg-[#365927] text-white rounded-lg font-medium hover:bg-[#4a7a38] transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {submitting ? "처리 중..." : payMethod === "BANK_TRANSFER" ? `주문하기 (${checkoutTotal.toLocaleString()}원)` : `결제하기 (${checkoutTotal.toLocaleString()}원)`}
+          {submitting
+            ? "처리 중..."
+            : `주문하기 (${checkoutTotal.toLocaleString()}원)`}
         </button>
+
+        {isGuest && (
+          <p className="text-center text-xs text-[#8aab82] mt-4">
+            회원이시라면{" "}
+            <Link href={`/login?redirect=/checkout`} className="text-[#365927] underline">
+              로그인
+            </Link>
+            {" "}후 결제하시면 마이페이지에서 구매 내역을 확인할 수 있습니다.
+          </p>
+        )}
       </form>
     </div>
   );

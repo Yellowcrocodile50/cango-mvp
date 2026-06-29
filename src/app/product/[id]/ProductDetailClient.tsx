@@ -73,19 +73,11 @@ export default function ProductDetailClient({ material }: { material: Material }
   };
 
   const handleAddToCart = () => {
-    if (!user) {
-      setShowLoginModal(true);
-      return;
-    }
     addItem(cartItem);
     toast.success("장바구니에 담겼습니다!");
   };
 
   const handleBuyNow = () => {
-    if (!user) {
-      setShowLoginModal(true);
-      return;
-    }
     addItem(cartItem);
     router.push("/checkout");
   };
@@ -159,12 +151,14 @@ export default function ProductDetailClient({ material }: { material: Material }
                 >
                   바로 구매하기
                 </button>
-                <button
-                  onClick={handleAddToCart}
-                  className="w-full h-14 border-2 border-[#365927] text-[#365927] rounded-lg font-medium hover:bg-[#eaf2e8] transition cursor-pointer"
-                >
-                  장바구니 담기
-                </button>
+                {user && (
+                  <button
+                    onClick={handleAddToCart}
+                    className="w-full h-14 border-2 border-[#365927] text-[#365927] rounded-lg font-medium hover:bg-[#eaf2e8] transition cursor-pointer"
+                  >
+                    장바구니 담기
+                  </button>
+                )}
               </>
             )}
           </div>
@@ -252,9 +246,9 @@ export default function ProductDetailClient({ material }: { material: Material }
       {showLoginModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl p-8 max-w-sm w-full mx-4 text-center shadow-xl">
-            <h2 className="text-2xl font-bold text-[#365927] mb-3">잠깐, 로그인 하셨나요?</h2>
+            <h2 className="text-2xl font-bold text-[#365927] mb-3">로그인이 필요합니다</h2>
             <p className="text-[#5a7d50] text-xs mb-6">
-              로그인 후 이용하실 수 있어요!
+              무료 자료는 로그인 후 마이페이지에서 다운로드할 수 있어요.
             </p>
             <div className="space-y-3">
               <Link

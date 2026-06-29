@@ -112,7 +112,6 @@ export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
-  const [showLoginModal, setShowLoginModal] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [openCat, setOpenCat] = useState<string | null>(null);
   const [openSubCat, setOpenSubCat] = useState<string | null>(null);
@@ -256,12 +255,6 @@ export default function Header() {
                 <Link href="/signup" className="text-[#365927] hover:text-[#4a7a38] transition font-medium">
                   회원가입
                 </Link>
-                <button
-                  onClick={() => setShowLoginModal(true)}
-                  className="relative text-[#365927] hover:text-[#4a7a38] transition font-medium cursor-pointer"
-                >
-                  장바구니
-                </button>
               </>
             )}
           </nav>
@@ -405,32 +398,6 @@ export default function Header() {
             })()}
         </div>
       </div>
-      {/* Login modal */}
-      {showLoginModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl p-8 max-w-sm w-full mx-4 text-center shadow-xl">
-            <h2 className="text-2xl font-bold text-[#365927] mb-3">잠깐, 로그인 하셨나요?</h2>
-            <p className="text-[#5a7d50] text-xs mb-6">
-              장바구니는 로그인 후 이용하실 수 있어요!
-            </p>
-            <div className="space-y-3">
-              <Link
-                href={`/login?redirect=${encodeURIComponent(pathname)}`}
-                onClick={() => setShowLoginModal(false)}
-                className="block w-full h-12 bg-[#365927] text-white rounded-lg font-medium hover:bg-[#4a7a38] transition flex items-center justify-center"
-              >
-                로그인하기
-              </Link>
-              <button
-                onClick={() => { setShowLoginModal(false); router.push("/"); }}
-                className="w-full h-12 border border-[#d6e4d3] text-[#5a7d50] rounded-lg font-medium hover:bg-[#f5f9f4] transition cursor-pointer"
-              >
-                둘러볼게요
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </header>
   );
 }

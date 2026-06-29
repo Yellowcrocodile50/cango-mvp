@@ -67,8 +67,8 @@ export function getCategoryLabel(category: string): string {
     if (group.subGroups) {
       for (const sg of group.subGroups) {
         if (sg.items.includes(category)) {
-          const displaySgLabel = stripFreePrefix(sg.label);
-          return displaySgLabel === displayCat ? displayCat : `${displaySgLabel} › ${displayCat}`;
+          // 무료 카테고리는 "무료 입시 › [항목]" 형태로 유료와 명확히 구분
+          return `무료 입시 › ${displayCat}`;
         }
       }
       continue;
@@ -100,14 +100,15 @@ export function getBreadcrumb(category: string | null): BreadcrumbItem[] {
   if (freeGroup?.subGroups) {
     const subGroup = freeGroup.subGroups.find((sg) => sg.label === category);
     if (subGroup) {
+      const displaySgLabel = FREE_SUB_DISPLAY[subGroup.label] ?? displayCat;
       return [
         { name: FREE_PARENT_CATEGORY, href: `/?category=${encodeURIComponent(FREE_PARENT_CATEGORY)}` },
-        { name: displayCat, href: null },
+        { name: displaySgLabel, href: null },
       ];
     }
     for (const sg of freeGroup.subGroups) {
       if (sg.items.includes(category)) {
-        const displaySgLabel = stripFreePrefix(sg.label);
+        const displaySgLabel = FREE_SUB_DISPLAY[sg.label] ?? stripFreePrefix(sg.label);
         return [
           { name: FREE_PARENT_CATEGORY, href: `/?category=${encodeURIComponent(FREE_PARENT_CATEGORY)}` },
           { name: displaySgLabel, href: `/?category=${encodeURIComponent(sg.label)}` },

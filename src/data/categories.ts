@@ -28,21 +28,12 @@ export const categoryGroups: CategoryGroup[] = [
   },
   {
     label: "무료 입시 자료",
-    items: [
-      "공통국어", "문학", "비문학", "화법과작문", "언어와매체",
-      "고1영어", "고2영어", "고3영어",
-      "공통수학1", "공통수학2", "대수", "미적분1", "미적분2", "확률과 통계", "기하",
-      "통합과학", "물리", "화학", "지구과학", "생명과학",
-      "통합사회", "사회문화", "세계사", "경제", "정치와법", "지리",
-      "한국사",
-    ],
+    items: ["무료-수시", "무료-정시", "무료-공부법", "무료-고교입시", "무료-진로/직업", "무료-기타"],
     subGroups: [
-      { label: "국어", items: ["공통국어", "문학", "비문학", "화법과작문", "언어와매체"] },
-      { label: "영어", items: ["고1영어", "고2영어", "고3영어"] },
-      { label: "수학", items: ["공통수학1", "공통수학2", "대수", "미적분1", "미적분2", "확률과 통계", "기하"] },
-      { label: "과학탐구", items: ["통합과학", "물리", "화학", "지구과학", "생명과학"] },
-      { label: "사회탐구", items: ["통합사회", "사회문화", "세계사", "경제", "정치와법", "지리"] },
-      { label: "한국사", items: ["한국사"] },
+      { label: "고등", items: ["무료-수시", "무료-정시"] },
+      { label: "중학", items: ["무료-공부법", "무료-고교입시"] },
+      { label: "진로/직업", items: ["무료-진로/직업"] },
+      { label: "기타", items: ["무료-기타"] },
     ],
   },
 ];
@@ -51,30 +42,37 @@ export const allCategories = categoryGroups.flatMap((g) => g.items);
 
 export const FREE_PARENT_CATEGORY = "무료 입시 자료";
 
+// "무료-수시" → "수시" 처리
+function stripFreePrefix(s: string): string {
+  return s.startsWith("무료-") ? s.slice(3) : s;
+}
+
 export function isFreeCategory(category: string): boolean {
   const freeGroup = categoryGroups.find((g) => g.label === FREE_PARENT_CATEGORY);
   if (!freeGroup) return false;
   if (category === FREE_PARENT_CATEGORY) return true;
-  if (freeGroup.items.includes(category)) return true;
-  return freeGroup.subGroups?.some((sg) => sg.label === category) ?? false;
+  return freeGroup.items.includes(category);
 }
 
 export function getCategoryLabel(category: string): string {
+  const displayCat = stripFreePrefix(category);
+
   for (const group of categoryGroups) {
     if (group.subGroups) {
       for (const sg of group.subGroups) {
         if (sg.items.includes(category)) {
-          return sg.label === category ? category : `${sg.label} › ${category}`;
+          const displaySgLabel = stripFreePrefix(sg.label);
+          return displaySgLabel === displayCat ? displayCat : `${displaySgLabel} › ${displayCat}`;
         }
       }
       continue;
     }
     if (group.items.includes(category) && group.label !== category) {
       const prefix = group.label === "고등학생(대학입시)" ? "고등학생" : group.label;
-      return `${prefix} › ${category}`;
+      return `${prefix} › ${displayCat}`;
     }
   }
-  return category;
+  return displayCat;
 }
 
 export type Category = string;
@@ -87,43 +85,41 @@ export type BreadcrumbItem = {
 export function getBreadcrumb(category: string | null): BreadcrumbItem[] {
   if (!category) return [];
 
-  // 최상위 그룹 자체인 경우
+  const displayCat = stripFreePrefix(category);
+
   const topGroup = categoryGroups.find((g) => g.label === category);
   if (topGroup) return [{ name: category, href: null }];
 
-  // 무료 입시 자료 하위 계층 처리 (2단계 / 3단계)
-  const freeGroup = categoryGroups.find((g) => g.label === "무료 입시 자료");
+  const freeGroup = categoryGroups.find((g) => g.label === FREE_PARENT_CATEGORY);
   if (freeGroup?.subGroups) {
-    // 2단계: 국어/영어/수학 등 subGroup 라벨
     const subGroup = freeGroup.subGroups.find((sg) => sg.label === category);
     if (subGroup) {
       return [
-        { name: "무료 입시 자료", href: "/?category=무료 입시 자료" },
-        { name: category, href: null },
+        { name: FREE_PARENT_CATEGORY, href: `/?category=${encodeURIComponent(FREE_PARENT_CATEGORY)}` },
+        { name: displayCat, href: null },
       ];
     }
-    // 3단계: 공통국어/문학 등 subGroup 내 항목
     for (const sg of freeGroup.subGroups) {
       if (sg.items.includes(category)) {
+        const displaySgLabel = stripFreePrefix(sg.label);
         return [
-          { name: "무료 입시 자료", href: "/?category=무료 입시 자료" },
-          { name: sg.label, href: `/?category=${sg.label}` },
-          { name: category, href: null },
+          { name: FREE_PARENT_CATEGORY, href: `/?category=${encodeURIComponent(FREE_PARENT_CATEGORY)}` },
+          { name: displaySgLabel, href: `/?category=${encodeURIComponent(sg.label)}` },
+          { name: displayCat, href: null },
         ];
       }
     }
   }
 
-  // 고등학생/중학생 하위 항목 (수시/정시/공부법/고교입시)
   for (const group of categoryGroups) {
-    if (group.label === "무료 입시 자료") continue;
+    if (group.label === FREE_PARENT_CATEGORY) continue;
     if (group.items.includes(category) && group.label !== category) {
       return [
-        { name: group.label, href: `/?category=${group.label}` },
+        { name: group.label, href: `/?category=${encodeURIComponent(group.label)}` },
         { name: category, href: null },
       ];
     }
   }
 
-  return [{ name: category, href: null }];
+  return [{ name: displayCat, href: null }];
 }

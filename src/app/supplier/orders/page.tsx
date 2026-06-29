@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Send, CheckCircle, RefreshCw, Receipt } from "lucide-react";
 import { toast } from "sonner";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
-import { isFreeCategory } from "@/data/categories";
+import { isFreeCategory, getCategoryLabel } from "@/data/categories";
 
 interface Order {
   id: string;
@@ -152,7 +152,7 @@ export default function OrdersPage() {
     setOrders(
       orderList.map((o) => ({
         ...o,
-        material_title: materialMap.get(o.material_id)?.title || "알 수 없음",
+        material_title: materialMap.get(o.material_id)?.title || "삭제된 자료",
         material_category: materialMap.get(o.material_id)?.category || "-",
         buyer_userid: profileMap.get(o.buyer_id)?.userid ?? null,
         user_type: profileMap.get(o.buyer_id)?.user_type ?? null,
@@ -329,7 +329,7 @@ export default function OrdersPage() {
                   return (
                     <TableRow key={order.id} className={rowClass}>
                       <TableCell className="font-medium">{order.material_title}</TableCell>
-                      <TableCell className="text-muted-foreground">{order.material_category}</TableCell>
+                      <TableCell className="text-muted-foreground">{order.material_category !== "-" ? getCategoryLabel(order.material_category) : "-"}</TableCell>
                       <TableCell>
                         <div>{order.buyer_userid || "-"}</div>
                         {order.payment_method === "bank_transfer" && (

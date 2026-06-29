@@ -98,9 +98,16 @@ function CheckoutContent() {
     e.preventDefault();
 
     if (isGuest) {
-      if (!guestEmail) { toast.error("이메일을 입력해주세요."); return; }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail)) { toast.error("올바른 이메일 형식으로 입력해주세요."); return; }
-      if (!guestPhone || guestPhone.replace(/\D/g, "").length < 10) { toast.error("전화번호를 올바르게 입력해주세요."); return; }
+      if (!guestEmail) { toast.error("이메일을 입력해주세요. (예: example@email.com)"); return; }
+      if (!/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(guestEmail)) {
+        toast.error("올바른 이메일 형식으로 입력해주세요. (예: example@email.com)");
+        return;
+      }
+      const phoneDigits = guestPhone.replace(/\D/g, "");
+      if (!phoneDigits || phoneDigits.length !== 11 || !phoneDigits.startsWith("010")) {
+        toast.error("전화번호를 올바르게 입력해주세요. (예: 010-1234-5678)");
+        return;
+      }
       if (!privacyAgreed) { toast.error("개인정보 수집 및 이용에 동의해주세요."); return; }
     } else {
       if (!email) { toast.error("이메일을 입력해주세요."); return; }

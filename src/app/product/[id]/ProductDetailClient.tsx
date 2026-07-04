@@ -10,6 +10,7 @@ import type { Material } from "@/types/material";
 import { getBreadcrumb, getCategoryLabel, isFreeCategory } from "@/data/categories";
 import { colorForId } from "@/lib/coverColor";
 import { toast } from "sonner";
+import { trackEvent } from "@/lib/ga";
 
 export default function ProductDetailClient({ material }: { material: Material }) {
   const router = useRouter();
@@ -56,6 +57,7 @@ export default function ProductDetailClient({ material }: { material: Material }
         toast.info("이미 마이페이지에 등록된 자료입니다.");
       } else {
         toast.success("마이페이지에 등록되었습니다.");
+        trackEvent("free_download", { material_id: material.id, title: material.title });
       }
       router.push("/mypage");
     } catch {
@@ -75,6 +77,7 @@ export default function ProductDetailClient({ material }: { material: Material }
   const handleAddToCart = () => {
     addItem(cartItem);
     toast.success("장바구니에 담겼습니다!");
+    trackEvent("add_to_cart", { material_id: material.id, title: material.title, price: material.price });
   };
 
   const handleBuyNow = () => {
@@ -84,6 +87,7 @@ export default function ProductDetailClient({ material }: { material: Material }
       clearCart();
       addItem(cartItem);
     }
+    trackEvent("begin_checkout", { material_id: material.id, title: material.title, price: material.price });
     router.push("/checkout");
   };
 

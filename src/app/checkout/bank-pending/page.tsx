@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { useCart } from "@/context/CartContext";
 import { BANK_ORDER_KEY, type BankOrderStash } from "@/lib/bankOrder";
 import { toast } from "sonner";
+import { trackEvent } from "@/lib/ga";
 
 function BankPendingContent() {
   const searchParams = useSearchParams();
@@ -128,6 +129,7 @@ function BankPendingContent() {
     }
 
     setSaving(false);
+    trackEvent("bank_transfer_submit", { amount });
     setTransferred(true);
   };
 

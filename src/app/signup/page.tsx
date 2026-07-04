@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { validatePhone, normalizePhone } from "@/lib/phone";
+import { trackEvent } from "@/lib/ga";
 
 const GRADES = ["고3/N수", "고2", "고1", "중3", "중2", "중1"];
 
@@ -135,6 +136,7 @@ export default function SignupPage() {
       return;
     }
 
+    trackEvent("sign_up", { method: "email" });
     router.push("/login?registered=true");
   };
 

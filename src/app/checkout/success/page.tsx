@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
+import { trackEvent } from "@/lib/ga";
 
 function SuccessContent() {
   const searchParams = useSearchParams();
@@ -43,6 +44,7 @@ function SuccessContent() {
       .then((data) => {
         if (data.success) {
           removeItems(data.materialIds);
+          trackEvent("purchase", { payment_method: "card" });
           setStatus("success");
         } else {
           setStatus("error");

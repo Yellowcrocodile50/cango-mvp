@@ -248,7 +248,7 @@ export default function TermsPage() {
             <section>
               <h3 className="font-semibold mb-2">제18조&nbsp;&nbsp;대금 결제와 관련하여 발생하는 오류를 신속히 정정하겠습니다.</h3>
               <ol className="list-none space-y-2 text-[#5a7d50]">
-                <li>① CANGO 웹에서의 대금 결제는 신용·체크카드, 간편결제(카카오페이 등), 계좌이체 중 회원이 선택한 방식으로 이루어집니다.</li>
+                <li>① CANGO 웹에서의 대금 결제는 신용·체크카드, 간편결제(카카오페이 등), 계좌이체 중 회원이 선택한 방식으로 이루어집니다. 다만, 신용·체크카드 및 간편결제는 결제대행사(PG) 심사 완료 후 순차적으로 오픈되며, 현재는 계좌이체 방식만 이용 가능합니다.</li>
                 <li className="pl-0">
                   &nbsp;&nbsp;&nbsp;계좌이체 결제 시, 주문 후 <strong>2일(영업일 기준) 이내</strong>에 안내된 계좌로 입금하지 않을 경우 주문이 자동 취소됩니다. 입금 확인 후 영업일 기준 24시간 이내에 자료를 발송합니다.
                 </li>

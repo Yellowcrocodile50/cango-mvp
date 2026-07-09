@@ -26,7 +26,7 @@ export default function MarketingTermsPage() {
           <h2 className="text-base font-semibold mb-2">제2조 (수집 및 이용 항목)</h2>
           <p>CANGO는 다음의 회원 정보를 활용하여 마케팅 정보를 제공합니다.</p>
           <ol className="list-decimal pl-5 space-y-1 mt-2">
-            <li>이름</li>
+            <li>아이디</li>
             <li>이메일 주소</li>
             <li>연락처(휴대전화 포함)</li>
             <li>학생(학년) 및 학부모 여부</li>

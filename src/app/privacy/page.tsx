@@ -22,9 +22,11 @@ export default function PrivacyPage() {
           <h2 className="text-base font-semibold mb-2">제1조 (수집하는 개인정보 항목)</h2>
           <p>회사는 다음의 개인정보를 수집·이용합니다.</p>
           <ul className="list-disc pl-5 space-y-1 mt-2">
-            <li>회원가입 시: 이메일, 비밀번호, 아이디, 이름(또는 닉네임), 휴대전화번호</li>
-            <li>결제 시: 결제 수단 정보, 구매 내역, 거래 금액</li>
-            <li>자동 수집: 서비스 이용 기록, 접속 로그, 쿠키, 접속 IP, 기기 정보</li>
+            <li>회원가입 시: 이메일, 비밀번호, 아이디, 휴대전화번호, 학생/학부모 구분 및 학년</li>
+            <li>결제(계좌이체) 시: 입금자명, 구매자 이메일·전화번호, 결제 수단, 구매 내역, 거래 금액</li>
+            <li>현금영수증 발행 신청 시: 휴대전화번호</li>
+            <li>비회원 주문 시: 이메일, 전화번호, 개인정보 수집·이용 동의 여부</li>
+            <li>자동 수집: 서비스 이용 기록, 접속 로그, 쿠키, 접속 IP, 기기 정보(Google Analytics 등 분석 도구를 통해 수집)</li>
             <li>선택 항목: 마케팅 정보 수신 동의 여부</li>
           </ul>
         </section>
@@ -43,8 +45,9 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-base font-semibold mb-2">제3조 (개인정보의 보유 및 이용 기간)</h2>
           <p>
-            회사는 회원 탈퇴 시까지 개인정보를 보유하며, 탈퇴 즉시 파기합니다. 단,
-            관련 법령에 따라 일정 기간 보존이 필요한 경우 해당 기간 동안 보관합니다.
+            회사는 회원 탈퇴 시까지 개인정보를 보유하며, 탈퇴 즉시 파기합니다. 다만, 구매
+            내역이 있는 경우 이메일·전화번호 등 식별정보만 즉시 비식별 처리하고, 거래 관련
+            기록은 아래 관련 법령에 따른 보유기간 동안 보관 후 파기합니다.
           </p>
           <ul className="list-disc pl-5 space-y-1 mt-2">
             <li>전자상거래법: 계약·청약철회 기록 5년, 대금결제 및 재화공급 기록 5년, 소비자 불만·분쟁 처리 기록 3년</li>
@@ -70,7 +73,8 @@ export default function PrivacyPage() {
           <ul className="list-disc pl-5 space-y-1 mt-2">
             <li>Supabase Inc. — 회원 인증 및 데이터베이스 관리</li>
             <li>Vercel Inc. — 호스팅 서비스</li>
-            <li>토스페이먼츠 — 결제 처리 (이용 신청 후)</li>
+            <li>포트원(PortOne) — 결제 처리(신용·체크카드 및 간편결제는 결제대행사 심사 완료 후 순차 활성화 예정이며, 현재는 계좌이체 결제만 서비스 중입니다)</li>
+            <li>Google LLC(Google Analytics) — 웹사이트 이용 통계 분석</li>
           </ul>
         </section>
 

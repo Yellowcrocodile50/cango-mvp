@@ -310,7 +310,7 @@ function CheckoutContent() {
               계좌이체
             </div>
             <p className="text-xs text-[#8aab82] mt-2">
-              회원가입 후 로그인하시면 카드·카카오페이 결제도 이용하실 수 있습니다.
+              카드, 카카오페이는 현재 준비중입니다.
             </p>
           </div>
         ) : (

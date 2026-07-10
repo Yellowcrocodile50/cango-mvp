@@ -25,7 +25,7 @@ export async function generateMetadata(
   const material = await getMaterial(id);
 
   if (!material) {
-    return { title: "자료를 찾을 수 없습니다 | CANGO" };
+    return { title: "자료를 찾을 수 없습니다" };
   }
 
   const isFree = isFreeCategory(material.category);

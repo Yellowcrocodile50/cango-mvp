@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "이용약관 | CANGO",
+  title: "이용약관",
 };
 
 export default function TermsPage() {

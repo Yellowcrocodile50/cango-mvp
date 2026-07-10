@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "마케팅 정보 수신 동의 | CANGO",
+  title: "마케팅 정보 수신 동의",
 };
 
 export default function MarketingTermsPage() {

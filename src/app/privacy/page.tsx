@@ -1,7 +1,7 @@
 import { COMPANY_INFO } from "@/lib/companyInfo";
 
 export const metadata = {
-  title: "개인정보 처리방침 | CANGO",
+  title: "개인정보 처리방침",
 };
 
 export default function PrivacyPage() {

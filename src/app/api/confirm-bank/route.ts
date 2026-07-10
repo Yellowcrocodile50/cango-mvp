@@ -125,11 +125,11 @@ export async function POST(req: NextRequest) {
       }
       const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
 
-      await sendOrderReceiptEmail({ to: buyerEmail, orderId, items, totalAmount });
+      const emailResult = await sendOrderReceiptEmail({ to: buyerEmail, orderId, items, totalAmount });
 
       await adminClient
         .from("orders")
-        .update({ sent_at: new Date().toISOString() })
+        .update({ sent_at: new Date().toISOString(), resend_email_id: emailResult?.id ?? null })
         .eq("order_id", orderId)
         .eq("payment_method", "bank_transfer");
     }

@@ -5,6 +5,7 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
 import SupplierUploadSection from "@/components/SupplierUploadSection";
+import NaeshinBanner from "@/components/NaeshinBanner";
 import { supabase } from "@/lib/supabase";
 import { categoryGroups, getBreadcrumb, isFreeCategory } from "@/data/categories";
 import type { Material } from "@/types/material";
@@ -64,7 +65,9 @@ function ProductGrid() {
     : materials.filter((m) => !isFreeCategory(m.category));
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <>
+      <NaeshinBanner />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       {supplierUserId && (
         <SupplierUploadSection
           userId={supplierUserId}
@@ -120,7 +123,8 @@ function ProductGrid() {
           </Link>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
 

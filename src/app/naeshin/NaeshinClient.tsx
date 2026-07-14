@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { trackEvent } from "@/lib/ga";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   naeshinCutoffs,
@@ -118,6 +119,7 @@ export default function NaeshinClient() {
     }
     setRequestText("");
     toast.success("요청 접수됐어요! 다음 업데이트 때 참고할게요.");
+    trackEvent("naeshin_request_submit", { track, department, tier });
   }
 
   const scaleMax = gradeSystem === "9" ? 9 : 5;
@@ -198,6 +200,12 @@ export default function NaeshinClient() {
     });
 
     setResults(computed);
+    trackEvent("naeshin_calculate", {
+      track,
+      department,
+      tier,
+      grade_system: gradeSystem,
+    });
   }
 
   return (

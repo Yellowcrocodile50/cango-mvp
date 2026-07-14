@@ -57,6 +57,7 @@ type CutoffRaw = {
   actualName?: string;
   admissionType?: "comprehensive";
   mergedUnit?: boolean;
+  year?: 2025 | 2026;
   note?: string;
 };
 
@@ -181,6 +182,7 @@ export default function NaeshinClient() {
           actualName: c.actualName,
           admissionType: c.admissionType,
           mergedUnit: c.mergedUnit,
+          year: c.year,
         },
       };
     }
@@ -468,8 +470,11 @@ function CutoffBreakdown({ cutoffRaw }: { cutoffRaw: CutoffRaw }) {
   if (cutoffRaw.cut70 !== undefined) parts.push(`70% ${cutoffRaw.cut70}`);
   if (parts.length === 0) return null;
 
+  const year = cutoffRaw.year ?? 2026;
   return (
-    <p className="text-[11px] text-[#a8bfa2] mt-1.5">9등급제 발표컷 · {parts.join(" · ")}</p>
+    <p className="text-[11px] text-[#a8bfa2] mt-1.5">
+      9등급제 발표컷 · {year}학년도 · {parts.join(" · ")}
+    </p>
   );
 }
 

@@ -65,6 +65,7 @@ const categories: NavItem[] = [
       { name: "기타", href: "/?category=무료-기타" },
     ],
   },
+  { name: "내신 계산기", href: "/naeshin" },
 ];
 
 export default function Header() {
@@ -230,12 +231,17 @@ export default function Header() {
                   href={cat.href}
                   onClick={cat.href === "/" ? (e) => { if (window.location.search) { e.preventDefault(); window.location.href = "/"; } } : undefined}
                   className={`whitespace-nowrap transition inline-block py-1 ${
-                    cat.name === "무료 입시 자료"
+                    cat.name === "무료 입시 자료" || cat.name === "내신 계산기"
                       ? "text-[#8aab82] hover:text-[#5a7d50]"
                       : "text-[#5a7d50] hover:text-[#365927]"
                   }`}
                 >
                   {cat.name}
+                  {cat.name === "내신 계산기" && (
+                    <span className="ml-1 align-middle text-[10px] font-semibold text-[#5a7d50] bg-[#eaf2e8] border border-[#d6e4d3] rounded-full px-1.5 py-0.5">
+                      v1.0
+                    </span>
+                  )}
                 </Link>
                 {cat.children && (
                   <div className="absolute left-0 top-full pt-1 hidden group-hover:block z-50">
@@ -303,12 +309,17 @@ export default function Header() {
                       }
                     }}
                     className={`whitespace-nowrap py-1 transition flex items-center gap-0.5 ${
-                      cat.name === "무료 입시 자료"
+                      cat.name === "무료 입시 자료" || cat.name === "내신 계산기"
                         ? openCat === cat.name ? "text-[#5a7d50] font-semibold" : "text-[#8aab82]"
                         : openCat === cat.name ? "text-[#365927] font-semibold" : "text-[#5a7d50]"
                     }`}
                   >
                     {cat.name}
+                    {cat.name === "내신 계산기" && (
+                      <span className="align-middle text-[10px] font-semibold text-[#5a7d50] bg-[#eaf2e8] border border-[#d6e4d3] rounded-full px-1.5 py-0.5">
+                        v1.0
+                      </span>
+                    )}
                     {cat.children && (
                       <ChevronDown className={`h-3 w-3 transition-transform ${openCat === cat.name ? "rotate-180" : ""}`} />
                     )}

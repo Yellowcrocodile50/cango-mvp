@@ -10,6 +10,7 @@ import {
   LogOut,
   ArrowLeft,
   Bell,
+  HelpCircle,
 } from "lucide-react";
 import {
   Sidebar,
@@ -58,6 +59,11 @@ const navItems = [
     title: "마케팅 동의 여부",
     url: "/supplier/marketing",
     icon: Bell,
+  },
+  {
+    title: "내신 계산기 추가 문의",
+    url: "/supplier/naeshin-requests",
+    icon: HelpCircle,
   },
 ];
 

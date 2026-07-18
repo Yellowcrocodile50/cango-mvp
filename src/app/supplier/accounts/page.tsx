@@ -210,7 +210,8 @@ export default function AccountsPage() {
                   <TableHead>이메일</TableHead>
                   <TableHead>구분 / 학년</TableHead>
                   <TableHead>전화번호</TableHead>
-                  <TableHead>가입/최근구매일</TableHead>
+                  <TableHead>가입일</TableHead>
+                  <TableHead>최근 구매일</TableHead>
                   <TableHead>마케팅 동의</TableHead>
                 </TableRow>
               </TableHeader>
@@ -250,7 +251,12 @@ export default function AccountsPage() {
                       )}
                     </TableCell>
                     <TableCell>{r.phone || "-"}</TableCell>
-                    <TableCell>{new Date(r.date).toLocaleDateString("ko-KR")}</TableCell>
+                    <TableCell>
+                      {r.kind === "member" ? new Date(r.date).toLocaleDateString("ko-KR") : "-"}
+                    </TableCell>
+                    <TableCell>
+                      {r.kind === "guest" ? new Date(r.date).toLocaleDateString("ko-KR") : "-"}
+                    </TableCell>
                     <TableCell>
                       {r.marketing_agreed ? (
                         <span className="inline-block text-xs font-medium text-green-700 bg-green-100 px-2 py-1 rounded-md">

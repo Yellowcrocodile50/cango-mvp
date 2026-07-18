@@ -18,6 +18,7 @@ import {
   type GradeSystem,
   type NaeshinResult,
 } from "@/lib/naeshinCalculator";
+import { convertGrade9to5, convertGrade5to9 } from "@/lib/gradeConversion";
 
 const TRACKS: { label: string; departments: NaeshinDepartment[] }[] = [
   { label: "메디컬", departments: ["의예과", "치의예과", "한의예과", "약학과", "수의예과"] },
@@ -74,6 +75,13 @@ export default function NaeshinClient() {
   const [lastSemesterIndex, setLastSemesterIndex] = useState(1);
   const [grades, setGrades] = useState<string[]>(["", ""]);
   const [results, setResults] = useState<UniversityResult[] | null>(null);
+  // 결과보기를 누른 시점의 입력 성적 스냅샷 (이후 입력이 바뀌어도 결과와 어긋나지 않도록 고정)
+  const [enteredSummary, setEnteredSummary] = useState<{
+    avg: number;
+    converted: number;
+    count: number;
+    system: GradeSystem;
+  } | null>(null);
   const [requestText, setRequestText] = useState("");
   const [requestSubmitting, setRequestSubmitting] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -129,6 +137,7 @@ export default function NaeshinClient() {
     setGradeSystem(system);
     setGrades((prev) => prev.map(() => ""));
     setResults(null);
+    setEnteredSummary(null);
   }
 
   const currentTrack = TRACKS.find((t) => t.label === track) ?? TRACKS[0];
@@ -138,6 +147,7 @@ export default function NaeshinClient() {
     setTrack(label);
     if (next) setDepartment(next.departments[0]);
     setResults(null);
+    setEnteredSummary(null);
   }
 
   function handleSemesterChange(index: number) {
@@ -148,6 +158,7 @@ export default function NaeshinClient() {
       return next;
     });
     setResults(null);
+    setEnteredSummary(null);
   }
 
   function handleGradeChange(index: number, value: string) {
@@ -199,6 +210,15 @@ export default function NaeshinClient() {
       const primary = buildResultEntry(u.university, cutoff);
       const altEntries = (cutoff.alt ?? []).map((a: AltCutoff) => buildResultEntry(u.university, a));
       return [primary, ...altEntries];
+    });
+
+    const enteredAvg = parsedGrades.reduce((sum, g) => sum + g, 0) / parsedGrades.length;
+    const convertToOther = gradeSystem === "9" ? convertGrade9to5 : convertGrade5to9;
+    setEnteredSummary({
+      avg: Math.round(enteredAvg * 100) / 100,
+      converted: Math.round(convertToOther(enteredAvg) * 100) / 100,
+      count: parsedGrades.length,
+      system: gradeSystem,
     });
 
     setResults(computed);
@@ -268,6 +288,7 @@ export default function NaeshinClient() {
                 onClick={() => {
                   setDepartment(d);
                   setResults(null);
+                  setEnteredSummary(null);
                 }}
                 className={`px-3 py-1.5 rounded-full text-sm border transition ${
                   department === d
@@ -288,6 +309,7 @@ export default function NaeshinClient() {
             onValueChange={(value) => {
               setTier(value as string);
               setResults(null);
+              setEnteredSummary(null);
             }}
           >
             <SelectTrigger>
@@ -382,6 +404,17 @@ export default function NaeshinClient() {
           <h2 className="text-lg font-bold text-[#365927] mb-1">
             {TIER_LABELS[tier] ?? tier} · {department} 예측 결과
           </h2>
+          {enteredSummary && (
+            <div className="rounded-lg border border-[#d6e4d3] bg-[#eef5ec] px-4 py-3">
+              <p className="text-sm text-[#4a6b40]">
+                입력한 {enteredSummary.count}개 학기 기준 현재 평균 내신은{" "}
+                <b className="text-[#365927]">{enteredSummary.avg}등급</b>({enteredSummary.system}등급제)이에요.
+              </p>
+              <p className="text-xs text-[#8aab82] mt-0.5">
+                {enteredSummary.system === "9" ? "5" : "9"}등급제로 환산하면 약 {enteredSummary.converted}등급
+              </p>
+            </div>
+          )}
           {results.map((r, i) => (
             <ResultCard key={`${r.university}-${i}`} entry={r} />
           ))}
@@ -575,7 +608,8 @@ function ResultCard({ entry }: { entry: UniversityResult }) {
           {result.aheadOfPace ? "까지는 여유가 있어요." : "이 필요해요."}
         </p>
         <p className="text-xs text-[#8aab82] mt-1">
-          {otherSystem}등급제 환산 시 약 {result.requiredAvgConverted}등급
+          위 남은 학기 평균을 {otherSystem}등급제로 환산하면 약 {result.requiredAvgConverted}등급이에요
+          <span className="text-[#c0d2ba]"> (커트라인이 아니라 남은 학기 목표 평균이에요)</span>
         </p>
         <CutoffBreakdown cutoffRaw={cutoffRaw} />
       </div>

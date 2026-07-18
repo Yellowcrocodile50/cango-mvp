@@ -2,7 +2,7 @@ import { cache } from "react";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { supabaseServer } from "@/lib/supabaseServer";
-import { getCategoryLabel, isFreeCategory } from "@/data/categories";
+import { getBreadcrumb, getCategoryLabel, isFreeCategory } from "@/data/categories";
 import type { Material } from "@/types/material";
 import ProductDetailClient from "./ProductDetailClient";
 
@@ -36,11 +36,26 @@ export async function generateMetadata(
   const title = `${material.title} | CANGO`;
   const description =
     material.description ??
-    `${categoryLabel} ${priceText} 입시 자료. 선배들이 직접 만든 검증된 자료를 CANGO에서 확인하세요.`;
+    `${material.title} - ${categoryLabel} ${priceText} 입시 자료. 선배들이 직접 만든 검증된 자료를 CANGO에서 확인하고 즉시 다운로드하세요.`;
+
+  // 자료명(학교·과목·학년 등)과 카테고리 경로를 검색 키워드로 노출 (네이버 meta keywords 활용)
+  const keywords = Array.from(
+    new Set(
+      [
+        material.title,
+        ...getBreadcrumb(material.category).map((b) => b.name),
+        ...(isFree ? ["무료 입시 자료"] : []),
+        "입시 자료",
+        "CANGO",
+        "캔고",
+      ].filter(Boolean)
+    )
+  );
 
   return {
     title: { absolute: title },
     description,
+    keywords,
     alternates: { canonical: url },
     openGraph: {
       title,

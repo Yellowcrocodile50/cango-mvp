@@ -1,24 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 
-const DISMISS_KEY = "naeshin_banner_dismissed_v1";
-
 export default function NaeshinBanner() {
-  // 서버/초기엔 숨김 → 마운트 후 localStorage 확인해서 표시(잘못된 상태 깜빡임 방지)
-  const [show, setShow] = useState(false);
-
-  useEffect(() => {
-    // 클라이언트 마운트 후 dismiss 여부 확인 (SSR-safe + hydration mismatch 방지)
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (localStorage.getItem(DISMISS_KEY) !== "1") setShow(true);
-  }, []);
+  // 새로고침할 때마다 다시 노출 → dismiss는 저장하지 않고 현재 화면에서만 유지.
+  // X를 누르면 이번 페이지 로드에서만 닫히고, 새로고침하면 다시 뜬다.
+  const [show, setShow] = useState(true);
 
   if (!show) return null;
 
   function dismiss() {
-    localStorage.setItem(DISMISS_KEY, "1");
     setShow(false);
   }
 

@@ -14,9 +14,24 @@ const geistMono = Geist_Mono({
 });
 
 const SITE_URL = "https://www.cango.kr";
-const SITE_TITLE = "CANGO - 선배들이 만든 입시 자료";
+const SITE_TITLE = "CANGO - 선배들이 만든 생기부·대학 입시자료";
 const SITE_DESCRIPTION =
-  "선배들이 직접 만든 입시 자료 PDF 마켓플레이스. 수시·정시·공부법까지 검증된 자료를 쉽게 구매하고 즉시 다운로드하세요.";
+  "선배들이 직접 만든 생기부·대학 입시자료 PDF 마켓플레이스. 수시·정시·공부법·기출자료와 무료 내신 계산기까지, 검증된 입시 자료를 쉽게 구매하고 즉시 다운로드하세요.";
+const SITE_KEYWORDS = [
+  "CANGO",
+  "캔고",
+  "캔고 입시",
+  "입시 자료",
+  "생기부",
+  "대학 입시자료",
+  "수시 자료",
+  "정시 자료",
+  "기출",
+  "공부법",
+  "내신 계산기",
+  "선배들이 만든 생기부",
+  "선배들이 만든 대학",
+];
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -25,6 +40,7 @@ export const metadata: Metadata = {
     template: "%s | CANGO",
   },
   description: SITE_DESCRIPTION,
+  keywords: SITE_KEYWORDS,
   alternates: {
     canonical: SITE_URL,
   },

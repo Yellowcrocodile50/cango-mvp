@@ -9,7 +9,7 @@ import {
   BarChart3,
   LogOut,
   ArrowLeft,
-  Bell,
+  Users,
   HelpCircle,
 } from "lucide-react";
 import {
@@ -56,9 +56,9 @@ const navItems = [
     icon: Package,
   },
   {
-    title: "마케팅 동의 여부",
-    url: "/supplier/marketing",
-    icon: Bell,
+    title: "계정 관리",
+    url: "/supplier/accounts",
+    icon: Users,
   },
   {
     title: "내신 계산기 추가 문의",

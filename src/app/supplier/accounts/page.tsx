@@ -101,6 +101,10 @@ export default function AccountsPage() {
 
   const memberCount = useMemo(() => rows.filter((r) => r.kind === "member").length, [rows]);
   const guestCount = useMemo(() => rows.filter((r) => r.kind === "guest").length, [rows]);
+  const totalAgreedCount = useMemo(
+    () => rows.filter((r) => r.marketing_agreed).length,
+    [rows],
+  );
 
   const visibleRows = useMemo(() => {
     let arr = rows.slice();
@@ -114,8 +118,6 @@ export default function AccountsPage() {
     return arr;
   }, [rows, kindFilter, agreedOnly, gradeFilter, sortDir]);
 
-  const agreedCount = visibleRows.filter((r) => r.marketing_agreed).length;
-
   // 학년 필터는 비로그인 구매자에겐 학년 정보가 없어 의미가 없음
   const gradeDisabled = kindFilter === "guest";
 
@@ -125,11 +127,11 @@ export default function AccountsPage() {
 
       <Card>
         <CardHeader className="flex flex-col gap-3 pb-3 border-b">
-          <div className="flex flex-row items-center justify-between">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <CardTitle className="text-base font-bold text-[#365927]">전체 계정</CardTitle>
             {!loading && (
               <span className="text-xs text-[#5a7d50]">
-                회원 {memberCount}명 · 비로그인 {guestCount}명 · 표시 {visibleRows.length}명(동의 {agreedCount}명)
+                로그인 {memberCount}명 / 비로그인 {guestCount}명 / 총 {memberCount + guestCount}명 (동의 {totalAgreedCount}명)
               </span>
             )}
           </div>

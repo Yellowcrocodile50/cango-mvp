@@ -232,12 +232,25 @@ export default function NaeshinClient() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
-      <h1 className="text-2xl font-bold text-[#365927] mb-2">
-        내신 계산기
-        <span className="ml-2 align-middle text-xs font-semibold text-[#5a7d50] bg-[#eaf2e8] border border-[#d6e4d3] rounded-full px-2 py-0.5">
-          v1.0
-        </span>
-      </h1>
+      <div className="mb-6">
+        <p className="flex items-center gap-2 text-sm font-semibold text-[#5a7d50] mb-2">
+          내신 계산기
+          <span className="align-middle text-xs font-semibold text-[#5a7d50] bg-[#eaf2e8] border border-[#d6e4d3] rounded-full px-2 py-0.5">
+            v1.0
+          </span>
+        </p>
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-[#365927] leading-tight tracking-tight">
+          가고 싶은 대학, <br className="sm:hidden" />
+          <span className="text-[#4a7a38]">지금부터 몇 등급</span>이 필요할까?
+        </h1>
+        <p className="mt-3 text-base sm:text-lg text-[#4a6b40] leading-relaxed">
+          내 성적을 매겨주는 계산기가 아니에요.
+          <br />
+          <b className="text-[#365927]">목표 대학에 맞춰, 남은 학기에 받아야 할 등급을 거꾸로 계산</b>해주는
+          <br className="sm:hidden" />{" "}
+          <b className="text-[#365927]">역산 내신 계산기</b>예요.
+        </p>
+      </div>
 
       <div className="bg-[#eef5ec] border border-[#d6e4d3] text-[#4a6b40] text-sm rounded-lg px-4 py-3 mb-4 space-y-2">
         <p className="font-semibold text-[#365927]">📌 전형 유형 이해하기</p>

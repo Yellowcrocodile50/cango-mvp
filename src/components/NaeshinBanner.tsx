@@ -28,8 +28,8 @@ export default function NaeshinBanner() {
             </span>
           </span>{" "}
           <span className="block md:inline">
-            내 성적으로 목표 대학 합격 가능성{" "}
-            <span className="whitespace-nowrap">확인하기 →</span>
+            가고 싶은 대학, <b className="font-semibold">몇 등급이 필요할까?</b>{" "}
+            <span className="whitespace-nowrap">→</span>
           </span>
         </Link>
         <button

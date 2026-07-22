@@ -369,7 +369,7 @@ export default function OrdersPage() {
                           ) : (
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <OrderStatusBadge is_sent={order.is_sent} payment_status={order.payment_status} payment_method={order.payment_method} />
-                              {order.is_sent && order.payment_method === "bank_transfer" && (
+                              {order.payment_method === "bank_transfer" && order.payment_status === "done" && (
                                 <span className="text-xs text-[#8aab82] whitespace-nowrap">
                                   입금완료 {formatDownloadTime(order.created_at)}
                                 </span>

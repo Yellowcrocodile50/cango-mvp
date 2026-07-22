@@ -246,7 +246,9 @@ export default function NaeshinClient() {
         <p className="mt-3 text-base sm:text-lg text-[#4a6b40] leading-relaxed">
           내 성적을 매겨주는 계산기가 아니에요.
           <br />
-          <b className="text-[#365927]">목표 대학에 맞춰, 남은 학기에 받아야 할 등급을 거꾸로 계산</b>해주는
+          <b className="text-[#365927]">목표 대학에 맞춰,</b>
+          <br className="sm:hidden" />{" "}
+          <b className="text-[#365927]">남은 학기에 받아야 할 등급을 거꾸로 계산</b>해주는
           <br className="sm:hidden" />{" "}
           <b className="text-[#365927]">역산 내신 계산기</b>예요.
         </p>

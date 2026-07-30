@@ -146,11 +146,39 @@ function BankPendingContent() {
         <p className="text-center text-[#5a7d50] mb-2">
           입금 내역을 확인한 후 등록하신 이메일로 자료를 보내드리겠습니다.
         </p>
-        <p className="text-center text-sm text-[#8aab82] mb-10">
+        <p className="text-center text-sm text-[#8aab82] mb-6">
           {isLoggedIn
             ? "발송 상태는 마이페이지에서 언제든 확인할 수 있습니다."
             : "입금 확인 후 기재하신 이메일로 자료를 보내드립니다."}
         </p>
+
+        {/* 메일 미수신 주의사항 */}
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-10 text-sm text-amber-800">
+          <p className="font-semibold mb-2">📮 메일이 안 보인다면 꼭 확인해주세요</p>
+          <ul className="space-y-1.5 list-disc pl-5">
+            <li>
+              <strong>스팸메일함</strong>과 (지메일의 경우) <strong>프로모션 탭</strong>을 함께 확인해주세요.
+              메일이 자동으로 분류되는 경우가 있습니다.
+            </li>
+            <li>
+              발신 주소는 <strong className="font-mono">order@mail.cango.kr</strong> 입니다.
+              주소록에 추가해 두시면 다음부터 정상 수신됩니다.
+            </li>
+            <li>
+              그래도 메일이 없으면{" "}
+              <a
+                href="https://pf.kakao.com/_xnANbX/chat"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium underline"
+              >
+                카카오톡 채널 · CANGO 캔고
+              </a>
+              로 문의해 주세요. 바로 다시 보내드립니다.
+            </li>
+          </ul>
+        </div>
+
         <div className="space-y-3">
           {isLoggedIn && (
             <Link

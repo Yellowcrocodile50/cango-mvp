@@ -144,16 +144,16 @@ function BankPendingContent() {
           입금 완료 접수되었습니다
         </h1>
         <p className="text-center text-[#5a7d50] mb-2">
-          입금 내역을 확인한 후 등록하신 이메일로 자료를 보내드리겠습니다.
+          입금 확인 후 기재하신 이메일로 자료를 보내드립니다.
         </p>
-        <p className="text-center text-sm text-[#8aab82] mb-6">
-          {isLoggedIn
-            ? "발송 상태는 마이페이지에서 언제든 확인할 수 있습니다."
-            : "입금 확인 후 기재하신 이메일로 자료를 보내드립니다."}
-        </p>
+        {isLoggedIn && (
+          <p className="text-center text-sm text-[#8aab82]">
+            발송 상태는 마이페이지에서 언제든 확인할 수 있습니다.
+          </p>
+        )}
 
         {/* 메일 미수신 주의사항 */}
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-10 text-sm text-amber-800">
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-6 mb-10 text-sm text-amber-800">
           <p className="font-semibold mb-2">📮 메일이 안 보인다면 꼭 확인해주세요</p>
           <ul className="space-y-1.5 list-disc pl-5">
             <li>

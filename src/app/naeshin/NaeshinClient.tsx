@@ -60,6 +60,7 @@ type CutoffRaw = {
   cut70?: number;
   actualName?: string;
   admissionType?: "comprehensive";
+  admissionName?: string;
   mergedUnit?: boolean;
   branchCampus?: string;
   year?: 2025 | 2026;
@@ -196,6 +197,7 @@ export default function NaeshinClient() {
           cut70: c.cut70,
           actualName: c.actualName,
           admissionType: c.admissionType,
+          admissionName: c.admissionName,
           mergedUnit: c.mergedUnit,
           branchCampus: c.branchCampus,
           year: c.year,
@@ -205,10 +207,13 @@ export default function NaeshinClient() {
 
     const universities: UniversityCutoffs[] = naeshinCutoffs.filter((u) => u.tier === tier);
     const computed: UniversityResult[] = universities.flatMap((u) => {
-      if (u.excludedReason) {
+      // excludedReason은 대학 전체 기본값 — 해당 학과에 개별 항목이 있으면 그쪽이 우선
+      // (서울대·한국외대는 교과전형이 없어 대학 단위로 제외돼 있지만, 학종 수치가 있는 학과는 개별 표시)
+      const own = u.departments[department];
+      if (u.excludedReason && !own) {
         return [{ kind: "excluded", university: u.university, reason: u.excludedReason }];
       }
-      const cutoff = u.departments[department] ?? { status: "no_data" as const };
+      const cutoff = own ?? { status: "no_data" as const };
       if (cutoff.status !== "data") {
         return [{ kind: "unavailable", university: u.university, status: cutoff.status, note: cutoff.note }];
       }
@@ -500,11 +505,11 @@ export default function NaeshinClient() {
   );
 }
 
-function ComprehensiveBadge() {
+function ComprehensiveBadge({ name }: { name?: string }) {
   return (
     <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-orange-600 bg-orange-50 border border-orange-200 rounded-full px-1.5 py-0.5">
       <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-      학종
+      {name ? `학종 · ${name}` : "학종"}
     </span>
   );
 }
@@ -582,7 +587,7 @@ function ResultCard({ entry }: { entry: UniversityResult }) {
       <div className="border border-[#f0c8c8] rounded-lg px-4 py-3 bg-[#fdf3f3]">
         <p className="font-medium text-[#365927] flex items-center gap-1.5">
           {displayName}
-          {cutoffRaw.admissionType === "comprehensive" && <ComprehensiveBadge />}
+          {cutoffRaw.admissionType === "comprehensive" && <ComprehensiveBadge name={cutoffRaw.admissionName} />}
           {cutoffRaw.mergedUnit && <MergedBadge />}
           {cutoffRaw.branchCampus && <BranchCampusBadge name={cutoffRaw.branchCampus} />}
         </p>
@@ -609,7 +614,7 @@ function ResultCard({ entry }: { entry: UniversityResult }) {
       <div className="border border-[#c9d9f5] rounded-lg px-4 py-3 bg-[#f2f6fd]">
         <p className="font-medium text-[#365927] flex items-center gap-1.5">
           {displayName}
-          {cutoffRaw.admissionType === "comprehensive" && <ComprehensiveBadge />}
+          {cutoffRaw.admissionType === "comprehensive" && <ComprehensiveBadge name={cutoffRaw.admissionName} />}
           {cutoffRaw.mergedUnit && <MergedBadge />}
           {cutoffRaw.branchCampus && <BranchCampusBadge name={cutoffRaw.branchCampus} />}
         </p>
@@ -630,7 +635,7 @@ function ResultCard({ entry }: { entry: UniversityResult }) {
       <div className="border border-[#c9d9f5] rounded-lg px-4 py-3 bg-[#f2f6fd]">
         <p className="font-medium text-[#365927] flex items-center gap-1.5">
           {displayName}
-          {cutoffRaw.admissionType === "comprehensive" && <ComprehensiveBadge />}
+          {cutoffRaw.admissionType === "comprehensive" && <ComprehensiveBadge name={cutoffRaw.admissionName} />}
           {cutoffRaw.mergedUnit && <MergedBadge />}
           {cutoffRaw.branchCampus && <BranchCampusBadge name={cutoffRaw.branchCampus} />}
         </p>

@@ -274,8 +274,8 @@ export default function NaeshinClient() {
             <b className="font-semibold text-[#5a7d50]">{naeshinCutoffs.length}개 대학</b>
             {" "}학생부교과전형 등급컷 기준
           </p>
-          <p className="mt-2.5 text-xs sm:text-sm text-[#4a6b40] bg-[#eaf2e8] border border-[#d6e4d3] rounded-md px-3 py-2 leading-relaxed">
-            <b className="font-semibold text-[#365927]">🆕 v2.0 업데이트</b> — 문과 계열을
+          <p className="mt-2.5 text-xs sm:text-sm text-[#3a5a8f] bg-[#f2f6fd] border border-[#c9d9f5] rounded-md px-3 py-2 leading-relaxed">
+            <b className="font-semibold">🆕 v2.0 업데이트</b> — 문과 계열을
             대폭 늘렸어요. <b className="font-semibold">사회</b>(미디어커뮤니케이션・정치외교),{" "}
             <b className="font-semibold">법학</b>, <b className="font-semibold">사범대</b>
             (교육학・국어교육・영어교육・사회윤리교육) 계열이 새로 생겼어요.

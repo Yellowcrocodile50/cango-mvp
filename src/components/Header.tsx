@@ -29,6 +29,7 @@ const categories: NavItem[] = [
     children: [
       { name: "수시", href: "/?category=수시" },
       { name: "정시", href: "/?category=정시" },
+      { name: "논술", href: "/?category=논술" },
     ],
   },
   {
@@ -51,6 +52,7 @@ const categories: NavItem[] = [
         children: [
           { name: "수시", href: "/?category=무료-수시" },
           { name: "정시", href: "/?category=무료-정시" },
+          { name: "논술", href: "/?category=무료-논술" },
         ],
       },
       {

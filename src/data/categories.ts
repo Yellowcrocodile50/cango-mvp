@@ -12,7 +12,7 @@ export type CategoryGroup = {
 export const categoryGroups: CategoryGroup[] = [
   {
     label: "고등학생(대학입시)",
-    items: ["수시", "정시"],
+    items: ["수시", "정시", "논술"],
   },
   {
     label: "중학생",
@@ -28,9 +28,9 @@ export const categoryGroups: CategoryGroup[] = [
   },
   {
     label: "무료 입시 자료",
-    items: ["무료-수시", "무료-정시", "무료-공부법", "무료-고교입시", "무료-진로/직업", "무료-기타"],
+    items: ["무료-수시", "무료-정시", "무료-논술", "무료-공부법", "무료-고교입시", "무료-진로/직업", "무료-기타"],
     subGroups: [
-      { label: "고등", items: ["무료-수시", "무료-정시"] },
+      { label: "고등", items: ["무료-수시", "무료-정시", "무료-논술"] },
       { label: "중학", items: ["무료-공부법", "무료-고교입시"] },
       { label: "진로/직업", items: ["무료-진로/직업"] },
       { label: "기타", items: ["무료-기타"] },

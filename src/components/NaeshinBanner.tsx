@@ -22,10 +22,11 @@ export default function NaeshinBanner() {
           className="flex-1 text-xs sm:text-sm leading-snug hover:underline"
         >
           <span className="block md:inline">
-            🎓 <b className="font-semibold">내신 계산기 오픈!</b>{" "}
+            🎓 내신 계산기{" "}
             <span className="align-middle text-[10px] font-bold bg-white/20 rounded-full px-1.5 py-0.5 whitespace-nowrap">
               무료
-            </span>
+            </span>{" "}
+            <b className="font-semibold">사범대·법학·미디어 추가!</b>
           </span>{" "}
           <span className="block md:inline">
             가고 싶은 대학, <b className="font-semibold">몇 등급이 필요할까?</b>{" "}

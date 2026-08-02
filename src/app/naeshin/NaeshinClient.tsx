@@ -262,6 +262,25 @@ export default function NaeshinClient() {
           <br className="sm:hidden" />{" "}
           <b className="text-[#365927]">역산 내신 계산기</b>예요.
         </p>
+        <div className="mt-4 pt-4 border-t border-[#d6e4d3]">
+          <p className="text-sm text-[#5a7d50] leading-relaxed">
+            {TRACKS.map((t) => t.label).join(" · ")}
+          </p>
+          <p className="mt-1 text-xs text-[#8aab82]">
+            <b className="font-semibold text-[#5a7d50]">
+              {TRACKS.reduce((n, t) => n + t.departments.length, 0)}개 학과
+            </b>{" "}
+            ×{" "}
+            <b className="font-semibold text-[#5a7d50]">{naeshinCutoffs.length}개 대학</b>
+            {" "}학생부교과전형 등급컷 기준
+          </p>
+          <p className="mt-2.5 text-xs sm:text-sm text-[#4a6b40] bg-[#eaf2e8] border border-[#d6e4d3] rounded-md px-3 py-2 leading-relaxed">
+            <b className="font-semibold text-[#365927]">🆕 v2.0 업데이트</b> — 문과 계열을
+            대폭 늘렸어요. <b className="font-semibold">사회</b>(미디어커뮤니케이션・정치외교),{" "}
+            <b className="font-semibold">법학</b>, <b className="font-semibold">사범대</b>
+            (교육학・국어교육・영어교육・사회윤리교육) 계열이 새로 생겼어요.
+          </p>
+        </div>
       </div>
 
       <div className="bg-[#eef5ec] border border-[#d6e4d3] text-[#4a6b40] text-sm rounded-lg px-4 py-3 mb-4 space-y-2">

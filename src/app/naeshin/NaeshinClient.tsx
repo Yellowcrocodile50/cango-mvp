@@ -58,6 +58,7 @@ type CutoffRaw = {
   actualName?: string;
   admissionType?: "comprehensive";
   mergedUnit?: boolean;
+  branchCampus?: string;
   year?: 2025 | 2026;
   note?: string;
 };
@@ -193,6 +194,7 @@ export default function NaeshinClient() {
           actualName: c.actualName,
           admissionType: c.admissionType,
           mergedUnit: c.mergedUnit,
+          branchCampus: c.branchCampus,
           year: c.year,
         },
       };
@@ -272,6 +274,8 @@ export default function NaeshinClient() {
         <ComprehensiveBadge /> 표시가 있는 학교는 교과전형이 없어서 학종(학생부종합전형) 수치로 대체한 거예요. 이 성적은 정성평가라 내신만으로 정해지지 않으니 참고만 해주세요.
         <br />
         <MergedBadge /> 표시는 개별 학과가 아니라 계열・학부 통합모집 수치라, 실제 학과 컷과 다를 수 있어요.
+        <br />
+        <BranchCampusBadge name="○○" /> 표시는 본교가 아닌 <b>분교・제2캠퍼스</b> 소속 학과예요. 위치도 모집도 본교와 완전히 다르니 꼭 확인하고 지원해주세요.
       </div>
 
       <div className="space-y-6">
@@ -511,6 +515,15 @@ function MergedBadge() {
   );
 }
 
+function BranchCampusBadge({ name }: { name: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-teal-700 bg-teal-50 border border-teal-200 rounded-full px-1.5 py-0.5">
+      <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
+      {name}캠
+    </span>
+  );
+}
+
 function CutoffBreakdown({ cutoffRaw }: { cutoffRaw: CutoffRaw }) {
   const parts: string[] = [];
   if (cutoffRaw.avg !== undefined) parts.push(`평균 ${cutoffRaw.avg}`);
@@ -568,6 +581,7 @@ function ResultCard({ entry }: { entry: UniversityResult }) {
           {displayName}
           {cutoffRaw.admissionType === "comprehensive" && <ComprehensiveBadge />}
           {cutoffRaw.mergedUnit && <MergedBadge />}
+          {cutoffRaw.branchCampus && <BranchCampusBadge name={cutoffRaw.branchCampus} />}
         </p>
         <p className="text-sm text-[#b5504f] mt-0.5">
           {noSemestersLeft
@@ -594,6 +608,7 @@ function ResultCard({ entry }: { entry: UniversityResult }) {
           {displayName}
           {cutoffRaw.admissionType === "comprehensive" && <ComprehensiveBadge />}
           {cutoffRaw.mergedUnit && <MergedBadge />}
+          {cutoffRaw.branchCampus && <BranchCampusBadge name={cutoffRaw.branchCampus} />}
         </p>
         <p className="text-sm text-[#3a5a8f] mt-0.5">
           {noSemestersLeft
@@ -614,6 +629,7 @@ function ResultCard({ entry }: { entry: UniversityResult }) {
           {displayName}
           {cutoffRaw.admissionType === "comprehensive" && <ComprehensiveBadge />}
           {cutoffRaw.mergedUnit && <MergedBadge />}
+          {cutoffRaw.branchCampus && <BranchCampusBadge name={cutoffRaw.branchCampus} />}
         </p>
         {result.aheadOfPace && (
           <p className="text-sm text-[#3a5a8f] mt-0.5">지금 페이스를 유지한다면 안정권이에요!</p>

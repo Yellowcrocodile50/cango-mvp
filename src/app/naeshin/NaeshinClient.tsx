@@ -51,7 +51,7 @@ const UNAVAILABLE_MESSAGES: Record<Exclude<DeptCutoff["status"], "data">, string
   no_department: "이 대학엔 해당 학과가 없어요.",
   no_quant_track: "이 학과는 학생부종합전형(학종)으로만 선발해서 교과 기준 예측이 어려워요.",
   merged_no_data: "학부 통합모집이라 학과별 데이터가 없어요.",
-  no_data: "아직 데이터를 준비 중이에요.",
+  no_data: "학과는 있지만 대학이 등급컷을 공개하지 않아 예측할 수 없어요.",
 };
 
 type CutoffRaw = {

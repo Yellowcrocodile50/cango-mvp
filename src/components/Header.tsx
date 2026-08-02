@@ -241,7 +241,7 @@ export default function Header() {
                   {cat.name}
                   {cat.name === "내신 계산기" && (
                     <span className="ml-1 align-middle text-[10px] font-semibold text-[#5a7d50] bg-[#eaf2e8] border border-[#d6e4d3] rounded-full px-1.5 py-0.5">
-                      v1.0
+                      v2.0
                     </span>
                   )}
                 </Link>
@@ -319,7 +319,7 @@ export default function Header() {
                     {cat.name}
                     {cat.name === "내신 계산기" && (
                       <span className="align-middle text-[10px] font-semibold text-[#5a7d50] bg-[#eaf2e8] border border-[#d6e4d3] rounded-full px-1.5 py-0.5">
-                        v1.0
+                        v2.0
                       </span>
                     )}
                     {cat.children && (

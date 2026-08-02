@@ -25,6 +25,9 @@ const TRACKS: { label: string; departments: NaeshinDepartment[] }[] = [
   { label: "공대", departments: ["컴퓨터공학과", "전자전기공학과", "기계공학과"] },
   { label: "자연", departments: ["화학과", "생명과학과"] },
   { label: "상경", departments: ["경영학과"] },
+  { label: "사회", departments: ["미디어커뮤니케이션학과", "정치외교학과"] },
+  { label: "법학", departments: ["법학과"] },
+  { label: "사범대", departments: ["교육학과", "국어교육과", "영어교육과", "사회·윤리교육과"] },
   { label: "인문/어문", departments: ["국어국문학과", "영어영문학과", "중어중문학과"] },
 ];
 
@@ -238,7 +241,7 @@ export default function NaeshinClient() {
         <p className="flex items-center gap-2 text-sm font-semibold text-[#5a7d50] mb-2">
           내신 계산기
           <span className="align-middle text-xs font-semibold text-[#5a7d50] bg-[#eaf2e8] border border-[#d6e4d3] rounded-full px-2 py-0.5">
-            v1.0
+            v2.0
           </span>
         </p>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-[#365927] leading-tight tracking-tight">
@@ -443,7 +446,7 @@ export default function NaeshinClient() {
       <div className="mt-12 border-t border-[#d6e4d3] pt-6">
         <h2 className="text-base font-bold text-[#365927] mb-1">이 학교/학과도 보고 싶어요!</h2>
         <p className="text-xs text-[#8aab82] mb-3">
-          아직 v1.0이라 데이터가 부족해요. 궁금한 학교나 학과를 알려주시면 다음 업데이트 때 참고해서 반영할게요.
+          문과 계열(사회・법학・사범대)을 새로 넣었어요. 아직 없는 학교나 학과를 알려주시면 다음 업데이트 때 반영할게요.
         </p>
         {requestUser && (
           <p className="text-xs text-[#5a7a4e] mb-1.5">

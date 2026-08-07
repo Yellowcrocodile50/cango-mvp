@@ -20,35 +20,41 @@ function LoginForm() {
     setLoading(true);
     setError("");
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("email")
-      .eq("userid", identifier)
-      .maybeSingle();
+    // 아이디 → 이메일 변환과 로그인을 모두 서버에서 처리한다.
+    // (클라이언트가 anon 키로 profiles를 읽지 않게 하기 위함 — /api/auth/login 주석 참고)
+    let result: { access_token?: string; refresh_token?: string; role?: string | null; error?: string };
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userid: identifier, password }),
+      });
+      result = await res.json();
 
-    if (!profile) {
-      setError("존재하지 않는 아이디입니다.");
+      if (!res.ok || !result.access_token || !result.refresh_token) {
+        setError(result.error ?? "로그인에 실패했습니다.");
+        setLoading(false);
+        return;
+      }
+    } catch {
+      setError("로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
       setLoading(false);
       return;
     }
-    const loginEmail = profile.email;
 
-    const { data, error: signInError } = await supabase.auth.signInWithPassword({
-      email: loginEmail,
-      password,
+    // 서버에서 받은 토큰으로 브라우저 세션을 설정
+    const { error: sessionError } = await supabase.auth.setSession({
+      access_token: result.access_token,
+      refresh_token: result.refresh_token,
     });
 
-    if (signInError) {
-      setError(
-        signInError.message === "Invalid login credentials"
-          ? "아이디 또는 비밀번호를 확인해주세요."
-          : signInError.message
-      );
+    if (sessionError) {
+      setError("로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
       setLoading(false);
       return;
     }
 
-    const isSupplier = data.user?.user_metadata?.role === "supplier";
+    const isSupplier = result.role === "supplier";
     const redirect = searchParams.get("redirect") || (isSupplier ? "/supplier" : "/");
     router.push(redirect);
     router.refresh();

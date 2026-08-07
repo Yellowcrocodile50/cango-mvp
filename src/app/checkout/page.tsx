@@ -174,12 +174,23 @@ function CheckoutContent() {
         ? process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_KAKAO!
         : process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_CARD!;
 
+    // 호출부에서 await 하지 않으므로(fire-and-forget) 내부에서 모든 예외를 삼킨다
     const cancelOrder = () => {
-      fetch("/api/cancel", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId, buyerId: user!.id }),
-      }).catch(() => {});
+      void (async () => {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          await fetch("/api/cancel", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session?.access_token}`,
+            },
+            body: JSON.stringify({ orderId }),
+          });
+        } catch {
+          // 취소 요청 실패는 결제 흐름에 영향을 주지 않는다
+        }
+      })();
     };
 
     try {

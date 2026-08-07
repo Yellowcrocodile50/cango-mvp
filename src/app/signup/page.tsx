@@ -98,14 +98,27 @@ export default function SignupPage() {
     setLoading(true);
     setServerError("");
 
-    const { data: existing } = await supabase
-      .from("profiles")
-      .select("userid")
-      .eq("userid", userid)
-      .maybeSingle();
+    // 아이디 중복 검사는 서버에서 (클라이언트가 anon 키로 profiles를 읽지 않게 함)
+    try {
+      const checkRes = await fetch("/api/auth/check-userid", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userid }),
+      });
+      const checkResult = await checkRes.json();
 
-    if (existing) {
-      setUseridError("이미 사용 중인 아이디입니다.");
+      if (!checkRes.ok) {
+        setServerError("아이디 확인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        setLoading(false);
+        return;
+      }
+      if (!checkResult.available) {
+        setUseridError("이미 사용 중인 아이디입니다.");
+        setLoading(false);
+        return;
+      }
+    } catch {
+      setServerError("아이디 확인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
       setLoading(false);
       return;
     }

@@ -47,3 +47,6 @@ next-env.d.ts
 # local reference assets (작업용 참고 이미지 등 — 레포에 커밋 안 함)
 /환산 예시.png
 /자료보관_선행학습영향평가/
+
+# Playwright MCP 산출물 (스냅샷·콘솔 로그)
+.playwright-mcp/

@@ -24,8 +24,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
   }
 
+  const adminClient = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
   // supplier 권한 확인
-  const { data: profile } = await anonClient
+  // ⚠️ anonClient로 조회하면 안 된다. auth.getUser(token)은 토큰 검증만 할 뿐
+  // 클라이언트에 세션을 붙이지 않으므로, 이어지는 .from() 호출은 anon 권한으로 나간다.
+  // profiles SELECT 정책이 본인/공급자로 제한되면 anon은 0행을 받아 항상 403이 된다.
+  // 토큰 검증은 위에서 이미 끝났으므로 권한 조회는 service_role로 한다.
+  const { data: profile } = await adminClient
     .from("profiles")
     .select("role")
     .eq("id", user.id)
@@ -34,12 +43,6 @@ export async function POST(req: NextRequest) {
   if (profile?.role !== "supplier") {
     return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
   }
-
-  // service_role로 주문 상태 업데이트
-  const adminClient = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
 
   const { data: orders, error: fetchError } = await adminClient
     .from("orders")

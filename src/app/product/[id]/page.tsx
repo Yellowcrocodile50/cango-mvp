@@ -7,6 +7,7 @@ import type { Material } from "@/types/material";
 import ProductDetailClient from "./ProductDetailClient";
 
 const SITE_URL = "https://www.cango.kr";
+const SITE_NAME = "선배들이 만든 입시자료";
 
 const getMaterial = cache(async (id: string): Promise<Material | null> => {
   const { data } = await supabaseServer
@@ -33,10 +34,10 @@ export async function generateMetadata(
   const priceText = isFree ? "무료" : `${material.price.toLocaleString()}원`;
   const url = `${SITE_URL}/product/${material.id}`;
 
-  const title = `${material.title} | CANGO`;
+  const title = `${material.title} | ${SITE_NAME}`;
   const description =
     material.description ??
-    `${material.title} - ${categoryLabel} ${priceText} 입시 자료. 선배들이 직접 만든 검증된 자료를 CANGO에서 확인하고 즉시 다운로드하세요.`;
+    `${material.title} - ${categoryLabel} ${priceText} 입시 자료. 선배들이 직접 만든 검증된 자료를 확인하고 즉시 다운로드하세요.`;
 
   // 자료명(학교·과목·학년 등)과 카테고리 경로를 검색 키워드로 노출 (네이버 meta keywords 활용)
   const keywords = Array.from(
@@ -46,6 +47,8 @@ export async function generateMetadata(
         ...getBreadcrumb(material.category).map((b) => b.name),
         ...(isFree ? ["무료 입시 자료"] : []),
         "입시 자료",
+        SITE_NAME,
+        "선배들이 만든 생기부",
         "CANGO",
         "캔고",
       ].filter(Boolean)
@@ -84,7 +87,7 @@ export default async function ProductDetailPage(
     name: material.title,
     ...(material.description && { description: material.description }),
     url: `${SITE_URL}/product/${material.id}`,
-    brand: { "@type": "Brand", name: "CANGO" },
+    brand: { "@type": "Brand", name: SITE_NAME },
     ...(material.thumbnail_url && { image: material.thumbnail_url }),
     offers: {
       "@type": "Offer",

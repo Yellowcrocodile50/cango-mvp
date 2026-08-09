@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import NaeshinClient from "./NaeshinClient";
 
 const NAESHIN_URL = "https://www.cango.kr/naeshin";
-const NAESHIN_TITLE = "내신 계산기 · 학과별 등급컷으로 지원 가능 대학 계산";
+// "대학 등급 계산기"는 서치어드바이저 실측 유입 검색어(노출 65 / CTR 3.1%).
+// 노출은 이미 나오는데 제목에 그 표현이 없어 안 눌리므로 제목에 직접 넣는다.
+const NAESHIN_TITLE = "내신 계산기 · 대학 등급 계산기 — 학과별 등급컷으로 지원 가능 대학 확인";
 const NAESHIN_DESCRIPTION =
   "무료 내신 계산기 - 지금까지의 내신 성적으로 목표 대학 합격을 위해 남은 학기에 필요한 등급을 예측하세요. 의대·공대·자연계는 물론 사범대(교육학·국어교육·영어교육)·법학과·미디어커뮤니케이션·정치외교 등 문과 학과까지, 38개 대학 21개 학과의 학생부교과전형 등급컷으로 지원 가능 대학을 확인할 수 있어요.";
 
@@ -12,6 +14,10 @@ export const metadata: Metadata = {
   keywords: [
     "내신 계산기",
     "내신 등급 계산기",
+    // 실측 유입 검색어 (서치어드바이저, 2026-08-10 확인)
+    "대학 등급 계산기",
+    "등급 계산기",
+    "고교 내신 계산기",
     "내신 등급 계산",
     "내신 평균 계산",
     "필요 내신 등급",

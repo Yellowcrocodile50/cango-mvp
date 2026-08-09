@@ -1,5 +1,9 @@
+// 검색 색인 제외: 네이버가 브랜드 검색("cango.kr")의 대표 문서로 홈 대신 이 약관 페이지를
+// 노출해 왔다(서치어드바이저 실측: /terms 25클릭 = "cango.kr" 검색 25클릭과 정확히 일치).
+// 약관류는 검색 유입 가치가 없으므로 색인에서 빼고 홈이 대표 문서가 되게 한다.
 export const metadata = {
   title: "마케팅 정보 수신 동의",
+  robots: { index: false, follow: true },
 };
 
 export default function MarketingTermsPage() {

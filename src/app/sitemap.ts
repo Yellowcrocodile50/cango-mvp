@@ -23,11 +23,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
+  // /terms·/privacy는 의도적으로 제외한다. 두 페이지에 noindex를 걸었고(각 page.tsx),
+  // 사이트맵에 남겨두면 색인하지 말라면서 수집하라는 모순된 신호를 준다.
   return [
     { url: BASE_URL, lastModified: new Date(), changeFrequency: "daily", priority: 1.0 },
     { url: `${BASE_URL}/naeshin`, changeFrequency: "monthly", priority: 0.9 },
-    { url: `${BASE_URL}/terms`, changeFrequency: "yearly", priority: 0.3 },
-    { url: `${BASE_URL}/privacy`, changeFrequency: "yearly", priority: 0.3 },
     ...productPages,
   ];
 }

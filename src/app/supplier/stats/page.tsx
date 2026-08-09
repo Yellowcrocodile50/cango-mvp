@@ -156,11 +156,14 @@ export default function StatsPage() {
   }, [materialIds, startDate, endDate]);
 
   const dailyData: DailyEntry[] = useMemo(() => {
-    const start = new Date(`${startDate}T00:00:00+09:00`);
-    const end = new Date(`${endDate}T00:00:00+09:00`);
+    // 날짜 칸은 KST 기준으로 만든다. isoDate(로컬 시각)로 만들면 브라우저 타임존이
+    // KST가 아닐 때 kstDateKey와 하루씩 어긋나 그 날 주문이 통째로 빠진다.
     const days: string[] = [];
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      days.push(isoDate(d));
+    const cursor = new Date(`${startDate}T00:00:00Z`);
+    const last = new Date(`${endDate}T00:00:00Z`);
+    while (cursor <= last) {
+      days.push(cursor.toISOString().slice(0, 10));
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
     }
 
     const map = new Map<string, DailyEntry>();
@@ -260,10 +263,11 @@ export default function StatsPage() {
               onChange={(e) => setEndDate(e.target.value)}
               className="h-9 px-3 border border-[#d6e4d3] rounded-md bg-white text-[#365927] focus:outline-none focus:ring-2 focus:ring-[#365927]"
             />
+            {/* 대시보드 '총 정산액'은 전체 기간이라 값이 다를 수 있어 기간 한정임을 명시 */}
             <span className="ml-auto text-xs text-[#5a7d50]">
               {tab === "amount"
-                ? `합계 ${totals.paidAmount.toLocaleString()}원`
-                : `유료 ${totals.paidCount}건 (로그인 ${totals.loggedInPaidCount} / 비로그인 ${totals.guestPaidCount}) · 무료 ${totals.freeCount}건`}
+                ? `선택 기간 합계 ${totals.paidAmount.toLocaleString()}원`
+                : `선택 기간 · 유료 ${totals.paidCount}건 (로그인 ${totals.loggedInPaidCount} / 비로그인 ${totals.guestPaidCount}) · 무료 ${totals.freeCount}건`}
             </span>
           </div>
         </CardHeader>

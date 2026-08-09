@@ -617,12 +617,20 @@ function ResultCard({ entry }: { entry: UniversityResult }) {
         </p>
         {noSemestersLeft && <CutoffLine cutoff9={result.cutoff9} cutoff5={result.cutoff5} />}
         <CutoffBreakdown cutoffRaw={cutoffRaw} />
-        <Link
-          href="/?category=정시"
-          className="inline-block mt-2 text-xs font-medium text-white bg-[#365927] hover:bg-[#4a7a38] rounded-full px-3 py-1.5 transition"
-        >
-          정시 자료 보러가기 →
-        </Link>
+        <div className="flex flex-wrap gap-2 mt-2">
+          <Link
+            href="/?category=정시"
+            className="text-xs font-medium text-white bg-[#365927] hover:bg-[#4a7a38] rounded-full px-3 py-1.5 transition"
+          >
+            정시 자료 보러가기 →
+          </Link>
+          <Link
+            href="/?category=논술"
+            className="text-xs font-medium text-white bg-[#365927] hover:bg-[#4a7a38] rounded-full px-3 py-1.5 transition"
+          >
+            논술 자료 보러가기 →
+          </Link>
+        </div>
       </div>
     );
   }

@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Pencil, Upload, FileText, Image as ImageIcon, X } from "lucide-react";
+import { Plus, Trash2, Pencil, Upload, FileText, Image as ImageIcon, X, Download } from "lucide-react";
 import { categoryGroups, FREE_SUB_DISPLAY } from "@/data/categories";
 import { toast } from "sonner";
 
@@ -49,6 +49,7 @@ export default function MaterialsPage() {
   const [uploading, setUploading] = useState(false);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [existingThumbnailUrl, setExistingThumbnailUrl] = useState<string | null>(null);
@@ -310,6 +311,37 @@ export default function MaterialsPage() {
     if (!confirm("정말 삭제하시겠습니까?")) return;
     await supabase.from("materials").update({ is_deleted: true }).eq("id", id);
     fetchMaterials();
+  }
+
+  /**
+   * 공급자가 자기가 올린 원본 PDF를 내려받는다. 이 화면(자료 관리) 전용.
+   *
+   * 서버 라우트를 새로 만들지 않고 브라우저 세션으로 직접 서명 URL을 발급받는다.
+   * materials 버킷 RLS가 `폴더명 = auth.uid()`라 **본인이 올린 파일에만 발급이 성공**하고,
+   * 남의 파일 경로를 넣어도 스토리지가 거부하므로 소유권 검증이 정책 레벨에서 끝난다.
+   * (service_role을 쓰는 /api/download는 무료 자료 전용이라 유료 자료엔 못 쓴다.)
+   */
+  async function handleDownload(m: Material) {
+    if (!m.file_url) {
+      toast.error("등록된 파일이 없습니다.");
+      return;
+    }
+    setDownloadingId(m.id);
+    try {
+      const { data, error } = await supabase.storage
+        .from("materials")
+        .createSignedUrl(m.file_url, 60, { download: `${m.title}.pdf` });
+
+      if (error || !data?.signedUrl) {
+        toast.error("다운로드 링크 발급에 실패했습니다.");
+        return;
+      }
+      window.location.href = data.signedUrl;
+    } catch {
+      toast.error("다운로드 중 오류가 발생했습니다.");
+    } finally {
+      setDownloadingId(null);
+    }
   }
 
   function handleEdit(material: Material) {
@@ -777,6 +809,16 @@ export default function MaterialsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          title="원본 PDF 다운로드"
+                          aria-label={`${m.title} 원본 PDF 다운로드`}
+                          disabled={!m.file_url || downloadingId === m.id}
+                          onClick={() => handleDownload(m)}
+                        >
+                          <Download className="h-3 w-3" />
+                        </Button>
                         <Button
                           size="sm"
                           variant="outline"

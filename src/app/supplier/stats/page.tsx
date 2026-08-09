@@ -36,11 +36,21 @@ function kstDateKey(iso: string): string {
   return kst.toISOString().slice(0, 10);
 }
 
+/** 소수점 이하 불필요한 0 제거: 2 → "2", 1.5 → "1.5", 1.25 → "1.25" */
+function trimZeros(v: number): string {
+  return String(Number(v.toFixed(2)));
+}
+
+/**
+ * 축 눈금용 축약 표기.
+ * 반올림하면 서로 다른 눈금이 같은 라벨이 되므로(15,000과 20,000이 둘 다 "2만")
+ * 소수점을 살린다.
+ */
 function formatAmount(n: number): string {
   if (n === 0) return "0";
-  if (n >= 100000000) return `${(n / 100000000).toFixed(1)}억`;
-  if (n >= 10000) return `${(n / 10000).toFixed(0)}만`;
-  if (n >= 1000) return `${(n / 1000).toFixed(0)}천`;
+  if (n >= 100000000) return `${trimZeros(n / 100000000)}억`;
+  if (n >= 10000) return `${trimZeros(n / 10000)}만`;
+  if (n >= 1000) return `${trimZeros(n / 1000)}천`;
   return n.toLocaleString();
 }
 
@@ -54,6 +64,26 @@ function niceMax(n: number): number {
   else if (normalized <= 5) nice = 5;
   else nice = 10;
   return nice * order;
+}
+
+/**
+ * 판매수량(건수) y축 상한. 눈금 간격을 보기 좋은 정수로 잡고 ×4 한다.
+ * 건수는 값이 작아서, 그냥 niceMax를 쓰면 눈금이 [0,0,1,1,1]처럼 겹쳐
+ * 라벨이 반복되고 React key까지 중복된다.
+ */
+function countAxisMax(n: number): number {
+  const need = Math.max(1, Math.ceil(n / 4)); // 필요한 최소 눈금 간격
+  const order = Math.pow(10, Math.floor(Math.log10(need)));
+  for (const m of [1, 2, 2.5, 5, 10]) {
+    const step = Math.round(m * order);
+    if (step >= need) return step * 4;
+  }
+  return order * 40;
+}
+
+/** 결제금액 y축 상한. 주문이 하나도 없을 때 눈금이 겹치지 않도록 최소 4로 막아둔다. */
+function amountAxisMax(n: number): number {
+  return Math.max(niceMax(n), 4);
 }
 
 export default function StatsPage() {
@@ -178,7 +208,7 @@ export default function StatsPage() {
     return Math.max(0, ...dailyData.flatMap((d) => [d.loggedInPaidCount, d.guestPaidCount, d.freeCount]));
   }, [tab, dailyData]);
 
-  const yMax = niceMax(rawMax);
+  const yMax = tab === "count" ? countAxisMax(rawMax) : amountAxisMax(rawMax);
   const yTicks = [0, 0.25, 0.5, 0.75, 1].map((r) => Math.round(yMax * r));
 
   const showXLabel = (idx: number, len: number) => {

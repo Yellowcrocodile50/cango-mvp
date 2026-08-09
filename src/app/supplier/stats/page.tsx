@@ -23,17 +23,15 @@ interface DailyEntry {
   guestPaidCount: number;
 }
 
-function pad(n: number): string {
-  return String(n).padStart(2, "0");
-}
-
-function isoDate(d: Date): string {
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
-
+/** ISO 시각 → KST 달력 날짜(YYYY-MM-DD) */
 function kstDateKey(iso: string): string {
   const kst = new Date(new Date(iso).getTime() + 9 * 60 * 60 * 1000);
   return kst.toISOString().slice(0, 10);
+}
+
+/** n일 전(KST) 날짜. 브라우저 타임존과 무관하게 항상 KST 기준 */
+function kstDaysAgo(n: number): string {
+  return kstDateKey(new Date(Date.now() - n * 86400000).toISOString());
 }
 
 /** 소수점 이하 불필요한 0 제거: 2 → "2", 1.5 → "1.5", 1.25 → "1.25" */
@@ -89,15 +87,12 @@ function amountAxisMax(n: number): number {
 export default function StatsPage() {
   const [tab, setTab] = useState<Tab>("amount");
 
-  const today = useMemo(() => new Date(), []);
-  const monthAgo = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 29);
-    return d;
-  }, []);
+  const todayKst = useMemo(() => kstDaysAgo(0), []);
 
-  const [startDate, setStartDate] = useState(isoDate(monthAgo));
-  const [endDate, setEndDate] = useState(isoDate(today));
+  // 기본 조회 기간은 전체 기간(첫 주문일 ~ 오늘). 첫 주문일은 아래에서 조회해 채운다.
+  // 주문이 없거나 조회 실패 시에는 최근 30일로 남는다.
+  const [startDate, setStartDate] = useState(() => kstDaysAgo(29));
+  const [endDate, setEndDate] = useState(todayKst);
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [materialIds, setMaterialIds] = useState<string[] | null>(null);
   const [freeMaterialIds, setFreeMaterialIds] = useState<Set<string>>(new Set());
@@ -119,10 +114,27 @@ export default function StatsPage() {
         .eq("supplier_id", user.id);
 
       const materials = myMaterials ?? [];
+      const ids = materials.map((m) => m.id);
+
+      // 전체 기간을 기본값으로 쓰기 위해 첫 주문일을 찾는다.
+      // setStartDate와 setMaterialIds가 같이 배치되므로 orders는 한 번만 조회된다.
+      if (ids.length > 0) {
+        const { data: firstOrder } = await supabase
+          .from("orders")
+          .select("created_at")
+          .in("material_id", ids)
+          .eq("payment_status", "done")
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+
+        if (firstOrder?.created_at) setStartDate(kstDateKey(firstOrder.created_at));
+      }
+
       setFreeMaterialIds(
         new Set(materials.filter((m) => isFreeCategory(m.category)).map((m) => m.id))
       );
-      setMaterialIds(materials.map((m) => m.id));
+      setMaterialIds(ids);
     })();
   }, []);
 
@@ -156,7 +168,7 @@ export default function StatsPage() {
   }, [materialIds, startDate, endDate]);
 
   const dailyData: DailyEntry[] = useMemo(() => {
-    // 날짜 칸은 KST 기준으로 만든다. isoDate(로컬 시각)로 만들면 브라우저 타임존이
+    // 날짜 칸은 KST 기준으로 만든다. 로컬 시각으로 만들면 브라우저 타임존이
     // KST가 아닐 때 kstDateKey와 하루씩 어긋나 그 날 주문이 통째로 빠진다.
     const days: string[] = [];
     const cursor = new Date(`${startDate}T00:00:00Z`);
@@ -259,7 +271,7 @@ export default function StatsPage() {
               type="date"
               value={endDate}
               min={startDate}
-              max={isoDate(today)}
+              max={todayKst}
               onChange={(e) => setEndDate(e.target.value)}
               className="h-9 px-3 border border-[#d6e4d3] rounded-md bg-white text-[#365927] focus:outline-none focus:ring-2 focus:ring-[#365927]"
             />

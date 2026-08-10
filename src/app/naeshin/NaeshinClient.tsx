@@ -464,6 +464,12 @@ export default function NaeshinClient() {
           {results.map((r, i) => (
             <ResultCard key={`${r.university}-${i}`} entry={r} />
           ))}
+          <ResultCta
+            results={results}
+            enteredAvg={enteredSummary?.avg ?? null}
+            department={department}
+            tier={tier}
+          />
         </div>
       )}
 
@@ -575,6 +581,82 @@ function CutoffLine({ cutoff9, cutoff5 }: { cutoff9: number; cutoff5: number }) 
   );
 }
 
+/**
+ * 결과 리스트 맨 아래에 딱 1회만 노출되는 무료 자료 CTA.
+ *
+ * 카드마다 붙이지 않는 이유: 결과는 대학 단위 리스트라 tier에 속한 대학 수(지거국 9곳)만큼
+ * 버튼이 늘어난다. 예전엔 '어려움' 카드 안에 정시·논술 버튼이 있어서 최악의 경우 한 화면에
+ * 버튼이 18개까지 찍혔고, 그게 오히려 광고처럼 읽혔다. 노출 범위는 모든 판정으로 넓히되
+ * 노출 횟수는 1회로 줄이는 게 이 컴포넌트의 목적이다.
+ *
+ * 링크는 유료가 아니라 무료 자료(`?category=고등` = 무료 입시 › 고등학생, 30건)로 보낸다.
+ * 지금 트래픽은 5등급제 사용자가 압도적인 현 고1이라 결제 의사가 거의 없고, 유료 논술은
+ * 자료가 1건뿐이어서 눌러 들어가면 빈약하다.
+ */
+function ResultCta({
+  results,
+  enteredAvg,
+  department,
+  tier,
+}: {
+  results: UniversityResult[];
+  enteredAvg: number | null;
+  department: NaeshinDepartment;
+  tier: string;
+}) {
+  const verdicts = results.flatMap((r) => (r.kind === "result" ? [r.result.verdict] : []));
+  if (verdicts.length === 0) return null;
+
+  // achievable이 하나라도 있으면 "목표가 보이는" 상태로 본다 — 동기가 가장 높은 순간이다.
+  const tone = verdicts.includes("achievable")
+    ? "achievable"
+    : verdicts.includes("safe")
+      ? "safe"
+      : "hard";
+
+  // 당위("~해야 해요")가 아니라 제안 톤으로 쓴다 — 계산기를 쓰러 온 사람에게 지시하면 반감이 든다.
+  // ⚠️ '어려움'에서 정시・학종・논술을 언급하는데, 목적지의 무료 자료는 무료-수시 29건(생기부 =
+  // 학종 대비로 적합) · 무료-정시 1건 · 무료-논술 0건이다. 논술 무료 자료가 생기기 전까진
+  // 기대와 살짝 어긋날 수 있다는 걸 알고 쓴 문구다.
+  const headline =
+    tone === "achievable"
+      ? enteredAvg !== null
+        ? `지금 ${enteredAvg}등급에서 목표까지, 도움될 만한 자료를 모아뒀어요.`
+        : "목표까지 가는 데 도움될 만한 자료를 모아뒀어요."
+      : tone === "safe"
+        ? "지금 잘하고 있어요! 미리 챙겨두면 좋을 자료도 있어요."
+        : "교과 말고도 정시・학종・논술 같은 길이 있어요. 준비에 참고할 자료도 모아뒀어요.";
+
+  // 배경을 흰색으로 두는 이유: 페이지 body가 #f5f9f4라서 초록 틴트를 깔면 배경과 같은 색이 돼
+  // 면으로 존재하지 않는다. 흰색은 페이지보다 밝아서 위로 들린다. 결과 카드(핑크·파랑 틴트)는
+  // 그림자가 없으므로 shadow-sm과 좌측 액센트 바로 "결과가 아니라 다음 단계"임을 구분한다.
+  return (
+    <div className="mt-5 rounded-lg border border-[#e6ece4] border-l-4 border-l-[#5a7d50] bg-white shadow-sm px-4 py-4">
+      <p className="text-sm font-medium text-[#365927]">{headline}</p>
+      <p className="text-xs text-[#4a6b40] mt-1">
+        선배들이 만든 자료 중 <b className="text-[#5a7d50]">무료로 받을 수 있는 것</b>만 모아뒀어요.
+        부담 없이 둘러보셔도 괜찮아요.
+      </p>
+      {/* py-3 = 44px 높이. 유입 3분의 2가 모바일이고 이게 전환 동선의 유일한 버튼이라
+          터치 타깃 권장치(44×44)를 맞춘다. */}
+      <Link
+        href="/?category=고등"
+        onClick={() =>
+          trackEvent("naeshin_cta_click", {
+            tone,
+            department,
+            tier,
+            target: "free",
+          })
+        }
+        className="inline-block mt-3 text-sm font-medium text-white bg-[#365927] hover:bg-[#4a7a38] rounded-full px-5 py-3 transition"
+      >
+        무료 자료 둘러보기 →
+      </Link>
+    </div>
+  );
+}
+
 function ResultCard({ entry }: { entry: UniversityResult }) {
   if (entry.kind === "excluded") {
     return (
@@ -617,20 +699,6 @@ function ResultCard({ entry }: { entry: UniversityResult }) {
         </p>
         {noSemestersLeft && <CutoffLine cutoff9={result.cutoff9} cutoff5={result.cutoff5} />}
         <CutoffBreakdown cutoffRaw={cutoffRaw} />
-        <div className="flex flex-wrap gap-2 mt-2">
-          <Link
-            href="/?category=정시"
-            className="text-xs font-medium text-white bg-[#365927] hover:bg-[#4a7a38] rounded-full px-3 py-1.5 transition"
-          >
-            정시 자료 보러가기 →
-          </Link>
-          <Link
-            href="/?category=논술"
-            className="text-xs font-medium text-white bg-[#365927] hover:bg-[#4a7a38] rounded-full px-3 py-1.5 transition"
-          >
-            논술 자료 보러가기 →
-          </Link>
-        </div>
       </div>
     );
   }

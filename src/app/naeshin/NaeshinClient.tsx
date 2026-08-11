@@ -24,9 +24,10 @@ const TRACKS: { label: string; departments: NaeshinDepartment[] }[] = [
   { label: "메디컬", departments: ["의예과", "치의예과", "한의예과", "약학과", "수의예과"] },
   { label: "보건", departments: ["간호학과", "보건계열"] },
   { label: "공대", departments: ["컴퓨터공학과", "전자전기공학과", "기계공학과"] },
+  { label: "건축", departments: ["건축학과", "건축공학과"] },
   { label: "자연", departments: ["화학과", "생명과학과"] },
   { label: "상경", departments: ["경영학과"] },
-  { label: "사회", departments: ["미디어커뮤니케이션학과", "정치외교학과"] },
+  { label: "사회", departments: ["미디어커뮤니케이션학과", "정치외교학과", "심리학과"] },
   { label: "법학", departments: ["법학과"] },
   { label: "사범대", departments: ["교육학과", "국어교육과", "영어교육과", "사회·윤리교육과"] },
   { label: "인문/어문", departments: ["국어국문학과", "영어영문학과", "중어중문학과"] },
@@ -279,10 +280,12 @@ export default function NaeshinClient() {
             {" "}학생부교과전형 등급컷 기준
           </p>
           <p className="mt-2.5 text-xs sm:text-sm text-[#3a5a8f] bg-[#f2f6fd] border border-[#c9d9f5] rounded-md px-3 py-2 leading-relaxed">
-            <b className="font-semibold">🆕 v3.0 업데이트</b> — <b className="font-semibold">보건</b> 계열이
-            새로 생겼어요. <b className="font-semibold">간호학과</b>와{" "}
-            <b className="font-semibold">보건계열</b>(임상병리・방사선・물리치료・치위생・작업치료・응급구조)을
-            추가했어요. v2.0에서 늘린 사회・법학・사범대 계열도 그대로 있어요.
+            <b className="font-semibold">🆕 v3.0 업데이트</b> — <b className="font-semibold">보건</b>과{" "}
+            <b className="font-semibold">건축</b> 계열이 새로 생겼어요.{" "}
+            <b className="font-semibold">간호학과</b>,{" "}
+            <b className="font-semibold">보건계열</b>(임상병리・방사선・물리치료・치위생・작업치료・응급구조),{" "}
+            <b className="font-semibold">건축학과</b>(5년제)・<b className="font-semibold">건축공학과</b>(4년제),{" "}
+            <b className="font-semibold">심리학과</b>를 추가했어요.
           </p>
         </div>
       </div>
@@ -480,7 +483,7 @@ export default function NaeshinClient() {
       <div className="mt-12 border-t border-[#d6e4d3] pt-6">
         <h2 className="text-base font-bold text-[#365927] mb-1">이 학교/학과도 보고 싶어요!</h2>
         <p className="text-xs text-[#8aab82] mb-3">
-          문과 계열(사회・법학・사범대)을 새로 넣었어요. 아직 없는 학교나 학과를 알려주시면 다음 업데이트 때 반영할게요.
+          보건(간호・임상병리 등)과 건축, 심리학과를 새로 넣었어요. 아직 없는 학교나 학과를 알려주시면 다음 업데이트 때 반영할게요.
         </p>
         {requestUser && (
           <p className="text-xs text-[#5a7a4e] mb-1.5">

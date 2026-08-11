@@ -284,8 +284,9 @@ export default function NaeshinClient() {
             <b className="font-semibold">건축</b> 계열이 새로 생겼어요.{" "}
             <b className="font-semibold">간호학과</b>,{" "}
             <b className="font-semibold">보건계열</b>(임상병리・방사선・물리치료・치위생・작업치료・응급구조),{" "}
-            <b className="font-semibold">건축학과</b>(5년제)・<b className="font-semibold">건축공학과</b>(4년제),{" "}
-            <b className="font-semibold">심리학과</b>를 추가했어요.
+            <b className="font-semibold">건축학과</b>(5년제)・<b className="font-semibold">건축공학과</b>(4년제)를
+            추가했고, <b className="font-semibold">사회</b> 계열에는{" "}
+            <b className="font-semibold">심리학과</b>가 새로 생겼어요.
           </p>
         </div>
       </div>

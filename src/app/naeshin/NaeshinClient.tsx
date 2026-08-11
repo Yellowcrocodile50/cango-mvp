@@ -98,6 +98,7 @@ export default function NaeshinClient() {
     id: string;
     userid: string;
     grade: string | null;
+    marketingAgreed: boolean;
   } | null | undefined>(undefined); // undefined = 확인 중, null = 로그인 안 함
 
   useEffect(() => {
@@ -111,10 +112,15 @@ export default function NaeshinClient() {
       }
       const { data: profile } = await supabase
         .from("profiles")
-        .select("userid, grade")
+        .select("userid, grade, marketing_agreed")
         .eq("id", user.id)
         .single();
-      setRequestUser({ id: user.id, userid: profile?.userid ?? user.email ?? "", grade: profile?.grade ?? null });
+      setRequestUser({
+        id: user.id,
+        userid: profile?.userid ?? user.email ?? "",
+        grade: profile?.grade ?? null,
+        marketingAgreed: profile?.marketing_agreed ?? false,
+      });
     })();
   }, []);
 
@@ -487,10 +493,26 @@ export default function NaeshinClient() {
           보건(간호・임상병리 등)과 건축, 심리학과를 새로 넣었어요. 아직 없는 학교나 학과를 알려주시면 다음 업데이트 때 반영할게요.
         </p>
         {requestUser && (
-          <p className="text-xs text-[#5a7a4e] mb-1.5">
-            {requestUser.userid}
-            {requestUser.grade ? ` · ${requestUser.grade}` : ""}(으)로 문의를 남겨요.
-          </p>
+          <>
+            <p className="text-xs text-[#5a7a4e] mb-1.5">
+              {requestUser.userid}
+              {requestUser.grade ? ` · ${requestUser.grade}` : ""}(으)로 문의를 남겨요.
+            </p>
+            {/* 요청한 학과가 반영돼도 알려줄 방법이 마케팅 수신 동의뿐이라, 여기서 상태를 알려준다 */}
+            {requestUser.marketingAgreed ? (
+              <p className="text-xs text-[#5a7a4e] mb-1.5">
+                마케팅 정보 수신에 동의해두셔서, 요청하신 학과가 반영되면 이메일로 알려드릴 수 있어요.
+              </p>
+            ) : (
+              <p className="text-xs text-[#8a6d1f] bg-[#fff8e6] border border-[#f0e2bd] rounded-md px-2.5 py-2 mb-1.5 leading-relaxed">
+                지금은 마케팅 정보 수신에 동의하지 않으셔서, 반영 소식을 따로 알려드리기 어려워요.{" "}
+                <Link href="/mypage" className="underline underline-offset-2 font-medium">
+                  마이페이지
+                </Link>
+                에서 언제든 바꾸실 수 있어요.
+              </p>
+            )}
+          </>
         )}
         <textarea
           value={requestText}

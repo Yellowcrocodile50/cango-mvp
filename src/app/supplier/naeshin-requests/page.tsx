@@ -24,6 +24,7 @@ interface NaeshinRequest {
     grade: string | null;
     phone: string | null;
     marketing_agreed: boolean | null;
+    marketing_agreed_at: string | null;
   } | null;
 }
 
@@ -43,7 +44,7 @@ export default function NaeshinRequestsPage() {
     if (userIds.length > 0) {
       const { data: profileRows } = await supabase
         .from("profiles")
-        .select("id, userid, email, user_type, grade, phone, marketing_agreed")
+        .select("id, userid, email, user_type, grade, phone, marketing_agreed, marketing_agreed_at")
         .in("id", userIds);
       profileMap = new Map((profileRows ?? []).map((p) => [p.id, p]));
     }
@@ -119,14 +120,24 @@ export default function NaeshinRequestsPage() {
                     <TableCell>
                       {!r.profile ? (
                         <span className="text-xs text-muted-foreground">-</span>
-                      ) : r.profile.marketing_agreed ? (
-                        <span className="inline-block text-xs font-medium text-green-700 bg-green-100 px-2 py-1 rounded-md">
-                          동의
-                        </span>
                       ) : (
-                        <span className="inline-block text-xs font-medium text-red-600 bg-red-100 px-2 py-1 rounded-md">
-                          미동의
-                        </span>
+                        <div className="flex flex-col gap-0.5">
+                          <span
+                            className={`inline-block w-fit text-xs font-medium px-2 py-1 rounded-md ${
+                              r.profile.marketing_agreed
+                                ? "text-green-700 bg-green-100"
+                                : "text-red-600 bg-red-100"
+                            }`}
+                          >
+                            {r.profile.marketing_agreed ? "동의" : "미동의"}
+                          </span>
+                          {/* 본인이 마이페이지에서 바꾼 경우에만 값이 있다(가입 이후 미변경이면 null) */}
+                          {r.profile.marketing_agreed_at && (
+                            <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                              {new Date(r.profile.marketing_agreed_at).toLocaleDateString("ko-KR")} 변경
+                            </span>
+                          )}
+                        </div>
                       )}
                     </TableCell>
                     <TableCell className="max-w-md whitespace-pre-wrap break-words">{r.content}</TableCell>

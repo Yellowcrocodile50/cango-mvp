@@ -23,6 +23,7 @@ interface NaeshinRequest {
     user_type: string | null;
     grade: string | null;
     phone: string | null;
+    marketing_agreed: boolean | null;
   } | null;
 }
 
@@ -42,7 +43,7 @@ export default function NaeshinRequestsPage() {
     if (userIds.length > 0) {
       const { data: profileRows } = await supabase
         .from("profiles")
-        .select("id, userid, email, user_type, grade, phone")
+        .select("id, userid, email, user_type, grade, phone, marketing_agreed")
         .in("id", userIds);
       profileMap = new Map((profileRows ?? []).map((p) => [p.id, p]));
     }
@@ -83,13 +84,23 @@ export default function NaeshinRequestsPage() {
                   <TableHead>이메일</TableHead>
                   <TableHead>구분 / 학년</TableHead>
                   <TableHead>전화번호</TableHead>
+                  <TableHead>마케팅 동의</TableHead>
                   <TableHead>문의 내용</TableHead>
                   <TableHead>문의일</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {requests.map((r) => (
-                  <TableRow key={r.id}>
+                  <TableRow
+                    key={r.id}
+                    className={
+                      !r.profile
+                        ? undefined
+                        : r.profile.marketing_agreed
+                          ? "bg-green-50 hover:bg-green-100"
+                          : "bg-red-50 hover:bg-red-100"
+                    }
+                  >
                     <TableCell className="font-medium">{r.profile?.userid || "-"}</TableCell>
                     <TableCell>{r.profile?.email || "-"}</TableCell>
                     <TableCell>
@@ -105,6 +116,19 @@ export default function NaeshinRequestsPage() {
                       )}
                     </TableCell>
                     <TableCell>{r.profile?.phone || "-"}</TableCell>
+                    <TableCell>
+                      {!r.profile ? (
+                        <span className="text-xs text-muted-foreground">-</span>
+                      ) : r.profile.marketing_agreed ? (
+                        <span className="inline-block text-xs font-medium text-green-700 bg-green-100 px-2 py-1 rounded-md">
+                          동의
+                        </span>
+                      ) : (
+                        <span className="inline-block text-xs font-medium text-red-600 bg-red-100 px-2 py-1 rounded-md">
+                          미동의
+                        </span>
+                      )}
+                    </TableCell>
                     <TableCell className="max-w-md whitespace-pre-wrap break-words">{r.content}</TableCell>
                     <TableCell className="whitespace-nowrap">
                       {new Date(r.created_at).toLocaleDateString("ko-KR")}

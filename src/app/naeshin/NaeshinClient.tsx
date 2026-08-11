@@ -708,7 +708,7 @@ function ResultCard({ entry }: { entry: UniversityResult }) {
     const noSemestersLeft = result.remainingCount === 0;
     return (
       <div className="border border-[#f0c8c8] rounded-lg px-4 py-3 bg-[#fdf3f3]">
-        <p className="font-medium text-[#365927] flex items-center gap-1.5">
+        <p className="font-medium text-[#365927] flex flex-wrap items-center gap-1.5">
           {displayName}
           {cutoffRaw.admissionType === "comprehensive" && <ComprehensiveBadge name={cutoffRaw.admissionName} />}
           {cutoffRaw.admissionType !== "comprehensive" && cutoffRaw.admissionName && (
@@ -732,7 +732,7 @@ function ResultCard({ entry }: { entry: UniversityResult }) {
     const noSemestersLeft = result.remainingCount === 0;
     return (
       <div className="border border-[#c9d9f5] rounded-lg px-4 py-3 bg-[#f2f6fd]">
-        <p className="font-medium text-[#365927] flex items-center gap-1.5">
+        <p className="font-medium text-[#365927] flex flex-wrap items-center gap-1.5">
           {displayName}
           {cutoffRaw.admissionType === "comprehensive" && <ComprehensiveBadge name={cutoffRaw.admissionName} />}
           {cutoffRaw.admissionType !== "comprehensive" && cutoffRaw.admissionName && (
@@ -756,7 +756,7 @@ function ResultCard({ entry }: { entry: UniversityResult }) {
     const otherSystem = result.gradeSystem === "9" ? "5" : "9";
     return (
       <div className="border border-[#c9d9f5] rounded-lg px-4 py-3 bg-[#f2f6fd]">
-        <p className="font-medium text-[#365927] flex items-center gap-1.5">
+        <p className="font-medium text-[#365927] flex flex-wrap items-center gap-1.5">
           {displayName}
           {cutoffRaw.admissionType === "comprehensive" && <ComprehensiveBadge name={cutoffRaw.admissionName} />}
           {cutoffRaw.admissionType !== "comprehensive" && cutoffRaw.admissionName && (

@@ -24,7 +24,7 @@ const TRACKS: { label: string; departments: NaeshinDepartment[] }[] = [
   { label: "메디컬", departments: ["의예과", "치의예과", "한의예과", "약학과", "수의예과"] },
   { label: "보건", departments: ["간호학과", "보건계열"] },
   { label: "공대", departments: ["컴퓨터공학과", "전자전기공학과", "기계공학과"] },
-  { label: "건축", departments: ["건축학과", "건축공학과"] },
+  { label: "건축", departments: ["건축계열"] },
   { label: "자연", departments: ["화학과", "생명과학과"] },
   { label: "상경", departments: ["경영학과"] },
   { label: "사회", departments: ["미디어커뮤니케이션학과", "정치외교학과", "심리학과"] },
@@ -280,13 +280,13 @@ export default function NaeshinClient() {
             {" "}학생부교과전형 등급컷 기준
           </p>
           <p className="mt-2.5 text-xs sm:text-sm text-[#3a5a8f] bg-[#f2f6fd] border border-[#c9d9f5] rounded-md px-3 py-2 leading-relaxed">
-            <b className="font-semibold">🆕 v3.0 업데이트</b> — <b className="font-semibold">보건</b>과{" "}
-            <b className="font-semibold">건축</b> 계열이 새로 생겼어요.{" "}
-            <b className="font-semibold">간호학과</b>,{" "}
-            <b className="font-semibold">보건계열</b>(임상병리・방사선・물리치료・치위생・작업치료・응급구조),{" "}
-            <b className="font-semibold">건축학과</b>(5년제)・<b className="font-semibold">건축공학과</b>(4년제)를
-            추가했고, <b className="font-semibold">사회</b> 계열에는{" "}
-            <b className="font-semibold">심리학과</b>가 새로 생겼어요.
+            <b className="font-semibold">🆕 v3.0 업데이트</b> — 계열 2개가 새로 생겼어요.
+            <br />
+            <b className="font-semibold">보건</b> — 간호학과 · 보건계열(임상병리・방사선・물리치료・치위생・작업치료・응급구조)
+            <br />
+            <b className="font-semibold">건축</b> — 건축계열(건축학·건축공학·도시건축·실내건축 등 대학별 모집단위 전부)
+            <br />
+            그리고 <b className="font-semibold">사회 계열에 심리학과</b>가 추가됐어요.
           </p>
         </div>
       </div>

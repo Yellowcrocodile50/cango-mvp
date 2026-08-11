@@ -22,6 +22,7 @@ import { convertGrade9to5, convertGrade5to9 } from "@/lib/gradeConversion";
 
 const TRACKS: { label: string; departments: NaeshinDepartment[] }[] = [
   { label: "메디컬", departments: ["의예과", "치의예과", "한의예과", "약학과", "수의예과"] },
+  { label: "보건", departments: ["간호학과", "보건계열"] },
   { label: "공대", departments: ["컴퓨터공학과", "전자전기공학과", "기계공학과"] },
   { label: "자연", departments: ["화학과", "생명과학과"] },
   { label: "상경", departments: ["경영학과"] },
@@ -63,6 +64,8 @@ type CutoffRaw = {
   admissionName?: string;
   mergedUnit?: boolean;
   branchCampus?: string;
+  /** 결과 카드에 노출되는 짧은 안내(지원자격 제한 등) — note는 내부 문서용이라 렌더링되지 않는다 */
+  notice?: string;
   year?: 2025 | 2026;
   note?: string;
 };
@@ -200,6 +203,7 @@ export default function NaeshinClient() {
           admissionName: c.admissionName,
           mergedUnit: c.mergedUnit,
           branchCampus: c.branchCampus,
+          notice: c.notice,
           year: c.year,
         },
       };
@@ -246,7 +250,7 @@ export default function NaeshinClient() {
         <p className="flex items-center gap-2 text-sm font-semibold text-[#5a7d50] mb-2">
           내신 계산기
           <span className="align-middle text-xs font-semibold text-[#5a7d50] bg-[#eaf2e8] border border-[#d6e4d3] rounded-full px-2 py-0.5">
-            v2.0
+            v3.0
           </span>
         </p>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-[#365927] leading-tight tracking-tight">
@@ -275,10 +279,10 @@ export default function NaeshinClient() {
             {" "}학생부교과전형 등급컷 기준
           </p>
           <p className="mt-2.5 text-xs sm:text-sm text-[#3a5a8f] bg-[#f2f6fd] border border-[#c9d9f5] rounded-md px-3 py-2 leading-relaxed">
-            <b className="font-semibold">🆕 v2.0 업데이트</b> — 문과 계열을
-            대폭 늘렸어요. <b className="font-semibold">사회</b>(미디어커뮤니케이션・정치외교),{" "}
-            <b className="font-semibold">법학</b>, <b className="font-semibold">사범대</b>
-            (교육학・국어교육・영어교육・사회윤리교육) 계열이 새로 생겼어요.
+            <b className="font-semibold">🆕 v3.0 업데이트</b> — <b className="font-semibold">보건</b> 계열이
+            새로 생겼어요. <b className="font-semibold">간호학과</b>와{" "}
+            <b className="font-semibold">보건계열</b>(임상병리・방사선・물리치료・치위생・작업치료・응급구조)을
+            추가했어요. v2.0에서 늘린 사회・법학・사범대 계열도 그대로 있어요.
           </p>
         </div>
       </div>
@@ -302,7 +306,7 @@ export default function NaeshinClient() {
         <br />
         <MergedBadge /> 표시는 개별 학과가 아니라 계열・학부 통합모집 수치라, 실제 학과 컷과 다를 수 있어요.
         <br />
-        <BranchCampusBadge name="○○" /> 표시는 본교가 아닌 <b>분교・제2캠퍼스</b> 소속 학과예요. 위치도 모집도 본교와 완전히 다르니 꼭 확인하고 지원해주세요.
+        <BranchCampusBadge name="○○캠" /> 표시는 본교가 아닌 <b>분교・제2캠퍼스</b> 소속 학과예요. 위치도 모집도 본교와 완전히 다르니 꼭 확인하고 지원해주세요.
       </div>
 
       <div className="space-y-6">
@@ -552,7 +556,7 @@ function BranchCampusBadge({ name }: { name: string }) {
   return (
     <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-teal-700 bg-teal-50 border border-teal-200 rounded-full px-1.5 py-0.5">
       <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
-      {name}캠
+      {name}
     </span>
   );
 }
@@ -566,9 +570,14 @@ function CutoffBreakdown({ cutoffRaw }: { cutoffRaw: CutoffRaw }) {
 
   const year = cutoffRaw.year ?? 2026;
   return (
-    <p className="text-[11px] text-[#a8bfa2] mt-1.5">
-      9등급제 발표컷 · {year}학년도 · {parts.join(" · ")}
-    </p>
+    <>
+      {cutoffRaw.notice && (
+        <p className="text-[11px] text-[#8aab82] mt-1.5 leading-relaxed">{cutoffRaw.notice}</p>
+      )}
+      <p className="text-[11px] text-[#a8bfa2] mt-1.5">
+        9등급제 발표컷 · {year}학년도 · {parts.join(" · ")}
+      </p>
+    </>
   );
 }
 
@@ -694,8 +703,8 @@ function ResultCard({ entry }: { entry: UniversityResult }) {
         </p>
         <p className="text-sm text-[#b5504f] mt-0.5">
           {noSemestersLeft
-            ? "이미 입력한 성적으로는 교과전형 합격이 어려워요ㅠㅠ 정시・논술이나 정성평가인 학종 전형을 추천해요!"
-            : "교과전형으로는 합격이 어려워요ㅠㅠ 목표 대학을 위해서는 정시・논술이나 정성평가인 학종 전형을 추천해요!"}
+            ? "이미 입력한 성적으로는 교과전형 합격이 어려워보여요ㅠㅠ 정시・논술이나 정성평가인 학종 전형을 추천해요!"
+            : "교과전형으로는 합격이 어려워보여요ㅠㅠ 목표 대학을 위해서는 정시・논술이나 정성평가인 학종 전형을 추천해요!"}
         </p>
         {noSemestersLeft && <CutoffLine cutoff9={result.cutoff9} cutoff5={result.cutoff5} />}
         <CutoffBreakdown cutoffRaw={cutoffRaw} />

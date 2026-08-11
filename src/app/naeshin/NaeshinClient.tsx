@@ -284,7 +284,7 @@ export default function NaeshinClient() {
             <br />
             <b className="font-semibold">보건</b> — 간호학과 · 보건계열(임상병리・방사선・물리치료・치위생・작업치료・응급구조)
             <br />
-            <b className="font-semibold">건축</b> — 건축계열(건축학·건축공학·도시건축·실내건축 등 대학별 모집단위 전부)
+            <b className="font-semibold">건축</b> — 건축계열(건축학 5년제·건축공학 4년제·도시건축을 대학별 모집단위 그대로)
             <br />
             그리고 <b className="font-semibold">사회 계열에 심리학과</b>가 추가됐어요.
           </p>

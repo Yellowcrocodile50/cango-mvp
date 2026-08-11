@@ -546,6 +546,15 @@ function ComprehensiveBadge({ name }: { name?: string }) {
   );
 }
 
+function SubjectAdmissionBadge({ name }: { name: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-600 bg-slate-50 border border-slate-200 rounded-full px-1.5 py-0.5">
+      <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+      교과 · {name}
+    </span>
+  );
+}
+
 function MergedBadge() {
   return (
     <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-full px-1.5 py-0.5">
@@ -701,6 +710,9 @@ function ResultCard({ entry }: { entry: UniversityResult }) {
         <p className="font-medium text-[#365927] flex items-center gap-1.5">
           {displayName}
           {cutoffRaw.admissionType === "comprehensive" && <ComprehensiveBadge name={cutoffRaw.admissionName} />}
+          {cutoffRaw.admissionType !== "comprehensive" && cutoffRaw.admissionName && (
+            <SubjectAdmissionBadge name={cutoffRaw.admissionName} />
+          )}
           {cutoffRaw.mergedUnit && <MergedBadge />}
           {cutoffRaw.branchCampus && <BranchCampusBadge name={cutoffRaw.branchCampus} />}
         </p>
@@ -722,6 +734,9 @@ function ResultCard({ entry }: { entry: UniversityResult }) {
         <p className="font-medium text-[#365927] flex items-center gap-1.5">
           {displayName}
           {cutoffRaw.admissionType === "comprehensive" && <ComprehensiveBadge name={cutoffRaw.admissionName} />}
+          {cutoffRaw.admissionType !== "comprehensive" && cutoffRaw.admissionName && (
+            <SubjectAdmissionBadge name={cutoffRaw.admissionName} />
+          )}
           {cutoffRaw.mergedUnit && <MergedBadge />}
           {cutoffRaw.branchCampus && <BranchCampusBadge name={cutoffRaw.branchCampus} />}
         </p>
@@ -743,6 +758,9 @@ function ResultCard({ entry }: { entry: UniversityResult }) {
         <p className="font-medium text-[#365927] flex items-center gap-1.5">
           {displayName}
           {cutoffRaw.admissionType === "comprehensive" && <ComprehensiveBadge name={cutoffRaw.admissionName} />}
+          {cutoffRaw.admissionType !== "comprehensive" && cutoffRaw.admissionName && (
+            <SubjectAdmissionBadge name={cutoffRaw.admissionName} />
+          )}
           {cutoffRaw.mergedUnit && <MergedBadge />}
           {cutoffRaw.branchCampus && <BranchCampusBadge name={cutoffRaw.branchCampus} />}
         </p>

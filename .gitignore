@@ -50,3 +50,7 @@ next-env.d.ts
 
 # Playwright MCP 산출물 (스냅샷·콘솔 로그)
 .playwright-mcp/
+
+# 내신 계산기 검수용 산출물 (naeshinCutoffs.ts에서 생성 — 원본이 아니라 파생물이라 커밋 안 함)
+/naeshin_v3_전체리스트.md
+/naeshin_v2_검수프롬프트.md

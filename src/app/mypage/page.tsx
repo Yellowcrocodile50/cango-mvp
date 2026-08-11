@@ -37,6 +37,8 @@ export default function MyPage() {
   const [user, setUser] = useState<User | null>(null);
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [marketingAgreed, setMarketingAgreed] = useState<boolean | null>(null);
+  const [marketingSaving, setMarketingSaving] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [withdrawPassword, setWithdrawPassword] = useState("");
   const [withdrawing, setWithdrawing] = useState(false);
@@ -78,9 +80,34 @@ export default function MyPage() {
         .order("created_at", { ascending: false });
 
       setOrders((data as unknown as OrderRow[]) || []);
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("marketing_agreed")
+        .eq("id", authUser.id)
+        .single();
+      setMarketingAgreed(profile?.marketing_agreed ?? false);
+
       setLoading(false);
     })();
   }, [router]);
+
+  const handleMarketingToggle = async () => {
+    if (!user || marketingAgreed === null || marketingSaving) return;
+    const next = !marketingAgreed;
+    setMarketingSaving(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ marketing_agreed: next, marketing_agreed_at: new Date().toISOString() })
+      .eq("id", user.id);
+    setMarketingSaving(false);
+    if (error) {
+      toast.error("변경에 실패했어요. 잠시 후 다시 시도해주세요.");
+      return;
+    }
+    setMarketingAgreed(next);
+    toast.success(next ? "마케팅 정보 수신에 동의했어요." : "마케팅 정보 수신을 해지했어요.");
+  };
 
   const handleDownload = async (materialId: string, title: string) => {
     try {
@@ -328,6 +355,36 @@ export default function MyPage() {
             <span className="inline-block w-2 h-2 rounded-full bg-[#8aab82]" />
             계정 관리
           </h2>
+
+          {/* 마케팅 수신 동의 — 가입 때 받기만 하고 사이트 안에 철회 수단이 없었다.
+              광고성 정보를 보내려면 수신 거부 방법을 제공해야 한다. */}
+          <div className="mb-5 rounded-lg border border-[#d6e4d3] bg-white px-4 py-3 flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-[#365927]">마케팅 정보 수신</p>
+              <p className="mt-0.5 text-xs text-[#8aab82] leading-relaxed">
+                새 자료·이벤트 소식을 이메일로 받아보실 수 있어요. 언제든 바꿀 수 있고,
+                주문·결제 같은 필수 안내는 이 설정과 무관하게 발송돼요.
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={marketingAgreed === true}
+              aria-label="마케팅 정보 수신 동의"
+              disabled={marketingAgreed === null || marketingSaving}
+              onClick={handleMarketingToggle}
+              className={`relative shrink-0 w-12 h-7 rounded-full transition-colors disabled:opacity-50 ${
+                marketingAgreed ? "bg-[#365927]" : "bg-[#d6e4d3]"
+              }`}
+            >
+              <span
+                className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-white shadow transition-transform ${
+                  marketingAgreed ? "translate-x-5" : ""
+                }`}
+              />
+            </button>
+          </div>
+
           <button
             type="button"
             onClick={() => {

@@ -27,7 +27,7 @@ const TRACKS: { label: string; departments: NaeshinDepartment[] }[] = [
   { label: "건축", departments: ["건축계열"] },
   { label: "자연", departments: ["화학과", "생명과학과"] },
   { label: "상경", departments: ["경영학과"] },
-  { label: "사회", departments: ["미디어커뮤니케이션학과", "정치외교학과", "심리학과"] },
+  { label: "사회", departments: ["미디어커뮤니케이션학과", "정치외교학과", "심리학과", "행정학과"] },
   { label: "법학", departments: ["법학과"] },
   { label: "사범대", departments: ["교육학과", "국어교육과", "영어교육과", "사회·윤리교육과"] },
   { label: "인문/어문", departments: ["국어국문학과", "영어영문학과", "중어중문학과"] },
@@ -257,7 +257,7 @@ export default function NaeshinClient() {
         <p className="flex items-center gap-2 text-sm font-semibold text-[#5a7d50] mb-2">
           내신 계산기
           <span className="align-middle text-xs font-semibold text-[#5a7d50] bg-[#eaf2e8] border border-[#d6e4d3] rounded-full px-2 py-0.5">
-            v3.0
+            v3.5
           </span>
         </p>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-[#365927] leading-tight tracking-tight">
@@ -286,13 +286,15 @@ export default function NaeshinClient() {
             {" "}학생부교과전형 등급컷 기준
           </p>
           <p className="mt-2.5 text-xs sm:text-sm text-[#3a5a8f] bg-[#f2f6fd] border border-[#c9d9f5] rounded-md px-3 py-2 leading-relaxed">
-            <b className="font-semibold">🆕 v3.0 업데이트</b> — 계열 2개가 새로 생겼어요.
+            <b className="font-semibold">🆕 v3.5 업데이트</b> — 계열 2개가 새로 생겼어요.
             <br />
             <b className="font-semibold">보건</b> — 간호학과 · 보건계열(임상병리・방사선・물리치료・치위생・작업치료・응급구조)
             <br />
             <b className="font-semibold">건축</b> — 건축계열(건축학 5년제·건축공학 4년제·도시건축을 대학별 모집단위 그대로)
             <br />
             그리고 <b className="font-semibold">사회 계열에 심리학과</b>가 추가됐어요.
+            <br />
+            여기에 <b className="font-semibold">행정학과</b>도 사회 계열에 들어왔어요 — 38개 대학을 모두 확인했어요.
           </p>
         </div>
       </div>
@@ -490,7 +492,7 @@ export default function NaeshinClient() {
       <div className="mt-12 border-t border-[#d6e4d3] pt-6">
         <h2 className="text-base font-bold text-[#365927] mb-1">이 학교/학과도 보고 싶어요!</h2>
         <p className="text-xs text-[#8aab82] mb-3">
-          보건(간호・임상병리 등)과 건축, 심리학과를 새로 넣었어요. 아직 없는 학교나 학과를 알려주시면 다음 업데이트 때 반영할게요.
+          보건(간호・임상병리 등)과 건축, 심리학과, 행정학과를 새로 넣었어요. 아직 없는 학교나 학과를 알려주시면 다음 업데이트 때 반영할게요.
         </p>
         {requestUser && (
           <>

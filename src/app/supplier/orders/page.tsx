@@ -39,6 +39,8 @@ interface Order {
   cash_receipt_requested: boolean;
   cash_receipt_phone: string | null;
   cash_receipt_issued: boolean;
+  email_status: string | null;
+  email_error: string | null;
 }
 
 function formatDownloadTime(iso: string): string {
@@ -51,16 +53,17 @@ function formatDownloadTime(iso: string): string {
   });
 }
 
-// 처리 우선순위: 낮을수록 위로 (입금확인 → 발송 → 영수증발행 → 완료 → 취소)
+// 처리 우선순위: 낮을수록 위로 (반송 → 입금확인 → 발송 → 영수증발행 → 완료 → 취소)
 // 무료 자료는 직접 다운로드 → 발송 개념이 없으므로 '발송 대기'로 치지 않음
 function actionPriority(o: Order): number {
   const free = isFreeCategory(o.material_category);
-  if (!free && o.payment_status === "pending") return 0; // 입금 확인 대기
-  if (!free && o.payment_status === "done" && !o.is_sent) return 1; // 발송 대기
+  if (o.email_status === "bounced") return 0; // 이메일 반송 — 주소 확인 후 재발송 필요
+  if (!free && o.payment_status === "pending") return 1; // 입금 확인 대기
+  if (!free && o.payment_status === "done" && !o.is_sent) return 2; // 발송 대기
   if (o.cash_receipt_requested && o.payment_status === "done" && !o.cash_receipt_issued)
-    return 2; // 현금영수증 발행 대기
-  if (o.payment_status === "canceled") return 4; // 취소 (맨 뒤)
-  return 3; // 처리 완료(무료 다운로드 포함)
+    return 3; // 현금영수증 발행 대기
+  if (o.payment_status === "canceled") return 5; // 취소 (맨 뒤)
+  return 4; // 처리 완료(무료 다운로드 포함)
 }
 
 export default function OrdersPage() {
@@ -69,6 +72,11 @@ export default function OrdersPage() {
 
   const bankPendingCount = useMemo(
     () => orders.filter((o) => o.payment_method === "bank_transfer" && o.payment_status === "pending").length,
+    [orders]
+  );
+
+  const bouncedCount = useMemo(
+    () => orders.filter((o) => o.email_status === "bounced").length,
     [orders]
   );
 
@@ -131,7 +139,7 @@ export default function OrdersPage() {
 
     const { data: rawOrders } = await supabase
       .from("orders")
-      .select("id, order_id, depositor_name, buyer_id, buyer_email, buyer_phone, amount, payment_status, payment_method, is_sent, created_at, first_downloaded_at, material_id, cash_receipt_requested, cash_receipt_phone, cash_receipt_issued")
+      .select("id, order_id, depositor_name, buyer_id, buyer_email, buyer_phone, amount, payment_status, payment_method, is_sent, created_at, first_downloaded_at, material_id, cash_receipt_requested, cash_receipt_phone, cash_receipt_issued, email_status, email_error")
       .in("material_id", materialIds)
       .order("created_at", { ascending: false });
 
@@ -234,6 +242,15 @@ export default function OrdersPage() {
           <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
         </button>
       </div>
+
+      {bouncedCount > 0 && (
+        <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm">
+          <span className="text-red-700 font-semibold">
+            📮 이메일 반송 {bouncedCount}건
+          </span>
+          <span className="text-red-600">받는 주소가 없거나 잘못된 건입니다. 사유를 확인하고 주소를 정정한 뒤 다시 보내주세요.</span>
+        </div>
+      )}
 
       {bankPendingCount > 0 && (
         <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm">
@@ -367,12 +384,19 @@ export default function OrdersPage() {
                               </span>
                             )
                           ) : (
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <OrderStatusBadge is_sent={order.is_sent} payment_status={order.payment_status} payment_method={order.payment_method} />
-                              {order.payment_method === "bank_transfer" && order.payment_status === "done" && (
-                                <span className="text-xs text-[#8aab82] whitespace-nowrap">
-                                  입금완료 {formatDownloadTime(order.created_at)}
-                                </span>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <OrderStatusBadge is_sent={order.is_sent} payment_status={order.payment_status} payment_method={order.payment_method} email_status={order.email_status} />
+                                {order.payment_method === "bank_transfer" && order.payment_status === "done" && (
+                                  <span className="text-xs text-[#8aab82] whitespace-nowrap">
+                                    입금완료 {formatDownloadTime(order.created_at)}
+                                  </span>
+                                )}
+                              </div>
+                              {order.email_status === "bounced" && order.email_error && (
+                                <p className="text-xs text-red-600 max-w-[22rem] leading-snug">
+                                  {order.email_error}
+                                </p>
                               )}
                             </div>
                           )}

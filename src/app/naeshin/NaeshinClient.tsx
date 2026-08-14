@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { trackEvent } from "@/lib/ga";
@@ -34,6 +35,17 @@ const TRACKS: { label: string; departments: NaeshinDepartment[] }[] = [
 ];
 
 const SEMESTER_LABELS = ["1학년 1학기", "1학년 2학기", "2학년 1학기", "2학년 2학기", "3학년 1학기"];
+
+/* 접이식 안내 상자 공통 스타일.
+   접힌 설명끼리는 색으로 구분할 이유가 없어 흰 바탕으로 통일하고(페이지 바탕 #f5f9f4보다
+   밝아서 면으로 떠오른다), 확인이 필요한 '예측 기준'만 주의색을 남긴다.
+   브라우저 기본 ▶ 마커는 숨기고 직접 그린 화살표를 열림 상태에 맞춰 회전시킨다. */
+const DETAILS_BOX = "rounded-lg border border-[#e6ece4] bg-white px-4 py-3";
+const DETAILS_BOX_CAUTION = "rounded-lg border border-[#f0dca0] bg-[#fff8e6] px-4 py-3";
+const DETAILS_BOX_INFO = "rounded-lg border border-[#c9d9f5] bg-[#f2f6fd] px-4 py-3";
+const DETAILS_SUMMARY =
+  "flex items-center gap-1.5 text-sm font-medium cursor-pointer list-none [&::-webkit-details-marker]:hidden";
+const DETAILS_CHEVRON = "w-4 h-4 shrink-0 transition-transform duration-200 group-open:rotate-90";
 
 const TIERS = Array.from(new Set(naeshinCutoffs.map((u) => u.tier)));
 
@@ -142,7 +154,7 @@ export default function NaeshinClient() {
       return;
     }
     setRequestText("");
-    toast.success("요청 접수됐어요! 다음 업데이트 때 참고할게요.");
+    toast.success("요청 접수됐어요. 다음 업데이트 때 참고할게요.");
     trackEvent("naeshin_request_submit", { track, department, tier });
   }
 
@@ -254,71 +266,26 @@ export default function NaeshinClient() {
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
       <div className="mb-6">
-        <p className="flex items-center gap-2 text-sm font-semibold text-[#5a7d50] mb-2">
-          내신 계산기
-          <span className="align-middle text-xs font-semibold text-[#5a7d50] bg-[#eaf2e8] border border-[#d6e4d3] rounded-full px-2 py-0.5">
-            v3.5
-          </span>
-        </p>
+        <p className="text-sm font-semibold text-[#5a7d50] mb-2">내신 계산기</p>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-[#365927] leading-tight tracking-tight">
           가고 싶은 대학, <br className="sm:hidden" />
           <span className="text-[#4a7a38]">지금부터 몇 등급</span>이 필요할까?
         </h1>
-        <p className="mt-3 text-base sm:text-lg text-[#4a6b40] leading-relaxed">
+        {/* break-keep: 한국어는 기본 줄바꿈이 단어 중간을 끊는다("계/산해드려요"). */}
+        {/* "무엇이 아닌지"를 먼저 말해야 역산이 왜 다른지 전달된다 — 이 대비 문장은
+            역산 컨셉을 차별점으로 잡은 기존 결정의 일부다. AI 티가 났던 건 문장이
+            아니라 세 줄 연속 볼드였으므로, 문장은 두고 볼드만 하나로 줄인다. */}
+        <p className="mt-3 text-base sm:text-lg text-[#4a6b40] leading-relaxed break-keep">
           내 성적을 매겨주는 계산기가 아니에요.
           <br />
-          <b className="text-[#365927]">목표 대학에 맞춰,</b>
+          목표 대학에 맞춰
           <br className="sm:hidden" />{" "}
-          <b className="text-[#365927]">남은 학기에 받아야 할 등급을 거꾸로 계산</b>해주는
-          <br className="sm:hidden" />{" "}
-          <b className="text-[#365927]">역산 내신 계산기</b>예요.
+          <b className="text-[#365927]">남은 학기에 받아야 할 등급을 거꾸로</b> 계산해드려요.
         </p>
-        <div className="mt-4 pt-4 border-t border-[#d6e4d3]">
-          <p className="text-sm text-[#5a7d50] leading-relaxed">
-            {TRACKS.map((t) => t.label).join(" · ")}
-          </p>
-          <p className="mt-1 text-xs text-[#8aab82]">
-            <b className="font-semibold text-[#5a7d50]">
-              {TRACKS.reduce((n, t) => n + t.departments.length, 0)}개 학과
-            </b>{" "}
-            ×{" "}
-            <b className="font-semibold text-[#5a7d50]">{naeshinCutoffs.length}개 대학</b>
-            {" "}학생부교과전형 등급컷 기준
-          </p>
-          <p className="mt-2.5 text-xs sm:text-sm text-[#3a5a8f] bg-[#f2f6fd] border border-[#c9d9f5] rounded-md px-3 py-2 leading-relaxed">
-            <b className="font-semibold">🆕 v3.5 업데이트</b> — 계열 2개가 새로 생겼어요.
-            <br />
-            <b className="font-semibold">보건</b> — 간호학과 · 보건계열(임상병리・방사선・물리치료・치위생・작업치료・응급구조)
-            <br />
-            <b className="font-semibold">건축</b> — 건축계열(건축학 5년제·건축공학 4년제·도시건축을 대학별 모집단위 그대로)
-            <br />
-            그리고 <b className="font-semibold">사회 계열에 심리학과</b>가 추가됐어요.
-            <br />
-            여기에 <b className="font-semibold">행정학과</b>도 사회 계열에 들어왔어요 — 38개 대학을 모두 확인했어요.
-          </p>
-        </div>
-      </div>
-
-      <div className="bg-[#eef5ec] border border-[#d6e4d3] text-[#4a6b40] text-sm rounded-lg px-4 py-3 mb-4 space-y-2">
-        <p className="font-semibold text-[#365927]">📌 전형 유형 이해하기</p>
-        <p>
-          <b className="text-[#365927]">교과전형(정량평가)</b> — 내신 등급을 정해진 공식으로 계산해 점수가 높은 순으로 뽑아요. 숫자로 딱 떨어져서 예측이 가능하고, <b>이 계산기가 바로 이 기준</b>이에요.
+        <p className="mt-3 text-xs text-[#8aab82]">
+          {TRACKS.reduce((n, t) => n + t.departments.length, 0)}개 학과 × {naeshinCutoffs.length}개 대학
+          학생부교과전형 등급컷 기준 · 공개 자료를 바탕으로 한 예측이라 실제 입결과 다를 수 있어요.
         </p>
-        <p>
-          <b className="text-[#365927]">학종・학생부종합전형(정성평가)</b> — 내신뿐 아니라 생활기록부・면접까지 종합적으로 평가해요. 학교별 환산점수・반영 과목, 특목고・자사고 내신 반영 방식까지 달라서 변수가 훨씬 많아 예측이 어려워요.
-        </p>
-      </div>
-
-      <div className="bg-[#fff8e6] border border-[#f0dca0] text-[#8a6d1f] text-sm rounded-lg px-4 py-3 mb-8">
-        ⚠️ 이 계산기는 공개된 교과전형 등급컷을 바탕으로 한 <b>단순 예측</b>이며, 실제 입결과 다를 수 있습니다.
-        <br />
-        반드시 참고용으로 활용해주세요.
-        <br />
-        <ComprehensiveBadge /> 표시가 있는 학교는 <b>그 학과의 교과전형 등급컷이 공개되지 않아</b> 학종(학생부종합전형) 수치로 대체한 거예요(대학에 교과전형이 없다는 뜻은 아니에요). 학종은 정성평가라 내신만으로 정해지지 않으니, <b>다른 학교의 교과 컷과 숫자를 그대로 비교하지 말고</b> 참고만 해주세요.
-        <br />
-        <MergedBadge /> 표시는 개별 학과가 아니라 계열・학부 통합모집 수치라, 실제 학과 컷과 다를 수 있어요.
-        <br />
-        <BranchCampusBadge name="○○캠" /> 표시는 본교가 아닌 <b>분교・제2캠퍼스</b> 소속 학과예요. 위치도 모집도 본교와 완전히 다르니 꼭 확인하고 지원해주세요.
       </div>
 
       <div className="space-y-6">
@@ -480,6 +447,14 @@ export default function NaeshinClient() {
           {results.map((r, i) => (
             <ResultCard key={`${r.university}-${i}`} entry={r} />
           ))}
+          {/* 대안(정시・논술・학종) 안내는 카드마다 반복하지 않고 여기서 한 번만 한다.
+              ⚠️ ResultCta에 맡기면 안 된다 — tone은 achievable > safe > hard 우선순위라
+              가능한 대학이 하나라도 섞이면 tone이 achievable이 되어 이 안내를 하지 않는다. */}
+          {results.some((r) => r.kind === "result" && r.result.verdict === "impossible") && (
+            <p className="text-xs text-[#8aab82] px-1 break-keep">
+              교과전형으로 어려운 곳은 정시・논술이나 정성평가인 학종도 함께 보시면 좋아요.
+            </p>
+          )}
           <ResultCta
             results={results}
             enteredAvg={enteredSummary?.avg ?? null}
@@ -489,10 +464,74 @@ export default function NaeshinClient() {
         </div>
       )}
 
+      {/* 설명은 지우지 않고 계산기 아래로 내려 접어둔다. 계산기를 쓰러 온 사람이
+          계산기보다 안내문을 먼저 만나면 도구가 아니라 설명서처럼 읽힌다.
+          면책 문구는 신뢰・법적 목적이 있으므로 요약 한 줄을 히어로에 남겨두고
+          전문은 여기 유지한다. */}
+      <div className="mt-10 space-y-2">
+        <details className={`group ${DETAILS_BOX}`}>
+          <summary className={`${DETAILS_SUMMARY} text-[#365927]`}>
+            <ChevronRight className={DETAILS_CHEVRON} aria-hidden />
+            교과전형과 학종, 뭐가 다른가요?
+          </summary>
+          <div className="mt-3 space-y-2 text-sm text-[#4a6b40]">
+            <p>
+              <b className="text-[#365927]">교과전형(정량평가)</b>은 내신 등급을 정해진 공식으로 계산해 점수가 높은 순으로 뽑아요. 숫자로 딱 떨어져서 예측이 가능하고, 이 계산기가 바로 이 기준이에요.
+            </p>
+            <p>
+              <b className="text-[#365927]">학종・학생부종합전형(정성평가)</b>은 내신뿐 아니라 생활기록부・면접까지 종합적으로 평가해요. 학교별 환산점수・반영 과목, 특목고・자사고 내신 반영 방식까지 달라서 변수가 훨씬 많아 예측이 어려워요.
+            </p>
+          </div>
+        </details>
+
+        <details className={`group ${DETAILS_BOX_CAUTION}`}>
+          <summary className={`${DETAILS_SUMMARY} text-[#8a6d1f]`}>
+            <ChevronRight className={DETAILS_CHEVRON} aria-hidden />
+            예측 기준과 배지 표시 안내
+          </summary>
+          <div className="mt-3 space-y-2 text-sm text-[#8a6d1f]">
+            <p>
+              이 계산기는 공개된 교과전형 등급컷을 바탕으로 한 단순 예측이며, 실제 입결과 다를 수 있습니다. 반드시 참고용으로 활용해주세요.
+            </p>
+            <p>
+              <ComprehensiveBadge /> 표시가 있는 학교는 그 학과의 교과전형 등급컷이 공개되지 않아 학종(학생부종합전형) 수치로 대체한 거예요(대학에 교과전형이 없다는 뜻은 아니에요). 학종은 정성평가라 내신만으로 정해지지 않으니, 다른 학교의 교과 컷과 숫자를 그대로 비교하지 말고 참고만 해주세요.
+            </p>
+            <p>
+              <MergedBadge /> 표시는 개별 학과가 아니라 계열・학부 통합모집 수치라, 실제 학과 컷과 다를 수 있어요.
+            </p>
+            <p>
+              <BranchCampusBadge name="○○캠" /> 표시는 본교가 아닌 분교・제2캠퍼스 소속 학과예요. 위치도 모집도 본교와 완전히 다르니 꼭 확인하고 지원해주세요.
+            </p>
+          </div>
+        </details>
+
+        {/* 업데이트 내역은 갈아치우지 않고 누적하기로 한 기존 결정을 유지한다.
+            첫 화면에서만 빼고 기록 자체는 그대로 둔다. */}
+        <details className={`group ${DETAILS_BOX_INFO}`}>
+          <summary className={`${DETAILS_SUMMARY} text-[#3a5a8f]`}>
+            <ChevronRight className={DETAILS_CHEVRON} aria-hidden />
+            업데이트 내역 (v3.5)
+          </summary>
+          <div className="mt-3 space-y-1.5 text-sm text-[#3a5a8f] leading-relaxed">
+            <p>계열 2개가 새로 생겼어요.</p>
+            <p>
+              <b className="font-semibold">보건</b> 간호학과, 보건계열(임상병리・방사선・물리치료・치위생・작업치료・응급구조)
+            </p>
+            <p>
+              <b className="font-semibold">건축</b> 건축계열(건축학 5년제·건축공학 4년제·도시건축을 대학별 모집단위 그대로)
+            </p>
+            <p>그리고 사회 계열에 심리학과가 추가됐어요.</p>
+            <p>여기에 행정학과도 사회 계열에 들어왔어요. 38개 대학을 모두 확인했어요.</p>
+          </div>
+        </details>
+      </div>
+
       <div className="mt-12 border-t border-[#d6e4d3] pt-6">
-        <h2 className="text-base font-bold text-[#365927] mb-1">이 학교/학과도 보고 싶어요!</h2>
-        <p className="text-xs text-[#8aab82] mb-3">
-          보건(간호・임상병리 등)과 건축, 심리학과, 행정학과를 새로 넣었어요. 아직 없는 학교나 학과를 알려주시면 다음 업데이트 때 반영할게요.
+        <h2 className="text-base font-bold text-[#365927] mb-1">이 학교/학과도 보고 싶어요</h2>
+        <p className="text-xs text-[#8aab82] mb-3 break-keep">
+          보건(간호・임상병리 등)과 건축, 심리학과, 행정학과를 새로 넣었어요.
+          <br className="sm:hidden" />
+          아직 없는 학교나 학과를 알려주시면 다음 업데이트 때 반영할게요.
         </p>
         {requestUser && (
           <>
@@ -536,9 +575,9 @@ export default function NaeshinClient() {
       {showLoginModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl p-8 max-w-sm w-full mx-4 text-center shadow-xl">
-            <h2 className="text-2xl font-bold text-[#365927] mb-3">로그인이 필요합니다!</h2>
+            <h2 className="text-2xl font-bold text-[#365927] mb-3">로그인이 필요해요</h2>
             <p className="text-[#5a7d50] text-xs mb-6">
-              로그인 후 문의를 남겨주셔야 새 버전을 알려드릴 수 있어요!
+              로그인하고 남겨주시면 반영됐을 때 알려드릴 수 있어요.
             </p>
             <div className="space-y-3">
               <Link
@@ -562,6 +601,9 @@ export default function NaeshinClient() {
   );
 }
 
+/* 배지는 종류별로 색을 달리한다. 한 색으로 묶어봤으나, 실제로 이 배지들을 읽는 입장에서는
+   "학종이냐 / 통합모집이냐 / 분교냐"가 각각 다른 확인 사항이라 색이 구분되는 편이 낫다는
+   판단(2026-08-15). 되돌릴 때 참고: 통일안은 주의색 하나 + 채움/테두리로만 구분했었다. */
 function ComprehensiveBadge({ name }: { name?: string }) {
   return (
     <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-orange-600 bg-orange-50 border border-orange-200 rounded-full px-1.5 py-0.5">
@@ -664,23 +706,29 @@ function ResultCta({
   // ⚠️ '어려움'에서 정시・학종・논술을 언급하는데, 목적지의 무료 자료는 무료-수시 29건(생기부 =
   // 학종 대비로 적합) · 무료-정시 1건 · 무료-논술 0건이다. 논술 무료 자료가 생기기 전까진
   // 기대와 살짝 어긋날 수 있다는 걸 알고 쓴 문구다.
-  const headline =
+  // 모바일에서 문장 단위로 끊기게 두 토막으로 나눠 둔다(좁은 화면에서 단어 중간이 잘리지 않게).
+  const [headlineLead, headlineTail]: [string, string] =
     tone === "achievable"
       ? enteredAvg !== null
-        ? `지금 ${enteredAvg}등급에서 목표까지, 도움될 만한 자료를 모아뒀어요.`
-        : "목표까지 가는 데 도움될 만한 자료를 모아뒀어요."
+        ? [`지금 ${enteredAvg}등급에서 목표까지,`, "도움될 만한 자료를 모아뒀어요."]
+        : ["목표까지 가는 데", "도움될 만한 자료를 모아뒀어요."]
       : tone === "safe"
-        ? "지금 잘하고 있어요! 미리 챙겨두면 좋을 자료도 있어요."
-        : "교과 말고도 정시・학종・논술 같은 길이 있어요. 준비에 참고할 자료도 모아뒀어요.";
+        ? ["지금 잘하고 있어요.", "미리 챙겨두면 좋을 자료도 있어요."]
+        : ["교과 말고도 정시・학종・논술 같은 길이 있어요.", "준비에 참고할 자료도 모아뒀어요."];
 
   // 배경을 흰색으로 두는 이유: 페이지 body가 #f5f9f4라서 초록 틴트를 깔면 배경과 같은 색이 돼
   // 면으로 존재하지 않는다. 흰색은 페이지보다 밝아서 위로 들린다. 결과 카드(핑크·파랑 틴트)는
   // 그림자가 없으므로 shadow-sm과 좌측 액센트 바로 "결과가 아니라 다음 단계"임을 구분한다.
   return (
     <div className="mt-5 rounded-lg border border-[#e6ece4] border-l-4 border-l-[#5a7d50] bg-white shadow-sm px-4 py-4">
-      <p className="text-sm font-medium text-[#365927]">{headline}</p>
-      <p className="text-xs text-[#4a6b40] mt-1">
+      <p className="text-sm font-medium text-[#365927] break-keep">
+        {headlineLead}
+        <br className="sm:hidden" />{" "}
+        {headlineTail}
+      </p>
+      <p className="text-xs text-[#4a6b40] mt-1 break-keep">
         선배들이 만든 자료 중 <b className="text-[#5a7d50]">무료로 받을 수 있는 것</b>만 모아뒀어요.
+        <br className="sm:hidden" />
         부담 없이 둘러보셔도 괜찮아요.
       </p>
       {/* py-3 = 44px 높이. 유입 3분의 2가 모바일이고 이게 전환 동선의 유일한 버튼이라
@@ -741,10 +789,12 @@ function ResultCard({ entry }: { entry: UniversityResult }) {
           {cutoffRaw.mergedUnit && <MergedBadge />}
           {cutoffRaw.branchCampus && <BranchCampusBadge name={cutoffRaw.branchCampus} />}
         </p>
+        {/* 대안(정시・논술・학종) 안내는 목록 아래 ResultCta가 한 번만 한다.
+            카드마다 반복하면 결과가 15장일 때 같은 문장을 15번 읽게 된다. */}
         <p className="text-sm text-[#b5504f] mt-0.5">
           {noSemestersLeft
-            ? "이미 입력한 성적으로는 교과전형 합격이 어려워보여요ㅠㅠ 정시・논술이나 정성평가인 학종 전형을 추천해요!"
-            : "교과전형으로는 합격이 어려워보여요ㅠㅠ 목표 대학을 위해서는 정시・논술이나 정성평가인 학종 전형을 추천해요!"}
+            ? "지금 성적으로는 교과전형이 어려워 보여요ㅠㅠ"
+            : "교과전형으로는 어려워 보여요ㅠㅠ"}
         </p>
         {noSemestersLeft && <CutoffLine cutoff9={result.cutoff9} cutoff5={result.cutoff5} />}
         <CutoffBreakdown cutoffRaw={cutoffRaw} />
@@ -790,15 +840,21 @@ function ResultCard({ entry }: { entry: UniversityResult }) {
           {cutoffRaw.branchCampus && <BranchCampusBadge name={cutoffRaw.branchCampus} />}
         </p>
         {result.aheadOfPace && (
-          <p className="text-sm text-[#3a5a8f] mt-0.5">지금 페이스를 유지한다면 안정권이에요!</p>
+          <p className="text-sm text-[#3a5a8f] mt-0.5">지금 페이스를 유지한다면 안정권이에요.</p>
         )}
-        <p className="text-sm text-[#3a5a8f] mt-0.5">
-          남은 학기 평균 <b className="text-[#365927]">{result.requiredAvg}등급</b>({result.gradeSystem}등급제)
-          {result.aheadOfPace ? "까지는 여유가 있어요." : "이 필요해요."}
+        {/* 계산기의 결과값은 문장이 아니라 숫자다. 숫자를 본문 크기 문장 안에 묻으면
+            도구가 아니라 안내문처럼 읽힌다. */}
+        <p className="text-xs text-[#5a7d50] mt-2">남은 학기 평균</p>
+        <p className="flex items-baseline gap-1.5">
+          <span className="text-3xl font-extrabold text-[#365927] tracking-tight leading-none">
+            {result.requiredAvg}
+          </span>
+          <span className="text-sm font-medium text-[#5a7d50]">
+            등급 ({result.gradeSystem}등급제){result.aheadOfPace ? "까지 여유" : " 필요"}
+          </span>
         </p>
-        <p className="text-xs text-[#8aab82] mt-1">
-          위 남은 학기 평균을 {otherSystem}등급제로 환산하면 약 {result.requiredAvgConverted}등급이에요
-          <span className="text-[#c0d2ba]"> (커트라인이 아니라 남은 학기 목표 평균이에요)</span>
+        <p className="text-xs text-[#8aab82] mt-1.5">
+          {otherSystem}등급제 환산 약 {result.requiredAvgConverted}등급 · 커트라인이 아닌 남은 학기 목표 평균
         </p>
         <CutoffBreakdown cutoffRaw={cutoffRaw} />
       </div>

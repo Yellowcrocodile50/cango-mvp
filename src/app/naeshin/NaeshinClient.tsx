@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
@@ -103,9 +102,13 @@ function resolveInitialSelection(raw: string | null): { track: string; departmen
   return { track: found.label, department: raw as NaeshinDepartment };
 }
 
-export default function NaeshinClient() {
-  const searchParams = useSearchParams();
-  const [initial] = useState(() => resolveInitialSelection(searchParams.get("department")));
+export default function NaeshinClient({
+  initialDepartment,
+}: {
+  /** `?department=`로 미리 선택할 학과. 서버 페이지에서 읽어 넘겨준다 */
+  initialDepartment: string | null;
+}) {
+  const [initial] = useState(() => resolveInitialSelection(initialDepartment));
   const [track, setTrack] = useState(initial.track);
   const [department, setDepartment] = useState<NaeshinDepartment>(initial.department);
   const [tier, setTier] = useState(TIERS[0]);

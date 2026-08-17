@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import NaeshinClient from "./NaeshinClient";
 
 const NAESHIN_URL = "https://www.cango.kr/naeshin";
@@ -78,11 +77,16 @@ export const metadata: Metadata = {
   },
 };
 
-export default function NaeshinPage() {
-  // useSearchParams(`?department=`로 학과 미리 선택)를 쓰므로 Suspense 경계가 필요하다.
+/* ⚠️ `?department=`를 **서버에서** 읽는다. 클라이언트 `useSearchParams` + Suspense로 하면
+   정적 HTML에 본문이 안 담긴다(공식 문서 useSearchParams > Behavior > Prerendering).
+   이 페이지는 조회수 1위이고 유입이 거의 전부 네이버 검색이라 특히 치명적이다. */
+export default async function NaeshinPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const department = (await searchParams).department;
   return (
-    <Suspense>
-      <NaeshinClient />
-    </Suspense>
+    <NaeshinClient initialDepartment={typeof department === "string" ? department : null} />
   );
 }

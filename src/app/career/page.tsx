@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import CareerClient from "./CareerClient";
 
 const CAREER_URL = "https://www.cango.kr/career";
@@ -39,11 +38,27 @@ export const metadata: Metadata = {
   },
 };
 
-export default function CareerPage() {
-  // useSearchParams를 쓰는 클라이언트 컴포넌트라 Suspense 경계가 필요하다.
+/* ⚠️ 초기 선택값을 **서버에서** 읽어 props로 내려준다.
+   전엔 클라이언트에서 `useSearchParams`로 읽었는데, 그러면 프리렌더 시
+   가장 가까운 Suspense 경계까지가 클라이언트 렌더로 넘어가서(공식 문서 useSearchParams >
+   Behavior > Prerendering) **정적 HTML에 본문이 하나도 안 담긴다.**
+   유입의 90%가 검색이라 크롤러가 빈 페이지를 보게 되는 문제였다. */
+export default async function CareerPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const sp = await searchParams;
+  const first = (key: string) => {
+    const v = sp[key];
+    return typeof v === "string" ? v : null;
+  };
+
   return (
-    <Suspense>
-      <CareerClient />
-    </Suspense>
+    <CareerClient
+      initialTrack={first("track")}
+      initialInterests={first("i")}
+      initialShowResults={first("r") === "1"}
+    />
   );
 }

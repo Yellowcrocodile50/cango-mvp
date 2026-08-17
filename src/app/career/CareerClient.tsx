@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   getTrack,
@@ -100,9 +100,17 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function CareerClient() {
+export default function CareerClient({
+  initialTrack,
+  initialInterests,
+  initialShowResults,
+}: {
+  /* 초기값은 서버에서 읽어 내려온다 — 클라이언트에서 읽으면 정적 HTML이 비어버린다(page.tsx 주석) */
+  initialTrack: string | null;
+  initialInterests: string | null;
+  initialShowResults: boolean;
+}) {
   const router = useRouter();
-  const params = useSearchParams();
 
   /* 결과가 링크로 남아야 공유가 된다(원본은 상태가 메모리에만 있어 새로고침하면 초기화됐다).
      다만 **URL을 그대로 상태로 쓰면 안 된다** — `router.replace`가 비동기라
@@ -110,15 +118,15 @@ export default function CareerClient() {
      그래서 진실은 React state가 갖고, URL은 아래 effect에서 따라 쓰는 스냅샷으로 둔다. */
   /* useState의 lazy initializer는 첫 렌더에서 한 번만 실행된다.
      공유 링크로 들어온 경우의 초기값만 URL에서 읽고, 이후로는 state가 주인이다. */
-  const [trackId, setTrackId] = useState<string | null>(() => params.get("track"));
+  const [trackId, setTrackId] = useState<string | null>(initialTrack);
   const track = getTrack(trackId);
   const [selected, setSelected] = useState<string[]>(() =>
-    decodeInterests(params.get("i"), getTrack(params.get("track")))
+    decodeInterests(initialInterests, getTrack(initialTrack))
   );
   const [showResults, setShowResults] = useState(
     () =>
-      params.get("r") === "1" &&
-      decodeInterests(params.get("i"), getTrack(params.get("track"))).length > 0
+      initialShowResults &&
+      decodeInterests(initialInterests, getTrack(initialTrack)).length > 0
   );
 
   /* 화면에는 한 단계만 보인다. 결과를 본 뒤에도 계열 카드와 칩 14개가 위에 남아 있으면

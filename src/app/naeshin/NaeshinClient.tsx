@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { trackEvent } from "@/lib/ga";
+import ToolCrossLinks from "@/components/ToolCrossLinks";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   naeshinCutoffs,
@@ -88,9 +90,24 @@ type UniversityResult =
   | { kind: "unavailable"; university: string; status: Exclude<DeptCutoff["status"], "data">; note?: string }
   | { kind: "result"; university: string; result: NaeshinResult; cutoffRaw: CutoffRaw };
 
+/**
+ * `?department=심리학과` 로 들어오면 그 학과가 선택된 상태로 연다.
+ * 진로 탐구(/career) 결과에서 "○○학과 등급컷 보러 가기"로 넘어오는 경로가 이걸 쓴다.
+ * 없거나 모르는 학과면 기본값을 그대로 쓴다.
+ */
+function resolveInitialSelection(raw: string | null): { track: string; department: NaeshinDepartment } {
+  const fallback = { track: TRACKS[0].label, department: TRACKS[0].departments[0] };
+  if (!raw) return fallback;
+  const found = TRACKS.find((t) => t.departments.includes(raw as NaeshinDepartment));
+  if (!found) return fallback;
+  return { track: found.label, department: raw as NaeshinDepartment };
+}
+
 export default function NaeshinClient() {
-  const [track, setTrack] = useState(TRACKS[0].label);
-  const [department, setDepartment] = useState<NaeshinDepartment>(TRACKS[0].departments[0]);
+  const searchParams = useSearchParams();
+  const [initial] = useState(() => resolveInitialSelection(searchParams.get("department")));
+  const [track, setTrack] = useState(initial.track);
+  const [department, setDepartment] = useState<NaeshinDepartment>(initial.department);
   const [tier, setTier] = useState(TIERS[0]);
   const [gradeSystem, setGradeSystem] = useState<GradeSystem>("5");
   const [lastSemesterIndex, setLastSemesterIndex] = useState(1);
@@ -461,6 +478,7 @@ export default function NaeshinClient() {
             department={department}
             tier={tier}
           />
+          <ToolCrossLinks currentSlug="naeshin" />
         </div>
       )}
 

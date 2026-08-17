@@ -7,22 +7,55 @@ import { useRouter, usePathname } from "next/navigation";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/lib/supabase";
+import { trackNavClick } from "@/lib/ga";
+import { liveTools, TOOLS_HUB_PATH, TOOLS_NAV_LABEL } from "@/data/tools";
 import type { User } from "@supabase/supabase-js";
 
 type NavChild = {
   name: string;
   href: string;
+  /** 항목 옆 작은 배지 (예: v3.5) */
+  badge?: string;
   children?: { name: string; href: string }[];
 };
 
 type NavItem = {
   name: string;
   href: string;
+  badge?: string;
+  /**
+   * 자료 카테고리가 아닌 칸(무료 자료·도구)은 흐린 색으로 구분한다.
+   * 예전엔 이름 문자열을 비교했는데, 도구가 늘면 조건이 계속 길어져서 플래그로 뺐다.
+   */
+  muted?: boolean;
   children?: NavChild[];
 };
 
+/*
+ * 순서 주의 — 도구 칸을 두 번째에 둔 건 실측 결과다.
+ *
+ * 모바일 탭바는 가로 스크롤이고, iPhone 폭(390px)에서 첫 화면에 완전히 보이는 건 앞 5칸(~369px)까지다.
+ * 도구 칸을 맨 뒤에 두면 502px 지점이라 스크롤해야 나오는데, GA 28일 기준 사용자의 **84%가 모바일**
+ * (태블릿 포함 94%, 데스크톱은 5.9%뿐)이고 **이벤트의 77%가 도구에서 발생**한다.
+ * 가장 많이 쓰는 기능이 첫 화면에 없던 셈이라 앞으로 당겼다(60~126px, 완전히 보임).
+ *
+ * 도구를 칸 하나(드롭다운)로 묶은 것도 같은 이유다. 최상위에 나란히 늘리면 2칸을 먹어서
+ * 앞으로 당겨도 자료 카테고리가 밀려난다. 지금 배치는 도구와 자료 3칸이 함께 보인다.
+ *
+ * ⚠️ 자료 카테고리 구성 자체는 아직 정리 전이다. 추후 수정 예정이라 여기 순서·라벨은 확정이 아니다.
+ */
 const categories: NavItem[] = [
   { name: "전체", href: "/" },
+  {
+    name: TOOLS_NAV_LABEL,
+    href: TOOLS_HUB_PATH,
+    muted: true,
+    children: liveTools.map((t) => ({
+      name: t.name,
+      href: `/${t.slug}`,
+      badge: t.badge,
+    })),
+  },
   {
     name: "고등학생(대학입시)",
     href: "/?category=고등학생(대학입시)",
@@ -45,6 +78,7 @@ const categories: NavItem[] = [
   {
     name: "무료 입시 자료",
     href: "/?category=무료 입시 자료",
+    muted: true,
     children: [
       {
         name: "고등학생(대학입시)",
@@ -67,7 +101,6 @@ const categories: NavItem[] = [
       { name: "기타", href: "/?category=무료-기타" },
     ],
   },
-  { name: "내신 계산기", href: "/naeshin" },
 ];
 
 export default function Header() {
@@ -231,17 +264,23 @@ export default function Header() {
               <div key={cat.name} className="relative group">
                 <Link
                   href={cat.href}
-                  onClick={cat.href === "/" ? (e) => { if (window.location.search) { e.preventDefault(); window.location.href = "/"; } } : undefined}
+                  onClick={(e) => {
+                    trackNavClick(cat.href);
+                    if (cat.href === "/" && window.location.search) {
+                      e.preventDefault();
+                      window.location.href = "/";
+                    }
+                  }}
                   className={`whitespace-nowrap transition inline-block py-1 ${
-                    cat.name === "무료 입시 자료" || cat.name === "내신 계산기"
+                    cat.muted
                       ? "text-[#8aab82] hover:text-[#5a7d50]"
                       : "text-[#5a7d50] hover:text-[#365927]"
                   }`}
                 >
                   {cat.name}
-                  {cat.name === "내신 계산기" && (
+                  {cat.badge && (
                     <span className="ml-1 align-middle text-[10px] font-semibold text-[#5a7d50] bg-[#eaf2e8] border border-[#d6e4d3] rounded-full px-1.5 py-0.5">
-                      v3.5
+                      {cat.badge}
                     </span>
                   )}
                 </Link>
@@ -276,9 +315,15 @@ export default function Header() {
                           <Link
                             key={child.name}
                             href={child.href}
+                            onClick={() => trackNavClick(child.href)}
                             className="block px-4 py-2 text-sm text-[#5a7d50] hover:bg-[#eef5ec] hover:text-[#365927] transition whitespace-nowrap"
                           >
                             {child.name}
+                            {child.badge && (
+                              <span className="ml-1.5 align-middle text-[10px] font-semibold text-[#5a7d50] bg-[#eaf2e8] border border-[#d6e4d3] rounded-full px-1.5 py-0.5">
+                                {child.badge}
+                              </span>
+                            )}
                           </Link>
                         )
                       )}
@@ -302,6 +347,7 @@ export default function Header() {
                         setOpenCat(openCat === cat.name ? null : cat.name);
                         setOpenSubCat(null);
                       } else {
+                        trackNavClick(cat.href);
                         if (cat.href === "/" && window.location.search) {
                           window.location.href = "/";
                         } else {
@@ -311,15 +357,15 @@ export default function Header() {
                       }
                     }}
                     className={`whitespace-nowrap py-1 transition flex items-center gap-0.5 ${
-                      cat.name === "무료 입시 자료" || cat.name === "내신 계산기"
+                      cat.muted
                         ? openCat === cat.name ? "text-[#5a7d50] font-semibold" : "text-[#8aab82]"
                         : openCat === cat.name ? "text-[#365927] font-semibold" : "text-[#5a7d50]"
                     }`}
                   >
                     {cat.name}
-                    {cat.name === "내신 계산기" && (
+                    {cat.badge && (
                       <span className="align-middle text-[10px] font-semibold text-[#5a7d50] bg-[#eaf2e8] border border-[#d6e4d3] rounded-full px-1.5 py-0.5">
-                        v3.5
+                        {cat.badge}
                       </span>
                     )}
                     {cat.children && (
@@ -364,10 +410,15 @@ export default function Header() {
                       ) : (
                         <Link
                           href={child.href}
-                          onClick={() => { setOpenCat(null); setOpenSubCat(null); }}
+                          onClick={() => { trackNavClick(child.href); setOpenCat(null); setOpenSubCat(null); }}
                           className="block py-2.5 text-sm text-[#5a7d50] active:text-[#365927]"
                         >
                           {child.name}
+                          {child.badge && (
+                            <span className="ml-1.5 align-middle text-[10px] font-semibold text-[#5a7d50] bg-[#eaf2e8] border border-[#d6e4d3] rounded-full px-1.5 py-0.5">
+                              {child.badge}
+                            </span>
+                          )}
                         </Link>
                       )}
                     </div>

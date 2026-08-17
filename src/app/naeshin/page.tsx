@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import NaeshinClient from "./NaeshinClient";
 
 const NAESHIN_URL = "https://www.cango.kr/naeshin";
@@ -78,5 +79,10 @@ export const metadata: Metadata = {
 };
 
 export default function NaeshinPage() {
-  return <NaeshinClient />;
+  // useSearchParams(`?department=`로 학과 미리 선택)를 쓰므로 Suspense 경계가 필요하다.
+  return (
+    <Suspense>
+      <NaeshinClient />
+    </Suspense>
+  );
 }

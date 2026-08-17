@@ -54,3 +54,12 @@ next-env.d.ts
 # 내신 계산기 검수용 산출물 (naeshinCutoffs.ts에서 생성 — 원본이 아니라 파생물이라 커밋 안 함)
 /naeshin_v3_전체리스트.md
 /naeshin_v2_검수프롬프트.md
+
+# 진로 탐구 검수용 산출물 (careerDepartments.ts에서 생성 — 파생물이라 커밋 안 함)
+/career_검수프롬프트.md
+/career_검수_배치*.md
+/career_검수2_*.md
+/career_자격검수_*.md
+
+# 글바치 원본 HTML (진로 탐구 이식 원본 — 외부 프로젝트라 이 레포에 커밋하지 않음)
+/글바치.html

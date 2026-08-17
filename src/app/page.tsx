@@ -5,7 +5,7 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
 import SupplierUploadSection from "@/components/SupplierUploadSection";
-import NaeshinBanner from "@/components/NaeshinBanner";
+import PromoBanner, { BannerPill } from "@/components/PromoBanner";
 import { supabase } from "@/lib/supabase";
 import { categoryGroups, getBreadcrumb, isFreeCategory } from "@/data/categories";
 import type { Material } from "@/types/material";
@@ -66,7 +66,28 @@ function ProductGrid() {
 
   return (
     <>
-      <NaeshinBanner />
+      {/* 도구 배너 2개. 순서는 내신 계산기가 먼저 — 이벤트의 77%가 거기서 나온다.
+          문구는 갈아치우지 않고 누적한다(v3.5 때 정리한 원칙). */}
+      <PromoBanner href="/naeshin" tone="green">
+        <span className="block md:inline">
+          🎓 내신 계산기 <BannerPill>무료</BannerPill>{" "}
+          <b className="font-semibold">간호·보건·건축·심리·행정 추가!</b>
+        </span>{" "}
+        <span className="block md:inline">
+          가고 싶은 대학, <b className="font-semibold">몇 등급이 필요할까?</b>{" "}
+          <span className="whitespace-nowrap">→</span>
+        </span>
+      </PromoBanner>
+      <PromoBanner href="/career" tone="blue">
+        <span className="block md:inline">
+          🧭 진로 탐구 <BannerPill>새로 나왔어요</BannerPill>{" "}
+          <b className="font-semibold">학과 99개</b>
+        </span>{" "}
+        <span className="block md:inline">
+          내가 좋아하는 건 이런 건데, <b className="font-semibold">어떤 학과에 가면 좋을까?</b>{" "}
+          <span className="whitespace-nowrap">→</span>
+        </span>
+      </PromoBanner>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       {supplierUserId && (
         <SupplierUploadSection

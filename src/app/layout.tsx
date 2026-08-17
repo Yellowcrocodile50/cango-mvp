@@ -6,7 +6,12 @@ import { CartProvider } from "@/context/CartContext";
 import { MainShell } from "@/components/MainShell";
 import { Toaster } from "sonner";
 
-const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
+/* 로컬 개발 서버(`next dev`)에서도 GA로 이벤트가 나가고 있었다 — 배포 전인 /career가
+   조회 67회로 잡혀 있는 걸 GA에서 확인했다(2026-08-17). 배포 직후 며칠간 자체 테스트가
+   실측에 섞여서 v2.0 때처럼 수치를 걸러 읽어야 하는 문제가 생긴다.
+   → 프로덕션 빌드에서만 로드한다. 로컬에서 계측을 확인해야 할 땐 `npm run build && npm start`. */
+const GA_ID =
+  process.env.NODE_ENV === "production" ? process.env.NEXT_PUBLIC_GA_ID : undefined;
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",

@@ -390,7 +390,10 @@ export default function CareerClient({
               {/* 관심사를 여러 개 고르면 겹치는 학과가 20~30개까지 나온다(합집합이라 필연).
                   많이 겹친 순으로 정렬돼 있으니 앞쪽만 펴두고 나머지는 접는다.
                   **지우지 않고 접는 이유**: 이 도구의 목적이 몰랐던 학과를 만나는 것이라
-                  꼬리 쪽에 그 사람의 학과가 있을 수 있다. */}
+                  꼬리 쪽에 그 사람의 학과가 있을 수 있다.
+                  ⚠️ 문구에 "덜 겹치는"이라 쓰지 말 것 — 관심사를 1개만 고르면 결과가 전부
+                  matchCount 1이라 접힌 쪽도 똑같이 겹친 것이고, 2순위 정렬(학과 키워드 대비
+                  비율)은 사용자의 겹침 정도가 아니라 학과 쪽 키워드 폭을 반영한다. */}
               {matches.length > VISIBLE_LIMIT && (
                 <details
                   className="group mt-2.5"
@@ -406,7 +409,7 @@ export default function CareerClient({
                     className={`${DETAILS_SUMMARY} justify-center text-[#5a7d50] rounded-lg border border-[#d6e4d3] bg-white px-4 py-3 hover:border-[#8aab82]`}
                   >
                     <ChevronRight className={`${DETAILS_CHEVRON} text-[#8aab82]`} aria-hidden />
-                    관심사가 덜 겹치는 학과 {matches.length - VISIBLE_LIMIT}개 더 보기
+                    나머지 학과 {matches.length - VISIBLE_LIMIT}개 더 보기
                   </summary>
                   <div className="space-y-2.5 mt-2.5">
                     {matches.slice(VISIBLE_LIMIT).map((m) => (

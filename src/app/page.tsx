@@ -80,7 +80,7 @@ function ProductGrid() {
       </PromoBanner>
       <PromoBanner href="/career" tone="blue">
         <span className="block md:inline">
-          🧭 진로 탐구 <BannerPill>새로 나왔어요</BannerPill>{" "}
+          🧭 진로 탐구 <BannerPill>NEW</BannerPill>{" "}
           <b className="font-semibold">학과 99개</b>
         </span>{" "}
         <span className="block md:inline">

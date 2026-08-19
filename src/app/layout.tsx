@@ -5,6 +5,7 @@ import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
 import { MainShell } from "@/components/MainShell";
 import { Toaster } from "sonner";
+import GaUserId from "@/components/GaUserId";
 
 /* 로컬 개발 서버(`next dev`)에서도 GA로 이벤트가 나가고 있었다 — 배포 전인 /career가
    조회 67회로 잡혀 있는 걸 GA에서 확인했다(2026-08-17). 배포 직후 며칠간 자체 테스트가
@@ -141,6 +142,7 @@ export default function RootLayout({
             <Script id="ga-init" strategy="afterInteractive">
               {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA_ID}');`}
             </Script>
+            <GaUserId />
           </>
         )}
       </body>

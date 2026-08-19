@@ -70,9 +70,39 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const bankPendingCount = useMemo(
-    () => orders.filter((o) => o.payment_method === "bank_transfer" && o.payment_status === "pending").length,
+  /* 한 주문(order_id)에 묶인 행이 몇 개이고 합계가 얼마인지.
+     장바구니로 여러 자료를 한 번에 사면 자료 수만큼 행이 생기므로, 행 단위로 세면
+     주문 1건이 3건으로 보이고 은행에 찍힌 실제 입금액과도 맞출 수 없다. */
+  const orderGroups = useMemo(() => {
+    const m = new Map<string, { count: number; total: number }>();
+    for (const o of orders) {
+      if (!o.order_id) continue;
+      const g = m.get(o.order_id) ?? { count: 0, total: 0 };
+      g.count += 1;
+      g.total += o.amount;
+      m.set(o.order_id, g);
+    }
+    return m;
+  }, [orders]);
+
+  // order_id가 있으면 주문 단위로, 없으면(구주문) 행 단위로 센다
+  const countByOrder = useCallback(
+    (match: (o: Order) => boolean) => {
+      const ids = new Set<string>();
+      let loose = 0;
+      for (const o of orders) {
+        if (!match(o)) continue;
+        if (o.order_id) ids.add(o.order_id);
+        else loose += 1;
+      }
+      return ids.size + loose;
+    },
     [orders]
+  );
+
+  const bankPendingCount = useMemo(
+    () => countByOrder((o) => o.payment_method === "bank_transfer" && o.payment_status === "pending"),
+    [countByOrder]
   );
 
   const bouncedCount = useMemo(
@@ -81,8 +111,8 @@ export default function OrdersPage() {
   );
 
   const cashReceiptPendingCount = useMemo(
-    () => orders.filter((o) => o.cash_receipt_requested && o.payment_status === "done" && !o.cash_receipt_issued).length,
-    [orders]
+    () => countByOrder((o) => o.cash_receipt_requested && o.payment_status === "done" && !o.cash_receipt_issued),
+    [countByOrder]
   );
 
   type SortKey = "created_at" | "amount" | "status";
@@ -175,17 +205,37 @@ export default function OrdersPage() {
     fetchOrders();
   }, [fetchOrders]);
 
-  async function markAsSent(orderId: string) {
-    if (!window.confirm("자료를 발송 완료로 표시할까요? 발송 후에는 되돌릴 수 없습니다.")) return;
-    const { error } = await supabase.from("orders").update({ is_sent: true }).eq("id", orderId);
+  /* 영수증 메일은 confirm-bank가 한 주문의 자료를 묶어 1통으로 보낸다.
+     따라서 발송 완료 표시도 주문 단위여야 한다 — 행마다 누르게 두면
+     3개짜리 주문에서 같은 메일 1통을 놓고 버튼을 3번 눌러야 한다. */
+  async function markAsSent(order: Order) {
+    const group = order.order_id ? orderGroups.get(order.order_id) : undefined;
+    const bulk = (group?.count ?? 1) > 1;
+    if (
+      !window.confirm(
+        bulk
+          ? `이 주문에 묶인 자료 ${group!.count}건을 모두 발송 완료로 표시할까요? 발송 후에는 되돌릴 수 없습니다.`
+          : "자료를 발송 완료로 표시할까요? 발송 후에는 되돌릴 수 없습니다."
+      )
+    )
+      return;
+
+    const query = supabase.from("orders").update({ is_sent: true });
+    const { error } = order.order_id
+      ? await query.eq("order_id", order.order_id)
+      : await query.eq("id", order.id);
     if (error) {
       toast.error("발송 완료 처리에 실패했습니다. 다시 시도해주세요.");
       return;
     }
     setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, is_sent: true } : o))
+      prev.map((o) =>
+        (order.order_id ? o.order_id === order.order_id : o.id === order.id)
+          ? { ...o, is_sent: true }
+          : o
+      )
     );
-    toast.success("발송 완료로 표시했습니다.");
+    toast.success(bulk ? `${group!.count}건을 발송 완료로 표시했습니다.` : "발송 완료로 표시했습니다.");
   }
 
   async function confirmBankTransfer(order: Order) {
@@ -206,24 +256,38 @@ export default function OrdersPage() {
     }).catch(() => null);
 
     if (res?.ok) {
+      /* confirm-bank는 order_id로 묶인 행 전체를 done 처리한다.
+         화면도 같은 범위를 갱신해야 한다 — 누른 행만 바꾸면 나머지가 '입금대기'로 남아
+         다시 누르게 되고, 그땐 pending 행이 없어 400이 떨어져 실패로 보인다. */
       setOrders((prev) =>
-        prev.map((o) => (o.id === order.id ? { ...o, payment_status: "done" } : o))
+        prev.map((o) =>
+          o.order_id === order.order_id ? { ...o, payment_status: "done" } : o
+        )
       );
-      toast.success("입금이 확인되었습니다.");
+      const count = orderGroups.get(order.order_id!)?.count ?? 1;
+      toast.success(count > 1 ? `입금이 확인되었습니다. (${count}건)` : "입금이 확인되었습니다.");
     } else {
       toast.error("입금 확인 처리에 실패했습니다. 다시 시도해주세요.");
     }
   }
 
-  async function markCashReceiptIssued(orderId: string) {
+  /* 현금영수증은 결제 1건에 1장이므로 주문 단위로 처리한다. */
+  async function markCashReceiptIssued(order: Order) {
     if (!window.confirm("현금영수증을 발행 완료로 표시할까요?\n홈택스에서 실제로 발행하신 뒤 체크해주세요.")) return;
-    const { error } = await supabase.from("orders").update({ cash_receipt_issued: true }).eq("id", orderId);
+    const query = supabase.from("orders").update({ cash_receipt_issued: true });
+    const { error } = order.order_id
+      ? await query.eq("order_id", order.order_id)
+      : await query.eq("id", order.id);
     if (error) {
       toast.error("발행 완료 처리에 실패했습니다. 다시 시도해주세요.");
       return;
     }
     setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, cash_receipt_issued: true } : o))
+      prev.map((o) =>
+        (order.order_id ? o.order_id === order.order_id : o.id === order.id)
+          ? { ...o, cash_receipt_issued: true }
+          : o
+      )
     );
     toast.success("현금영수증 발행 완료로 표시했습니다.");
   }
@@ -333,6 +397,7 @@ export default function OrdersPage() {
                 {sortedOrders.map((order) => {
                   const isFree = isFreeCategory(order.material_category);
                   const isGuest = order.buyer_id === null;
+                  const group = order.order_id ? orderGroups.get(order.order_id) : undefined;
                   const isBankPending =
                     order.payment_method === "bank_transfer" && order.payment_status === "pending";
                   // 비로그인(노랑) > 입금 대기(파랑, 로그인만) > 무료(초록) > 유료(기본)
@@ -370,7 +435,16 @@ export default function OrdersPage() {
                         ) : "-"}
                       </TableCell>
                       <TableCell>{order.buyer_phone || "-"}</TableCell>
-                      <TableCell>{isFree ? "무료" : `${order.amount.toLocaleString()}원`}</TableCell>
+                      <TableCell>
+                        {isFree ? "무료" : `${order.amount.toLocaleString()}원`}
+                        {/* 묶음 주문이면 실제 입금액(합계)을 같이 보여준다.
+                            은행에 찍힌 금액과 대조할 수 있어야 입금 확인이 가능하다. */}
+                        {group && group.count > 1 && (
+                          <div className="text-xs text-[#365927] whitespace-nowrap mt-0.5">
+                            묶음 {group.count}건 · 합계 {group.total.toLocaleString()}원
+                          </div>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <div className="space-y-1">
                           {isFree ? (
@@ -434,7 +508,7 @@ export default function OrdersPage() {
                           {!isFree && order.payment_status === "done" && !order.is_sent && (
                             <Button
                               size="sm"
-                              onClick={() => markAsSent(order.id)}
+                              onClick={() => markAsSent(order)}
                               className="bg-[#365927] hover:bg-[#4a7a38]"
                             >
                               <Send className="mr-1 h-3 w-3" />
@@ -445,7 +519,7 @@ export default function OrdersPage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => markCashReceiptIssued(order.id)}
+                              onClick={() => markCashReceiptIssued(order)}
                               className="border-emerald-600 text-emerald-700 hover:bg-emerald-50"
                             >
                               <Receipt className="mr-1 h-3 w-3" />

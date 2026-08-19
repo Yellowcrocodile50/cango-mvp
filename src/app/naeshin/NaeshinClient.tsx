@@ -32,7 +32,7 @@ const TRACKS: { label: string; departments: NaeshinDepartment[] }[] = [
   { label: "사회", departments: ["미디어커뮤니케이션학과", "정치외교학과", "심리학과", "행정학과"] },
   { label: "법학", departments: ["법학과"] },
   { label: "사범대", departments: ["교육학과", "국어교육과", "영어교육과", "사회·윤리교육과"] },
-  { label: "인문/어문", departments: ["국어국문학과", "영어영문학과", "중어중문학과"] },
+  { label: "인문/어문", departments: ["국어국문학과", "영어영문학과", "중어중문학과", "일어일문학과"] },
 ];
 
 const SEMESTER_LABELS = ["1학년 1학기", "1학년 2학기", "2학년 1학기", "2학년 2학기", "3학년 1학기"];
@@ -531,7 +531,7 @@ export default function NaeshinClient({
         <details className={`group ${DETAILS_BOX_INFO}`}>
           <summary className={`${DETAILS_SUMMARY} text-[#3a5a8f]`}>
             <ChevronRight className={DETAILS_CHEVRON} aria-hidden />
-            업데이트 내역 (v3.5)
+            업데이트 내역 (v3.6)
           </summary>
           <div className="mt-3 space-y-1.5 text-sm text-[#3a5a8f] leading-relaxed">
             <p>계열 2개가 새로 생겼어요.</p>
@@ -543,6 +543,7 @@ export default function NaeshinClient({
             </p>
             <p>그리고 사회 계열에 심리학과가 추가됐어요.</p>
             <p>여기에 행정학과도 사회 계열에 들어왔어요. 38개 대학을 모두 확인했어요.</p>
+            <p>인문/어문 계열에 일어일문학과가 새로 들어왔어요. 38개 대학을 모두 확인했어요.</p>
           </div>
         </details>
       </div>
@@ -550,7 +551,7 @@ export default function NaeshinClient({
       <div className="mt-12 border-t border-[#d6e4d3] pt-6">
         <h2 className="text-base font-bold text-[#365927] mb-1">이 학교/학과도 보고 싶어요</h2>
         <p className="text-xs text-[#8aab82] mb-3 break-keep">
-          보건(간호・임상병리 등)과 건축, 심리학과, 행정학과를 새로 넣었어요.
+          보건(간호・임상병리 등)과 건축, 심리학과, 행정학과, 일어일문학과를 새로 넣었어요.
           <br className="sm:hidden" />
           아직 없는 학교나 학과를 알려주시면 다음 업데이트 때 반영할게요.
         </p>

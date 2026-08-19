@@ -71,7 +71,7 @@ function ProductGrid() {
       <PromoBanner href="/naeshin" tone="green">
         <span className="block md:inline">
           🎓 내신 계산기 <BannerPill>무료</BannerPill>{" "}
-          <b className="font-semibold">간호·보건·건축·심리·행정 추가!</b>
+          <b className="font-semibold">간호·보건·건축·심리·행정·일어일문 추가!</b>
         </span>{" "}
         <span className="block md:inline">
           가고 싶은 대학, <b className="font-semibold">몇 등급이 필요할까?</b>{" "}

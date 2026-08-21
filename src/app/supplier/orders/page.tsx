@@ -255,6 +255,8 @@ export default function OrdersPage() {
       body: JSON.stringify({ orderId: order.order_id }),
     }).catch(() => null);
 
+    const body = res?.ok ? await res.json().catch(() => null) : null;
+
     if (res?.ok) {
       /* confirm-bank는 order_id로 묶인 행 전체를 done 처리한다.
          화면도 같은 범위를 갱신해야 한다 — 누른 행만 바꾸면 나머지가 '입금대기'로 남아
@@ -265,7 +267,13 @@ export default function OrdersPage() {
         )
       );
       const count = orderGroups.get(order.order_id!)?.count ?? 1;
-      toast.success(count > 1 ? `입금이 확인되었습니다. (${count}건)` : "입금이 확인되었습니다.");
+      const suffix = count > 1 ? ` (${count}건)` : "";
+      // 메일 보류 주문은 상태만 바뀌므로, 발송된 줄 알고 넘어가지 않도록 명시한다
+      if (body?.emailSuppressed) {
+        toast.success(`입금이 확인되었습니다.${suffix} 자료 메일은 보내지 않았습니다.`);
+      } else {
+        toast.success(`입금이 확인되었습니다.${suffix}`);
+      }
     } else {
       toast.error("입금 확인 처리에 실패했습니다. 다시 시도해주세요.");
     }

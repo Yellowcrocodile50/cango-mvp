@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, ShoppingCart, Clock, Download, RefreshCw, ChevronRight } from "lucide-react";
 import { isFreeCategory } from "@/data/categories";
+import { DEPOSIT_CONFIRMED_ORDER_IDS } from "@/lib/depositConfirmedOrders";
 
 interface Stats {
   totalMaterials: number;
@@ -51,7 +52,7 @@ export default function SupplierDashboard() {
 
     const { data: orderRows } = await supabase
       .from("orders")
-      .select("payment_status, is_sent, amount, payment_method, material_id")
+      .select("payment_status, is_sent, amount, payment_method, material_id, order_id")
       .in("material_id", materialIds);
 
     // 단일 패스로 통계 집계 (유료 결제 / 무료 다운로드 분리)
@@ -63,11 +64,14 @@ export default function SupplierDashboard() {
     let bankPending = 0;
     for (const o of orderRows ?? []) {
       const free = isFreeCategory(categoryMap.get(o.material_id) ?? "");
+      // 입금은 확인했지만 발송 메일 때문에 pending으로 남겨둔 주문. 집계에서만 결제 완료로 친다.
+      const depositConfirmed = o.order_id ? DEPOSIT_CONFIRMED_ORDER_IDS.has(o.order_id) : false;
       // 무료 자료는 직접 다운로드 → 입금/발송 개념 없음. 유료 주문만 입금 대기 집계
-      if (!free && o.payment_method === "bank_transfer" && o.payment_status === "pending") {
+      // 이미 입금을 확인한 주문은 배너로 다시 알리지 않는다
+      if (!free && o.payment_method === "bank_transfer" && o.payment_status === "pending" && !depositConfirmed) {
         bankPending += 1;
       }
-      if (o.payment_status !== "done") continue;
+      if (o.payment_status !== "done" && !depositConfirmed) continue;
       if (free) {
         // 무료 다운로드는 발송 대기/정산에서 제외하고 별도 카운트
         freeDownloads += 1;

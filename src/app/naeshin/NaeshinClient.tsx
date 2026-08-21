@@ -555,7 +555,9 @@ export default function NaeshinClient({
       <div className="mt-12 border-t border-[#d6e4d3] pt-6">
         <h2 className="text-base font-bold text-[#365927] mb-1">이 학교/학과도 보고 싶어요</h2>
         <p className="text-xs text-[#8aab82] mb-3 break-keep">
-          보건(간호・임상병리 등)과 건축, 심리학과, 행정학과, 일어일문학과, 이공계 6개 학과를 새로 넣었어요.
+          {/* 학과명을 그대로 밝힌다. "이공계 6개 학과"처럼 숫자로 뭉뚱그리면
+              학생이 자기가 찾는 학과가 그 안에 있는지 확인할 수 없다. */}
+          보건(간호・임상병리 등)과 건축, 심리학과, 행정학과, 일어일문학과, 그리고 화학공학·생명공학·신소재공학·수학·물리학·통계학을 새로 넣었어요.{" "}
           <br className="sm:hidden" />
           아직 없는 학교나 학과를 알려주시면 다음 업데이트 때 반영할게요.
         </p>

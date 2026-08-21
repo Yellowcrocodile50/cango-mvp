@@ -89,7 +89,8 @@ function amountAxisMax(n: number): number {
  *
  * 2026-08-17 20:55 KST 14,000원(자료 3건) 입금. 당시 다건 주문 INSERT가
  * `orders.order_id` 단독 UNIQUE 인덱스에 막혀 주문 레코드가 아예 남지 않았다.
- * 자료 3건이 확정되면 orders에 정식 복구하고 이 상수를 지운다.
+ * 자료 3건이 확정돼 orders가 done이 되면 아래 가드가 자동으로 이 보정을 끈다(이중 계상 방지).
+ * 그 뒤 이 상수는 지운다.
  * 구매 내역(마이페이지)·주문관리에는 넣지 않으므로 그쪽 수치와는 이 금액만큼 차이가 난다.
  */
 const MANUAL_PAID_ENTRIES = [
@@ -215,6 +216,9 @@ export default function StatsPage() {
     for (const m of MANUAL_PAID_ENTRIES) {
       const entry = map.get(m.day);
       if (!entry) continue;
+      // 그날 실제 유료 주문이 잡히면 수동 보정을 끈다. orders에 정식 복구했는데
+      // 이 상수를 안 지워도 이중 계상되지 않도록 하는 안전장치.
+      if (entry.paidAmount > 0) continue;
       entry.paidAmount += m.amount;
       entry.paidCount += m.count;
       if (m.loggedIn) entry.loggedInPaidCount += m.count;

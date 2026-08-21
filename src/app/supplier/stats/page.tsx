@@ -84,6 +84,18 @@ function amountAxisMax(n: number): number {
   return Math.max(niceMax(n), 4);
 }
 
+/**
+ * 주문 레코드가 없는 실제 입금 건. **그래프에만** 수동으로 얹는다.
+ *
+ * 2026-08-17 20:55 KST 14,000원(자료 3건) 입금. 당시 다건 주문 INSERT가
+ * `orders.order_id` 단독 UNIQUE 인덱스에 막혀 주문 레코드가 아예 남지 않았다.
+ * 자료 3건이 확정되면 orders에 정식 복구하고 이 상수를 지운다.
+ * 구매 내역(마이페이지)·주문관리에는 넣지 않으므로 그쪽 수치와는 이 금액만큼 차이가 난다.
+ */
+const MANUAL_PAID_ENTRIES = [
+  { day: "2026-08-17", amount: 14000, count: 3, loggedIn: true },
+];
+
 export default function StatsPage() {
   const [tab, setTab] = useState<Tab>("amount");
 
@@ -198,6 +210,15 @@ export default function StatsPage() {
           entry.guestPaidCount += 1;
         }
       }
+    }
+
+    for (const m of MANUAL_PAID_ENTRIES) {
+      const entry = map.get(m.day);
+      if (!entry) continue;
+      entry.paidAmount += m.amount;
+      entry.paidCount += m.count;
+      if (m.loggedIn) entry.loggedInPaidCount += m.count;
+      else entry.guestPaidCount += m.count;
     }
 
     return days.map((d) => map.get(d)!);

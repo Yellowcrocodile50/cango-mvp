@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { sendOrderReceiptEmail, type OrderReceiptItem } from "@/lib/email/orderReceipt";
 
+/**
+ * 영수증 메일을 보내지 않을 주문. 결제 상태만 done으로 바꾸고 메일은 건너뛴다.
+ *
+ * `order-1786967700000-recov1` = 14,000원 복구 건. 입금은 확인됐지만
+ * **어떤 자료를 샀는지 아직 구매자 확인 전**이라, 틀린 PDF가 나가면 되돌릴 수 없다.
+ *
+ * 🔜 자료가 확정되면: 이 목록에서 빼고 → 해당 행을 `pending`으로 되돌린 뒤
+ * 입금확인을 다시 누른다. (confirm-bank는 pending 행이 있어야만 동작한다)
+ */
+const EMAIL_SUPPRESSED_ORDER_IDS = new Set<string>(["order-1786967700000-recov1"]);
+
 export async function POST(req: NextRequest) {
   const { orderId } = await req.json();
   if (!orderId) {
@@ -63,6 +74,11 @@ export async function POST(req: NextRequest) {
 
   if (updateError) {
     return NextResponse.json({ error: "상태 업데이트에 실패했습니다." }, { status: 500 });
+  }
+
+  if (EMAIL_SUPPRESSED_ORDER_IDS.has(orderId)) {
+    console.warn(`[confirm-bank] 메일 발송 보류 주문: ${orderId}`);
+    return NextResponse.json({ success: true, emailSuppressed: true });
   }
 
   // 주문 완료 영수증 이메일 발송 (실패해도 결제 확정 자체는 이미 완료된 상태이므로 응답에 영향 없음)

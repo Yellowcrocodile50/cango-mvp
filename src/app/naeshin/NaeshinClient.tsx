@@ -25,9 +25,9 @@ import { convertGrade9to5, convertGrade5to9 } from "@/lib/gradeConversion";
 const TRACKS: { label: string; departments: NaeshinDepartment[] }[] = [
   { label: "메디컬", departments: ["의예과", "치의예과", "한의예과", "약학과", "수의예과"] },
   { label: "보건", departments: ["간호학과", "보건계열"] },
-  { label: "공대", departments: ["컴퓨터공학과", "전자전기공학과", "기계공학과"] },
+  { label: "공대", departments: ["컴퓨터공학과", "전자전기공학과", "기계공학과", "화학공학과", "생명공학과", "신소재공학과"] },
   { label: "건축", departments: ["건축계열"] },
-  { label: "자연", departments: ["화학과", "생명과학과"] },
+  { label: "자연", departments: ["화학과", "생명과학과", "수학과", "물리학과", "통계학과"] },
   { label: "상경", departments: ["경영학과"] },
   { label: "사회", departments: ["미디어커뮤니케이션학과", "정치외교학과", "심리학과", "행정학과"] },
   { label: "법학", departments: ["법학과"] },
@@ -531,7 +531,7 @@ export default function NaeshinClient({
         <details className={`group ${DETAILS_BOX_INFO}`}>
           <summary className={`${DETAILS_SUMMARY} text-[#3a5a8f]`}>
             <ChevronRight className={DETAILS_CHEVRON} aria-hidden />
-            업데이트 내역 (v3.6)
+            업데이트 내역 (v4.0)
           </summary>
           <div className="mt-3 space-y-1.5 text-sm text-[#3a5a8f] leading-relaxed">
             <p>계열 2개가 새로 생겼어요.</p>
@@ -544,6 +544,10 @@ export default function NaeshinClient({
             <p>그리고 사회 계열에 심리학과가 추가됐어요.</p>
             <p>여기에 행정학과도 사회 계열에 들어왔어요. 38개 대학을 모두 확인했어요.</p>
             <p>인문/어문 계열에 일어일문학과가 새로 들어왔어요. 38개 대학을 모두 확인했어요.</p>
+            <p>
+              <b className="font-semibold">이공계를 크게 넓혔어요</b> 공대에 화학공학·생명공학·신소재공학,
+              자연에 수학·물리학·통계학을 더했어요. 학과 6개가 한 번에 들어왔어요.
+            </p>
           </div>
         </details>
       </div>
@@ -551,7 +555,7 @@ export default function NaeshinClient({
       <div className="mt-12 border-t border-[#d6e4d3] pt-6">
         <h2 className="text-base font-bold text-[#365927] mb-1">이 학교/학과도 보고 싶어요</h2>
         <p className="text-xs text-[#8aab82] mb-3 break-keep">
-          보건(간호・임상병리 등)과 건축, 심리학과, 행정학과, 일어일문학과를 새로 넣었어요.
+          보건(간호・임상병리 등)과 건축, 심리학과, 행정학과, 일어일문학과, 이공계 6개 학과를 새로 넣었어요.
           <br className="sm:hidden" />
           아직 없는 학교나 학과를 알려주시면 다음 업데이트 때 반영할게요.
         </p>

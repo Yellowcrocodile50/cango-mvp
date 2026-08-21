@@ -39,7 +39,7 @@ export const tools: Tool[] = [
     emoji: "🎓",
     gaKey: "naeshin",
     status: "live",
-    badge: "v3.6",
+    badge: "v4.0",
     priority: 0.9,
   },
   {

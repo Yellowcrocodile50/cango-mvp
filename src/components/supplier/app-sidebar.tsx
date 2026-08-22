@@ -11,6 +11,7 @@ import {
   ArrowLeft,
   Users,
   HelpCircle,
+  Heart,
 } from "lucide-react";
 import {
   Sidebar,
@@ -59,6 +60,11 @@ const navItems = [
     title: "계정 관리",
     url: "/supplier/accounts",
     icon: Users,
+  },
+  {
+    title: "진로 탐구 찜 문의",
+    url: "/supplier/career-wishes",
+    icon: Heart,
   },
   {
     title: "내신 계산기 추가 문의",

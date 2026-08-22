@@ -3,10 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { FileText, Download } from "lucide-react";
+import { FileText, Download, Heart } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { isFreeCategory } from "@/data/categories";
+import { departments } from "@/data/careerDepartments";
 import { colorForId } from "@/lib/coverColor";
+import { trackEvent } from "@/lib/ga";
 import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
 
@@ -36,6 +38,9 @@ export default function MyPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [orders, setOrders] = useState<OrderRow[]>([]);
+  /* 진로 탐구에서 찜한 학과. 계열·관심사와 무관한 계정 단위 목록이라 여기서도 같은 걸 본다. */
+  const [wishes, setWishes] = useState<string[]>([]);
+  const [wishPending, setWishPending] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [marketingAgreed, setMarketingAgreed] = useState<boolean | null>(null);
   const [marketingSaving, setMarketingSaving] = useState(false);
@@ -88,6 +93,16 @@ export default function MyPage() {
         .single();
       setMarketingAgreed(profile?.marketing_agreed ?? false);
 
+      /* 본인 행만 읽힌다(RLS: users can view their own requests).
+         department가 null인 행은 내신 계산기 자유 문의라 찜이 아니다. */
+      const { data: wishRows } = await supabase
+        .from("naeshin_requests")
+        .select("department")
+        .eq("user_id", authUser.id)
+        .not("department", "is", null)
+        .order("created_at", { ascending: false });
+      setWishes((wishRows ?? []).map((r) => r.department as string));
+
       setLoading(false);
     })();
   }, [router]);
@@ -107,6 +122,25 @@ export default function MyPage() {
     }
     setMarketingAgreed(next);
     toast.success(next ? "마케팅 정보 수신에 동의했어요." : "마케팅 정보 수신을 해지했어요.");
+  };
+
+  const handleWishRemove = async (department: string) => {
+    if (!user || wishPending) return;
+    setWishPending(department);
+    const { error } = await supabase
+      .from("naeshin_requests")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("department", department);
+    setWishPending(null);
+    if (error) {
+      toast.error("찜 해제에 실패했어요. 잠시 후 다시 시도해주세요.");
+      return;
+    }
+    setWishes((prev) => prev.filter((d) => d !== department));
+    /* 진로 탐구에서만 계측하면 add − remove 순증이 실제보다 많게 나온다 —
+       해제하기 제일 쉬운 자리가 여기라 누락이 작지 않다. `from`으로 어디서 뺐는지 남긴다. */
+    trackEvent("career_wish_remove", { department, from: "mypage" });
   };
 
   const handleDownload = async (materialId: string, title: string) => {
@@ -345,6 +379,77 @@ export default function MyPage() {
                 {freeOrders.map((o) => renderOrderItem(o, true))}
               </ul>
             </div>
+          )}
+        </div>
+      )}
+
+      {/* 찜한 학과 — 진로 탐구에서 담은 목록을 여기서도 본다.
+          색은 진로 탐구의 찜과 같은 로즈 톤으로 맞춘다. 사이트 초록과 섞이면
+          "내가 담은 것"이라는 성격이 안 읽힌다(CareerClient의 WISH_* 상수와 같은 값). */}
+      {!loading && user && (
+        <div className="mt-12 pt-6 border-t border-[#d6e4d3]">
+          <h2 className="text-sm font-semibold text-[#5a7d50] mb-3 flex items-center gap-2">
+            <Heart className="w-3.5 h-3.5 shrink-0 fill-current text-[#c2415f]" aria-hidden />
+            {/* 어느 도구에서 담은 건지 밝힌다 — 마이페이지만 보고 온 사람은
+                "찜한 학과"만으로는 이게 어디서 생긴 목록인지 알 수 없다. */}
+            <span className="text-[#8aab82]">진로 탐구</span>
+            <span className="text-[#c9d9c5]" aria-hidden>·</span>
+            찜한 학과
+            {wishes.length > 0 && (
+              <span className="font-normal text-[#8aab82]">{wishes.length}개</span>
+            )}
+          </h2>
+
+          {wishes.length === 0 ? (
+            /* 찜이 없는 사람에게는 이게 진로 탐구로 가는 안내가 된다 */
+            <div className="rounded-xl border border-[#d6e4d3] bg-white px-4 py-4">
+              <p className="text-sm text-[#5a7d50] break-keep">
+                진로 탐구에서 관심 있는 학과를 찜해두면 여기에 모여요.
+              </p>
+              <Link
+                href="/career"
+                className="inline-block mt-3 px-4 py-2 rounded-lg bg-[#365927] text-white text-sm font-medium hover:bg-[#4a7a38] transition"
+              >
+                진로 탐구 해보기 →
+              </Link>
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {wishes.map((name) => {
+                /* 찜할 땐 계산기에 없던 학과라도, 데이터가 채워지면 여기가 저절로 링크로 바뀐다 */
+                const naeshinDept = departments.find((d) => d.name === name)?.naeshinDept;
+                const busy = wishPending === name;
+
+                return (
+                  <li
+                    key={name}
+                    className="flex flex-wrap items-center gap-2 rounded-xl border border-[#f0cdd9] bg-[#fdf2f6] px-4 py-3"
+                  >
+                    <span className="flex-1 min-w-0 text-sm font-medium text-[#8a4159] break-keep">
+                      {name}
+                    </span>
+
+                    {naeshinDept ? (
+                      <Link
+                        href={`/naeshin?department=${encodeURIComponent(naeshinDept)}`}
+                        className="inline-flex items-center min-h-[36px] px-3 py-1.5 rounded-full bg-[#365927] text-white text-xs font-bold hover:bg-[#4a7a38] transition"
+                      >
+                        등급컷 보러 가기 →
+                      </Link>
+                    ) : null}
+
+                    <button
+                      type="button"
+                      onClick={() => handleWishRemove(name)}
+                      disabled={busy}
+                      className="inline-flex items-center min-h-[36px] px-3 py-1.5 rounded-full border border-[#f0cdd9] bg-white text-xs font-medium text-[#b03a5b] hover:border-[#c2415f] disabled:opacity-60 transition cursor-pointer"
+                    >
+                      {busy ? "해제하는 중..." : "찜 해제"}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </div>
       )}

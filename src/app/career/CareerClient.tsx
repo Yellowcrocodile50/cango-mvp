@@ -3,8 +3,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Heart } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 import {
+  departments,
   getTrack,
   interestsForTrack,
   TRACKS,
@@ -23,6 +26,13 @@ const DETAILS_CHEVRON = "w-4 h-4 shrink-0 transition-transform duration-200 grou
 /* 기본으로 펴두는 결과 카드 수. 나머지는 지우지 않고 접는다.
    실측(트랙별 600표본): 관심사 3개 선택 시 중앙 16개·5개 선택 시 25개까지 나온다. */
 const VISIBLE_LIMIT = 7;
+
+/* 찜은 사이트 전체 초록톤에서 일부러 벗어난다 — 결과 카드 안에서 같은 초록으로 두면
+   설명글과 구분이 안 돼 눌러야 할 것으로 안 읽힌다. 하트와 함께 쓰는 관습색으로 잡았다. */
+const WISH_BG = "bg-[#fdf2f6]";
+const WISH_BORDER = "border-[#f0cdd9]";
+const WISH_TEXT = "text-[#8a4159]";
+const WISH_STRONG = "text-[#b03a5b]";
 
 /* 마침표 기준으로 문장을 나눈다.
    ⚠️ 정규식 lookbehind(`(?<=\.)`)를 쓰면 구형 iOS 사파리에서 **파일 파싱 단계에서** 터져
@@ -90,6 +100,15 @@ function Sentences({ text, lineWidth }: { text: string; lineWidth: number }) {
   );
 }
 
+/** 결과 카드의 관심 학과 찜 상태와 동작 */
+type WishApi = {
+  /** 이미 찜한 학과 이름. `undefined`면 아직 조회 중이라 버튼을 내보내지 않는다 */
+  wished: Set<string> | undefined;
+  /** 지금 서버에 반영 중인 학과 이름 */
+  pending: string | null;
+  onToggle: (department: string) => void;
+};
+
 /** 카드 안 소제목. 본문(14px)보다 작으면 제목으로 안 읽혀서 굵기·색·액센트로 단을 나눈다 */
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -104,11 +123,14 @@ export default function CareerClient({
   initialTrack,
   initialInterests,
   initialShowResults,
+  initialWish,
 }: {
   /* 초기값은 서버에서 읽어 내려온다 — 클라이언트에서 읽으면 정적 HTML이 비어버린다(page.tsx 주석) */
   initialTrack: string | null;
   initialInterests: string | null;
   initialShowResults: boolean;
+  /** 로그인하러 나갔다 돌아온 사람이 담으려던 학과(`?wish=`) */
+  initialWish: string | null;
 }) {
   const router = useRouter();
 
@@ -192,6 +214,154 @@ export default function CareerClient({
     return () => ro.disconnect();
   }, [step]);
 
+  /* ── 관심 학과 찜 ────────────────────────────────────────────────────
+     진로 탐구 학과 99개 중 내신 계산기에 대응 학과가 있는 건 32개뿐이다.
+     나머지 67개는 결과 카드까지 온 사람 앞에서 통로가 끊긴다 — 거기에 찜을 둔다.
+
+     📌 **"알림 받기"가 아니라 "찜"으로 만든 이유**: 알림 신청은 누르는 값이 싸서
+     학생이 뭔지도 모르고 카드마다 눌러버릴 수 있다. 그러면 "어느 학과부터 만들까"라는
+     이 기능의 유일한 산출물이 오염된다. 그래서 ① **자기 관심 학과를 고른다**는 뜻이 드러나는
+     말로 바꾸고 ② **찜한 목록을 항상 보이게** 하고 ③ **해제할 수 있게** 했다.
+
+     ⚠️ **개수 제한은 일부러 두지 않는다**(2026-08-22 결정). 막는 것 자체가 거부감을 준다는
+     판단으로, 남발은 감수하고 위의 세 장치로만 신호를 지킨다. 되돌릴 땐 이 주석부터 볼 것.
+
+     ⚠️ **결과를 보기 전에는 로그인을 요구하지 않는다.** 이 도구에서 지금 유일하게 잘 도는 지표가
+     완주율(2026-08-18~22 실측 18명 중 17명)이라, 그 앞에 벽을 세우면 그것부터 무너진다.
+     찜 버튼은 결과 카드를 **펼친 뒤에만** 나온다. */
+  const [userId, setUserId] = useState<string | null | undefined>(undefined);
+  /* undefined = 아직 확인 중. 확인 전에 "찜하기"를 보여주면 이미 찜한 학과에도 그게 떠서
+     화면이 거짓말을 하게 된다. */
+  const [wishlist, setWishlist] = useState<Set<string> | undefined>(undefined);
+  const [wishPending, setWishPending] = useState<string | null>(null);
+  const [loginRedirect, setLoginRedirect] = useState<string | null>(null);
+  /* `?wish=` 자동 담기는 마운트당 한 번만. dev StrictMode가 effect를 두 번 돌려
+     두 번째 INSERT가 유니크 인덱스에 막히는데(409), 유니크 인덱스가 막아주긴 해도
+     콘솔에 에러가 남고 토스트 타이밍이 어긋난다. */
+  const wishApplied = useRef(false);
+
+  useEffect(() => {
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setUserId(null);
+        setWishlist(new Set());
+        return;
+      }
+      setUserId(user.id);
+      /* 본인 행만 읽는다(RLS 정책 `users can view their own requests`).
+         기존 SELECT 정책은 공급자 전용이라 신청자 본인도 자기 찜 목록을 못 읽었다. */
+      const { data } = await supabase
+        .from("naeshin_requests")
+        .select("department")
+        .eq("user_id", user.id)
+        .not("department", "is", null)
+        .order("created_at", { ascending: true });
+      const set = new Set((data ?? []).map((r) => r.department as string));
+
+      /* 로그인하러 나갔다 돌아온 경우, 담으려던 학과를 대신 담아준다.
+         빈손으로 돌아오면 카드를 다시 찾아 다시 펼쳐 다시 눌러야 하는데,
+         이 기능의 목적이 로그인 유도라 **로그인 직후**가 가장 아까운 이탈 지점이다.
+
+         ⚠️ `?wish=`를 그대로 믿지 않는다 — 주소는 누구나 만들 수 있다.
+         실제로 있는 학과이면서 아직 계산기에 없는 학과일 때만 담는다. */
+      const wishable =
+        initialWish &&
+        !wishApplied.current &&
+        !set.has(initialWish) &&
+        departments.some((d) => d.name === initialWish && !d.naeshinDept);
+
+      if (wishable) {
+        wishApplied.current = true;
+        const { error } = await supabase.from("naeshin_requests").insert({
+          user_id: user.id,
+          department: initialWish,
+          content: `[진로 탐구] ${initialWish} 찜 · 등급컷 준비되면 알림`,
+        });
+        /* 23505 = 이미 담긴 학과(다른 기기에서 담았을 때). 실패로 알릴 일이 아니다. */
+        if (!error || error.code === "23505") {
+          set.add(initialWish);
+          if (!error) {
+            toast.success("찜했어요. 준비되면 알려드릴게요.");
+            trackEvent("career_wish_add", {
+              department: initialWish,
+              track: initialTrack ?? "",
+              from: "login_return",
+            });
+          }
+        }
+      }
+
+      setWishlist(set);
+    })();
+  }, [initialWish, initialTrack]);
+
+  async function handleWishToggle(department: string) {
+    if (!userId) {
+      /* 결과를 잃지 않고 돌아오도록 지금 URL(계열·관심사·결과 표시까지)을 그대로 들려 보내고,
+         담으려던 학과를 `wish`로 얹어 돌아온 직후 자동으로 담기게 한다.
+         ⚠️ `wish`는 위의 URL 동기화 effect가 만드는 주소에는 절대 들어가지 않는다 —
+         결과 링크 공유가 이 도구의 핵심 자산이라, 공유받은 사람 계정에 담기면 안 된다. */
+      const sp = new URLSearchParams(window.location.search);
+      sp.set("wish", department);
+      setLoginRedirect(`/career?${sp.toString()}`);
+      /* 이 기능의 목적이 로그인 유도인데, 시도 대비 성공을 못 보면 개선 전후를 비교할 수 없다 */
+      trackEvent("career_wish_login_prompt", { department, track: track?.id ?? "" });
+      return;
+    }
+    const already = wishlist?.has(department) ?? false;
+
+    setWishPending(department);
+    if (already) {
+      const { error } = await supabase
+        .from("naeshin_requests")
+        .delete()
+        .eq("user_id", userId)
+        .eq("department", department);
+      setWishPending(null);
+      if (error) {
+        toast.error("찜 해제에 실패했어요. 잠시 후 다시 시도해주세요.");
+        return;
+      }
+      setWishlist((prev) => {
+        const next = new Set(prev ?? []);
+        next.delete(department);
+        return next;
+      });
+      trackEvent("career_wish_remove", { department, track: track?.id ?? "", from: "career" });
+      return;
+    }
+
+    /* content를 비울 수 없다 — INSERT 정책이 `char_length(content) > 0`을 검사한다.
+       공급자 대시보드에서 자유 문의와 한 표에 섞여 보이므로 사람이 읽을 문장으로 넣는다. */
+    const { error } = await supabase.from("naeshin_requests").insert({
+      user_id: userId,
+      department,
+      content: `[진로 탐구] ${department} 찜 · 등급컷 준비되면 알림`,
+    });
+    setWishPending(null);
+
+    /* 23505 = 부분 유니크 인덱스 충돌 = 이미 찜한 학과. 실패로 알릴 일이 아니다
+       (다른 기기에서 담았거나 목록을 읽기 전에 눌렀을 때 난다). */
+    if (error && error.code !== "23505") {
+      toast.error("찜하기에 실패했어요. 잠시 후 다시 시도해주세요.");
+      return;
+    }
+    setWishlist((prev) => new Set(prev ?? []).add(department));
+    if (error) return;
+    toast.success("찜했어요. 준비되면 알려드릴게요.");
+    trackEvent("career_wish_add", { department, track: track?.id ?? "" });
+  }
+
+  /* 카드마다 프롭 3개를 늘리지 않으려고 묶어서 내린다. ResultCard는 memo가 아니라 매번 새로 만들어도 된다. */
+  const wishApi: WishApi = {
+    wished: wishlist,
+    pending: wishPending,
+    onToggle: handleWishToggle,
+  };
+
   const trackInterests = useMemo(() => (track ? interestsForTrack(track) : []), [track]);
 
   const selectedLabels = useMemo(() => {
@@ -257,6 +427,10 @@ export default function CareerClient({
       )}
 
       <StepBar step={step} onJump={goToStep} />
+
+      {/* 단계 화면 바깥이라 계열을 다시 고르러 가도 사라지지 않는다.
+          찜은 계열과 무관한 계정 단위 목록이므로 항상 같은 자리에 있어야 한다. */}
+      <WishPanel wishes={wishApi} />
 
       {step > 1 && (
         <button
@@ -353,9 +527,6 @@ export default function CareerClient({
               {matches.length}개
             </span>
           </div>
-          <p className="text-xs text-[#8aab82] mb-3 break-keep">
-            학과 소개와 진로는 일반적인 설명이라 참고용으로 봐주세요.
-          </p>
 
           {/* 칩 화면을 떠나왔으므로 무엇을 골랐는지 여기서 다시 보여준다 */}
           <div className="flex flex-wrap items-center gap-1.5 mb-4">
@@ -383,6 +554,7 @@ export default function CareerClient({
                     dept={m.dept}
                     matchedLabels={m.matched.map((i) => i.label)}
                     lineWidth={cardTextWidth}
+                    wishes={wishApi}
                   />
                 ))}
               </div>
@@ -418,6 +590,7 @@ export default function CareerClient({
                         dept={m.dept}
                         matchedLabels={m.matched.map((i) => i.label)}
                         lineWidth={cardTextWidth}
+                        wishes={wishApi}
                       />
                     ))}
                   </div>
@@ -454,8 +627,43 @@ export default function CareerClient({
             </Link>
           </div>
 
+          {/* 머리말에 있던 고지를 여기로 내렸다. 결과를 다 읽은 뒤에 보는 게 맞고,
+              머리말 자리는 찜 패널이 쓰는 게 낫다(careerDepartments.ts: 참고용임을 계속 밝힐 것). */}
+          <p className="mt-4 text-xs text-[#8aab82] break-keep">
+            학과 소개와 진로는 일반적인 설명이라 참고용으로 봐주세요.
+          </p>
+
           <ToolCrossLinks currentSlug="career" />
         </section>
+      )}
+
+      {/* 모달 뼈대는 내신 계산기 요청 폼과 같게 둔다 — 도구마다 생김새가 다르면
+          같은 사이트로 안 읽힌다. 문구만 찜에 맞게 따로 쓴다. */}
+      {loginRedirect && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl p-8 max-w-sm w-full mx-4 text-center shadow-xl">
+            <h2 className="text-2xl font-bold text-[#365927] mb-3">로그인이 필요합니다!</h2>
+            {/* 알림 수단은 적지 않는다(메일일 수도, 번호일 수도) */}
+            <p className="text-[#5a7d50] text-xs mb-6">
+              찜한 학과의 업데이트 소식을 알려드릴게요.
+            </p>
+            <div className="space-y-3">
+              <Link
+                href={`/login?redirect=${encodeURIComponent(loginRedirect)}`}
+                onClick={() => setLoginRedirect(null)}
+                className="block w-full h-12 bg-[#365927] text-white rounded-lg font-medium hover:bg-[#4a7a38] transition flex items-center justify-center"
+              >
+                로그인하기
+              </Link>
+              <button
+                onClick={() => setLoginRedirect(null)}
+                className="w-full h-12 border border-[#d6e4d3] text-[#5a7d50] rounded-lg font-medium hover:bg-[#f5f9f4] transition cursor-pointer"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -539,11 +747,13 @@ function ResultCard({
   dept,
   matchedLabels,
   lineWidth,
+  wishes,
 }: {
   dept: CareerDepartment;
   matchedLabels: string[];
   /** 카드 안쪽 실측 폭 — 설명을 문장 단위로 끊어도 줄이 안 늘어나는지 판단하는 데 쓴다 */
   lineWidth: number;
+  wishes: WishApi;
 }) {
   const [opened, setOpened] = useState(false);
 
@@ -641,7 +851,7 @@ function ResultCard({
 
         {/* 내신 계산기에 대응 학과가 있을 때만. 문구에는 넘어갈 학과 이름을 그대로 써서
             (생명공학 → 생명과학처럼) 같은 학과인 것처럼 읽히지 않게 한다. */}
-        {dept.naeshinDept && (
+        {dept.naeshinDept ? (
           <Link
             href={`/naeshin?department=${encodeURIComponent(dept.naeshinDept)}`}
             onClick={() =>
@@ -650,11 +860,146 @@ function ResultCard({
                 target: "naeshin",
               })
             }
-            className="inline-block text-sm font-medium text-[#365927] underline underline-offset-2 hover:text-[#4a7a38]"
+            /* 원래는 밑줄 글자였는데 카드 본문에 묻혀 안 눌렸다(tool_cross_link 5일간 6명).
+               결과 화면의 다른 주 액션들과 같은 알약 버튼 모양으로 올린다. */
+            className="inline-flex items-center min-h-[44px] px-4 py-2.5 rounded-full bg-[#365927] text-white text-sm font-bold shadow-sm hover:bg-[#4a7a38] transition"
           >
             {dept.naeshinDept} 등급컷 보러 가기 →
           </Link>
+        ) : (
+          /* 대응 학과가 없을 때 자리를 비워두면 "이 학과는 여기서 끝"이 된다.
+             링크가 있던 자리에 그대로 두어, 카드마다 마지막 줄의 역할이 같게 유지한다. */
+          <WishButton dept={dept.name} wishes={wishes} />
         )}
+      </div>
+    </details>
+  );
+}
+
+/**
+ * 내신 계산기에 아직 대응 학과가 없을 때, 그 학과를 관심 학과로 담아두는 자리.
+ *
+ * 📌 여기를 로그인 지점으로 고른 이유: 결과를 이미 본 사람에게만 보이고,
+ * 링크 공유로는 대신할 수 없는 일(나중에 연락)이며, 수요가 이미 확인됐다
+ * (`naeshin_requests`에 자유 문의로만 32명이 38건을 남겼다).
+ *
+ * 📌 문구가 "알림 받기"가 아니라 "찜"인 이유는 `handleWishToggle` 주석 참고 —
+ * 이 버튼이 만드는 학과별 대기 인원이 "다음에 어느 학과를 넣을까"의 근거가 되므로,
+ * 아무 생각 없이 눌러도 되는 버튼으로 보이면 안 된다.
+ *
+ * ⚠️ 알림 수단을 문구에 적지 않는다. 메일로 보낼 수도, 번호로 보낼 수도 있다.
+ */
+function WishButton({ dept, wishes }: { dept: string; wishes: WishApi }) {
+  const done = wishes.wished?.has(dept) ?? false;
+  const busy = wishes.pending === dept;
+
+  return (
+    <div className={`rounded-lg border ${WISH_BORDER} ${WISH_BG} px-3 py-2.5`}>
+      <p className={`text-[13px] ${WISH_TEXT} break-keep`}>
+        이 학과는 아직 내신 계산기에 업데이트가 안 됐어요.
+        {/* 찜이 무엇을 하는 일인지 버튼을 누르기 전에 밝힌다 */}
+        <span className={`block mt-0.5 ${WISH_STRONG}`}>
+          가고 싶은 학과라면 찜해두세요. 준비되면 알려드릴게요.
+        </span>
+      </p>
+
+      {/* 조회가 끝나기 전에는 버튼을 내보내지 않는다 — 이미 찜한 학과에 "찜하기"가
+          떴다가 바뀌면 화면이 거짓말을 한 게 된다. */}
+      {wishes.wished === undefined ? null : done ? (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1 text-sm font-bold text-[#c2415f]">
+            <Heart className="w-4 h-4 shrink-0 fill-current" aria-hidden />
+            찜 완료!
+          </span>
+          {/* 잘못 담은 걸 되돌릴 수 없으면 "정말 가고 싶은 학과"라는 신호가 오염된다.
+              글자 링크로 두면 눌 수 있는 것으로 안 읽혀서 버튼 모양으로 둔다. */}
+          <button
+            type="button"
+            onClick={() => wishes.onToggle(dept)}
+            disabled={busy}
+            className={`inline-flex items-center min-h-[36px] px-3 py-1.5 rounded-full border ${WISH_BORDER} bg-white text-xs font-medium ${WISH_STRONG} hover:border-[#c2415f] disabled:opacity-60 transition cursor-pointer`}
+          >
+            {busy ? "해제하는 중..." : "찜 해제"}
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => wishes.onToggle(dept)}
+          disabled={busy}
+          className="mt-2 inline-flex items-center gap-1.5 min-h-[44px] px-4 py-2.5 rounded-full bg-[#c2415f] text-white text-sm font-bold shadow-sm hover:bg-[#a83552] disabled:opacity-60 transition cursor-pointer"
+        >
+          <Heart className="w-4 h-4 shrink-0" aria-hidden />
+          {busy ? "담는 중..." : "관련 학과 찜하기!"}
+        </button>
+      )}
+    </div>
+  );
+}
+
+/**
+ * 찜한 학과 목록. **단계 화면 바깥**에 두어 계열·관심사를 다시 고르러 가도 남는다.
+ *
+ * 📌 찜은 계정에 붙고 화면 상태(계열·관심사)는 URL에 붙는다 — 서로 건드리지 않으므로
+ * 동기화할 게 없다. 문과에서 담은 학과는 이과 화면에서도 그대로 이 목록에 있다.
+ *
+ * 📌 평소엔 접힌 한 줄로 둔다. 펼친 채로 두면 1단계 계열 카드를 아래로 밀어내는데,
+ * 첫 입력까지의 거리를 늘리는 게 이 도구에서 제일 비싼 실수다.
+ */
+function WishPanel({ wishes }: { wishes: WishApi }) {
+  const names = [...(wishes.wished ?? [])];
+  /* 하나도 안 담은 사람에게는 아직 없는 개념이라 줄 자체를 만들지 않는다 */
+  if (names.length === 0) return null;
+
+  return (
+    <details className={`group mb-4 rounded-lg border ${WISH_BORDER} ${WISH_BG}`}>
+      <summary
+        className={`flex items-center gap-1.5 min-h-[44px] px-3.5 py-3 cursor-pointer list-none [&::-webkit-details-marker]:hidden text-sm font-bold ${WISH_STRONG}`}
+      >
+        <ChevronRight className={`${DETAILS_CHEVRON} text-[#c2415f]`} aria-hidden />
+        <Heart className="w-4 h-4 shrink-0 fill-current text-[#c2415f]" aria-hidden />
+        찜한 학과 {names.length}개
+      </summary>
+
+      <div className="px-3.5 pb-3.5 space-y-2">
+        {names.map((name) => {
+          /* 찜할 땐 계산기에 없던 학과라도, 나중에 데이터가 채워지면 여기가 저절로
+             링크로 바뀐다. 발송 기능이 생기기 전까지 이게 유일한 회수 경로다. */
+          const naeshinDept = departments.find((d) => d.name === name)?.naeshinDept;
+          const busy = wishes.pending === name;
+
+          return (
+            <div
+              key={name}
+              className={`flex flex-wrap items-center gap-2 rounded-lg border ${WISH_BORDER} bg-white px-3 py-2.5`}
+            >
+              <span className={`flex-1 min-w-0 text-sm font-medium ${WISH_TEXT} break-keep`}>
+                {name}
+              </span>
+
+              {naeshinDept ? (
+                <Link
+                  href={`/naeshin?department=${encodeURIComponent(naeshinDept)}`}
+                  onClick={() =>
+                    trackToolEvent("career", "cta_click", { department: name, target: "naeshin" })
+                  }
+                  className="inline-flex items-center min-h-[36px] px-3 py-1.5 rounded-full bg-[#365927] text-white text-xs font-bold hover:bg-[#4a7a38] transition"
+                >
+                  등급컷 보러 가기 →
+                </Link>
+              ) : null}
+
+              <button
+                type="button"
+                onClick={() => wishes.onToggle(name)}
+                disabled={busy}
+                className={`inline-flex items-center min-h-[36px] px-3 py-1.5 rounded-full border ${WISH_BORDER} bg-white text-xs font-medium ${WISH_STRONG} hover:border-[#c2415f] disabled:opacity-60 transition cursor-pointer`}
+              >
+                {busy ? "해제하는 중..." : "찜 해제"}
+              </button>
+            </div>
+          );
+        })}
       </div>
     </details>
   );

@@ -36,6 +36,8 @@ export default function NaeshinRequestsPage() {
     const { data: requestRows } = await supabase
       .from("naeshin_requests")
       .select("id, content, created_at, user_id")
+      /* 진로 탐구 찜(department 있음)은 전용 메뉴가 따로 본다. 여기는 자유 문의만. */
+      .is("department", null)
       .order("created_at", { ascending: false });
 
     const userIds = [...new Set((requestRows ?? []).map((r) => r.user_id).filter(Boolean))] as string[];

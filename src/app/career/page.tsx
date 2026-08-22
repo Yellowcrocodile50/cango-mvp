@@ -59,6 +59,9 @@ export default async function CareerPage({
       initialTrack={first("track")}
       initialInterests={first("i")}
       initialShowResults={first("r") === "1"}
+      /* 로그인하러 나갔다 돌아온 사람이 담으려던 학과. 서버에서 읽는 이유는
+         클라이언트에서 읽으면 URL 동기화 effect가 먼저 이 값을 지워버릴 수 있어서다. */
+      initialWish={first("wish")}
     />
   );
 }

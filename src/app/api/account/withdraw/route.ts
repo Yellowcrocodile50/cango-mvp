@@ -23,7 +23,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "인증에 실패했습니다." }, { status: 401 });
   }
 
-  if (user.user_metadata?.role === "supplier") {
+  // 공급자 판별은 profiles.role로 한다. user_metadata는 사용자가 스스로 고칠 수 있어
+  // 차단을 우회할 수 있고, 우회되면 materials가 auth.users에 ON DELETE CASCADE로
+  // 묶여 있어 자료 전체가 함께 지워진다.
+  const { data: profile, error: profileError } = await supabaseAdmin
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (profileError) {
+    return NextResponse.json(
+      { error: "계정 정보 확인 중 오류가 발생했습니다." },
+      { status: 500 }
+    );
+  }
+
+  if (profile?.role === "supplier") {
     return NextResponse.json(
       { error: "공급자 계정은 고객센터를 통해서만 탈퇴할 수 있습니다." },
       { status: 403 }

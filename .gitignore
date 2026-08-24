@@ -63,3 +63,8 @@ next-env.d.ts
 
 # 글바치 원본 HTML (진로 탐구 이식 원본 — 외부 프로젝트라 이 레포에 커밋하지 않음)
 /글바치.html
+
+# 내신 등급컷 · 진로 학과 데이터 (수집·검수한 자산이라 저장소에 포함하지 않는다)
+# 스키마와 판정 기준은 src/data/naeshinCutoffs.ts · careerDepartments.ts 에 남아 있다.
+/src/data/naeshinCutoffs.data.ts
+/src/data/careerDepartments.data.ts

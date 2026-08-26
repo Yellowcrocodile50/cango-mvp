@@ -158,10 +158,12 @@ function BankPendingContent() {
           <ul className="space-y-1.5 list-disc pl-5">
             <li>
               <strong>스팸메일함</strong>과 (지메일의 경우) <strong>프로모션 탭</strong>을 함께 확인해주세요.
+              <br className="hidden sm:inline" />
               메일이 자동으로 분류되는 경우가 있습니다.
             </li>
             <li>
               발신 주소는 <strong className="font-mono">order@mail.cango.kr</strong> 입니다.
+              <br className="hidden sm:inline" />
               주소록에 추가해 두시면 다음부터 정상 수신됩니다.
             </li>
             <li>
@@ -174,7 +176,9 @@ function BankPendingContent() {
               >
                 카카오톡 채널 · CANGO 캔고
               </a>
-              로 문의해 주세요. 바로 다시 보내드립니다.
+              로 문의해 주세요.
+              <br className="hidden sm:inline" />
+              바로 다시 보내드립니다.
             </li>
           </ul>
         </div>

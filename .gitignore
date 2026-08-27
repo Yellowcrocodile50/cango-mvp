@@ -68,3 +68,6 @@ next-env.d.ts
 # 스키마와 판정 기준은 src/data/naeshinCutoffs.ts · careerDepartments.ts 에 남아 있다.
 /src/data/naeshinCutoffs.data.ts
 /src/data/careerDepartments.data.ts
+
+# Claude Code 로컬 설정·스킬 (공개 레포에 포함하지 않음 + Vercel 업로드 제외)
+.claude/

@@ -421,6 +421,16 @@ export default function CareerClient({
             내가 좋아하는 건 이런 건데, <br className="sm:hidden" />
             <span className="text-[#4a7a38]">어떤 학과</span>에 가면 좋을까?
           </h1>
+          {/* 네이버 웹검색이 이 문장을 검색결과 설명으로 집어간다.
+              전엔 본문에 서술 문장이 하나도 없어서(h1 + 단계 라벨 + 칩뿐) 네이버가
+              계열 칩 라벨 3줄을 그대로 스니펫에 박아버렸다 — 2026-09-03 실측:
+              "이과 · 자연계 · 수학 · 과학 …" 이 설명 줄로 나오고 있었다.
+              ⚠️ 개수는 반드시 departments.length로 뽑는다. 문구에 숫자를 박으면
+              학과를 추가할 때마다 조용히 틀린 말이 된다. */}
+          <p className="mt-3 text-sm sm:text-base text-[#5a7d50] leading-relaxed break-keep">
+            학과 {departments.length}개를 모아뒀어요. 좋아하는 과목과 관심사를 고르면 그중에서
+            나에게 맞는 학과를 찾아드려요. 성적을 넣지 않아도 되고, 가입도 필요 없어요.
+          </p>
         </div>
       ) : (
         <h1 className="text-lg font-bold text-[#365927] mb-4">진로 탐구</h1>

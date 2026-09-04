@@ -1,10 +1,12 @@
 import type { NextConfig } from "next";
 
-// next.config 평가 시점에 .env가 로드돼 있다는 보장이 없어 상수를 폴백으로 둔다.
-// (여기서 throw하면 빌드 자체가 깨진다)
-const SUPABASE_HOST = process.env.NEXT_PUBLIC_SUPABASE_URL
-  ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
-  : "yqnbsiqypgighfezsuul.supabase.co";
+// next.config 평가 시점에도 .env가 로드된다는 걸 로컬 빌드·Vercel 배포 양쪽에서 확인했다.
+// 값이 없으면 조용히 잘못된 호스트로 빌드되느니 여기서 실패하는 편이 낫다.
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+if (!supabaseUrl) {
+  throw new Error("NEXT_PUBLIC_SUPABASE_URL이 없어 이미지 remotePatterns를 설정할 수 없습니다.");
+}
+const SUPABASE_HOST = new URL(supabaseUrl).hostname;
 
 const nextConfig: NextConfig = {
   images: {

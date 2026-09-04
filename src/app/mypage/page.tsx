@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { FileText, Download, Heart } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { isFreeCategory } from "@/data/categories";
@@ -218,9 +219,11 @@ export default function MyPage() {
         className="flex items-center gap-4 bg-white border border-[#d6e4d3] rounded-xl p-4"
       >
         {m?.thumbnail_url ? (
-          <img
+          <Image
             src={m.thumbnail_url}
             alt={m.title}
+            width={80}
+            height={96}
             className="w-20 h-24 rounded object-cover flex-shrink-0 border border-[#d6e4d3]"
           />
         ) : (

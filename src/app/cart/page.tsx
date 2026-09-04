@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/lib/supabase";
@@ -141,9 +142,11 @@ export default function CartPage() {
               />
 
               {item.thumbnail_url ? (
-                <img
+                <Image
                   src={item.thumbnail_url}
                   alt={item.title}
+                  width={64}
+                  height={80}
                   className="w-16 h-20 rounded flex-shrink-0 object-cover"
                 />
               ) : (

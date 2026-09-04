@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
+import Image from "next/image";
 import type { User } from "@supabase/supabase-js";
 import type { Material } from "@/types/material";
 import { getBreadcrumb, getCategoryLabel, isFreeCategory } from "@/data/categories";
@@ -112,14 +113,17 @@ export default function ProductDetailClient({ material }: { material: Material }
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
         <div
-          className="self-start rounded-lg overflow-hidden shadow-md bg-[#f5f9f4]"
+          className="relative self-start rounded-lg overflow-hidden shadow-md bg-[#f5f9f4]"
           style={{ aspectRatio: '1/1', maxWidth: 'min(100%, calc(100vh - 160px))' }}
         >
           {material.thumbnail_url ? (
-            <img
+            <Image
               src={material.thumbnail_url}
               alt={material.title}
-              className="w-full h-full object-contain"
+              fill
+              preload
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className="object-contain"
             />
           ) : (
             <div
@@ -230,11 +234,14 @@ export default function ProductDetailClient({ material }: { material: Material }
           <div className="max-w-2xl mx-auto space-y-2">
             {(previewExpanded ? material.preview_images : material.preview_images.slice(0, 1)).map(
               (url, idx) => (
-                <img
+                <Image
                   key={idx}
                   src={url}
                   alt={`미리보기 ${idx + 1}페이지`}
-                  className="w-full rounded-lg shadow-sm"
+                  width={800}
+                  height={1131}
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="w-full h-auto rounded-lg shadow-sm"
                 />
               )
             )}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Material } from "@/types/material";
 import { colorForId } from "@/lib/coverColor";
 import { getCategoryLabel, isFreeCategory } from "@/data/categories";
@@ -12,10 +13,12 @@ export default function ProductCard({ material }: { material: Material }) {
       <Link href={`/product/${material.id}`} className="group block">
         <div className="aspect-square rounded-lg overflow-hidden mb-3 relative shadow-sm">
           {material.thumbnail_url ? (
-            <img
+            <Image
               src={material.thumbnail_url}
               alt={material.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
             />
           ) : (
             <div

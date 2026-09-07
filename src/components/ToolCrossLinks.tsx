@@ -25,15 +25,19 @@ export default function ToolCrossLinks({ currentSlug }: { currentSlug: string })
       <p className="text-xs text-[#8aab82] break-keep">
         이런 것도 있어요
       </p>
-      <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1.5">
+      {/* 📌 밑줄 텍스트에서 알약 버튼으로 바꿨다. 실측에서 약한 텍스트 교차링크는
+          거의 눌리지 않았고(7일 9명) 알약 버튼은 눌렸다(7일 11명).
+          위계는 그대로 낮게 유지한다 — 주 액션은 여전히 자료 CTA 하나다. */}
+      <div className="mt-1.5 flex flex-wrap gap-2">
         {others.map((tool) => (
           <Link
             key={tool.slug}
             href={`/${tool.slug}`}
             onClick={() => trackToolCrossLink(`/${tool.slug}`, `/${currentSlug}`)}
-            className="text-xs text-[#5a7d50] underline underline-offset-2 hover:text-[#365927] transition"
+            className="inline-flex items-center gap-1 rounded-full border border-[#d6e4d3] bg-white px-3 py-1.5 text-xs font-medium text-[#5a7d50] hover:border-[#8aab82] hover:text-[#365927] transition"
           >
-            {tool.emoji} {tool.name} →
+            <span aria-hidden>{tool.emoji}</span>
+            {tool.name} →
           </Link>
         ))}
       </div>

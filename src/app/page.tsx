@@ -10,6 +10,17 @@ import { supabase } from "@/lib/supabase";
 import { categoryGroups, getBreadcrumb, isFreeCategory } from "@/data/categories";
 import type { Material } from "@/types/material";
 
+/* 수시 원서 접수 시즌 종료일. 이 시각이 지나면 홈 배너 두 번째 자리가
+   지원 전략(/aiming) → 진로 탐구(/career)로 자동으로 되돌아간다.
+
+   📌 렌더 함수 안이 아니라 모듈 스코프에서 한 번만 잰다. 렌더 중 Date.now()를 부르면
+   같은 렌더가 매번 다른 값을 볼 수 있어 React가 불순 함수 호출로 막는다(lint 실측).
+
+   ⚠️ 수시 원서 접수가 9월 11일까지라 12일 0시(KST)에 내려간다. 마감 당일까지는 떠 있어야
+   해서 11일이 아니라 12일 0시로 잡았다. */
+const AIMING_SEASON_END = new Date("2026-09-12T00:00:00+09:00").getTime();
+const inAimingSeason = Date.now() < AIMING_SEASON_END;
+
 function ProductGrid() {
   const searchParams = useSearchParams();
   const category = searchParams.get("category");
@@ -66,8 +77,33 @@ function ProductGrid() {
 
   return (
     <>
-      {/* 도구 배너 2개. 순서는 내신 계산기가 먼저 — 이벤트의 77%가 거기서 나온다.
+      {/* 도구 배너는 **항상 2개**로 유지한다. 3개가 되면 자료 카탈로그가 첫 화면 밖으로
+          밀려나는데, 헤더 클릭의 61%가 자료 카테고리였다(도구는 23%) — 홈에 온 사람의
+          다수는 자료를 찾으러 온 사람이다.
+
+          평소 순서는 내신 계산기가 먼저다(이벤트의 77%가 거기서 나온다). 다만 원서 접수
+          기간에는 조준 테스트를 맨 위로 올린다 — 그 며칠에만 쓸모가 있는 도구라
+          둘째 줄에 두면 시즌이 끝난 뒤에 발견된다.
+
+          ⚠️ 마감이 지나면 조준 테스트가 내려가고 진로 탐구가 돌아온다. 접수가 끝났는데
+          "지금 6장을 정하세요" 배너가 남아 있으면 안 되기 때문이다.
+          날짜는 AIMING_SEASON_END 한 곳만 고치면 된다.
+
           문구는 갈아치우지 않고 누적한다(v3.5 때 정리한 원칙). */}
+      {inAimingSeason && (
+        <PromoBanner href="/aiming" tone="plum">
+          <span className="block md:inline">
+            🎯 원서 조준 테스트 <BannerPill>NEW</BannerPill>{" "}
+            <b className="font-semibold">원서 접수 D-DAY</b>
+          </span>{" "}
+          {/* 히어로와 같은 말로 맞춘다. 배너를 눌러 들어왔는데 첫 화면이 다른 말이면
+              잘못 들어온 줄 안다. */}
+          <span className="block md:inline">
+            <b className="font-semibold">나의 원서 조준 전략은?</b> 1분이면 나와요{" "}
+            <span className="whitespace-nowrap">→</span>
+          </span>
+        </PromoBanner>
+      )}
       <PromoBanner href="/naeshin" tone="green">
         <span className="block md:inline">
           🎓 내신 계산기 <BannerPill>무료</BannerPill>{" "}
@@ -78,16 +114,18 @@ function ProductGrid() {
           <span className="whitespace-nowrap">→</span>
         </span>
       </PromoBanner>
-      <PromoBanner href="/career" tone="blue">
-        <span className="block md:inline">
-          🧭 진로 탐구 <BannerPill>NEW</BannerPill>{" "}
-          <b className="font-semibold">학과 99개</b>
-        </span>{" "}
-        <span className="block md:inline">
-          내가 좋아하는 건 이런 건데, <b className="font-semibold">어떤 학과에 가면 좋을까?</b>{" "}
-          <span className="whitespace-nowrap">→</span>
-        </span>
-      </PromoBanner>
+      {!inAimingSeason && (
+        <PromoBanner href="/career" tone="blue">
+          <span className="block md:inline">
+            🧭 진로 탐구 <BannerPill>NEW</BannerPill>{" "}
+            <b className="font-semibold">학과 99개</b>
+          </span>{" "}
+          <span className="block md:inline">
+            내가 좋아하는 건 이런 건데, <b className="font-semibold">어떤 학과에 가면 좋을까?</b>{" "}
+            <span className="whitespace-nowrap">→</span>
+          </span>
+        </PromoBanner>
+      )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       {supplierUserId && (
         <SupplierUploadSection

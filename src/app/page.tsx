@@ -94,12 +94,12 @@ function ProductGrid() {
         <PromoBanner href="/aiming" tone="plum">
           <span className="block md:inline">
             🎯 원서 조준 테스트 <BannerPill>NEW</BannerPill>{" "}
-            <b className="font-semibold">원서 접수 D-DAY</b>
+            <b className="font-semibold">원서 접수 기간</b>
           </span>{" "}
-          {/* 히어로와 같은 말로 맞춘다. 배너를 눌러 들어왔는데 첫 화면이 다른 말이면
-              잘못 들어온 줄 안다. */}
+          {/* 유형이 나오는 테스트라는 걸 배너에서 먼저 알린다.
+              "전략은?"이라고 하면 계산기처럼 읽혀서, 무엇이 나오는지가 안 보인다. */}
           <span className="block md:inline">
-            <b className="font-semibold">나의 원서 조준 전략은?</b> 1분이면 나와요{" "}
+            <b className="font-semibold">10가지 유형 중 내 원서 스타일은?</b> 1분이면 나와요{" "}
             <span className="whitespace-nowrap">→</span>
           </span>
         </PromoBanner>

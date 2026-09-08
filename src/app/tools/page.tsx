@@ -3,9 +3,11 @@ import Link from "next/link";
 import { tools, TOOLS_NAV_LABEL } from "@/data/tools";
 
 const TOOLS_URL = "https://www.cango.kr/tools";
-const TOOLS_TITLE = "무료 입시 도구 — 내신 계산기 · 진로 탐구";
+const TOOLS_TITLE = "무료 입시 도구 — 내신 계산기 · 진로 탐구 · 원서 조준 테스트";
+/* ⚠️ "가입 없이 바로 쓰는" 같은 문구는 영업 멘트로 읽힌다(2026-09-08 사용자 교정).
+   혜택을 파는 대신 **상황을 먼저 알아주고** 무엇을 찾을 수 있는지만 적는다. */
 const TOOLS_DESCRIPTION =
-  "가입 없이 바로 쓰는 무료 입시 도구 모음. 내신 계산기로 지원 가능 대학과 필요한 등급을 확인하고, 진로 탐구로 나에게 맞는 학과를 찾아보세요.";
+  "입시가 막막한 수험생을 위한 무료 입시 도구. 내신 계산기로 목표 대학에 필요한 등급을, 진로 탐구로 나에게 맞는 학과를, 원서 조준 테스트로 수시 6장 배분을 찾아볼 수 있어요.";
 
 export const metadata: Metadata = {
   title: TOOLS_TITLE,
@@ -36,11 +38,12 @@ export default function ToolsPage() {
       <div className="mb-8">
         <p className="text-sm font-semibold text-[#5a7d50] mb-2">{TOOLS_NAV_LABEL}</p>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-[#365927] leading-tight tracking-tight break-keep">
-          가입 없이 바로 써보는 <br className="sm:hidden" />
+          입시가 막막한 수험생을 위한 <br className="sm:hidden" />
           <span className="text-[#4a7a38]">무료 입시 도구</span>
         </h1>
+        {/* 선배들도 똑같았다 → 그러니 부담 없이 봐도 된다. 혜택을 파는 문장을 앞에 두지 않는다. */}
         <p className="text-sm text-[#5a7d50] mt-3 break-keep">
-          성적으로 대학을 찾거나, 관심사로 학과를 찾아볼 수 있어요. 전부 무료예요.
+          선배들도 똑같았어요. 나한테 맞는 입시 전략과 대학, 학과까지 전부 무료로 찾아볼 수 있어요.
         </p>
       </div>
 

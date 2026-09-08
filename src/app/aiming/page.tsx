@@ -44,6 +44,7 @@ export async function generateMetadata({
 
   const title = type ? `${type.emoji} ${type.name} — 수시 원서 6장 전략` : AIMING_TITLE;
   const description = type ? `${type.tagline}. ${type.summary}` : AIMING_DESCRIPTION;
+  const ogImage = `/aiming/og/${type ? type.id : "default"}.png`;
 
   return {
     title,
@@ -72,30 +73,26 @@ export async function generateMetadata({
       siteName: "선배들이 만든 입시자료",
       title,
       description,
-      /* 카카오톡·네이버 공유 미리보기 이미지.
-         유형별 가로형(1200x630)을 쓴다 — 결과 링크가 퍼져서 들어오는 유입이 큰 도구라
-         미리보기가 전부 같은 그림이면 무엇이 공유된 건지 안 보인다.
-         📌 layout.tsx에 metadataBase가 있어서 상대경로가 절대 URL로 펼쳐진다.
-         ⚠️ 유형이 없을 때(맨 /aiming) 쓸 기본 이미지는 아직 없다. */
-      ...(type && {
-        images: [
-          {
-            url: `/aiming/og/${type.id}.png`,
-            width: 1200,
-            height: 630,
-            alt: `${type.name} — 원서 조준 테스트`,
-          },
-        ],
-      }),
+      /* 카카오톡·네이버 공유 미리보기 이미지(1200x630).
+         유형이 있으면 그 유형 그림, 없으면 기본 그림을 쓴다.
+         📌 공유 버튼은 결과가 아니라 **첫 화면**을 보내므로 실제로 가장 많이 노출되는 건
+         default.png다. 유형별 그림은 누가 결과 URL을 직접 복사해 보낼 때 쓰인다.
+         📌 layout.tsx에 metadataBase가 있어서 상대경로가 절대 URL로 펼쳐진다. */
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: type ? `${type.name} — 원서 조준 테스트` : "원서 조준 테스트",
+        },
+      ],
     },
-    ...(type && {
-      twitter: {
-        card: "summary_large_image",
-        title,
-        description,
-        images: [`/aiming/og/${type.id}.png`],
-      },
-    }),
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImage],
+    },
   };
 }
 

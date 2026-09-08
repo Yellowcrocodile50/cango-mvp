@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import {
   MAX_FLOOR,
   MAX_INTV,
+  MIN_FLOOR,
   QUESTIONS,
   STRATEGY_TYPES,
   TIERS,
@@ -113,18 +114,21 @@ export default async function AimingPage({
   /* 배분은 유형만으로 정해지지 않는다. 하향 수용도(f)와 대학별고사 여력(i)이 같이 있어야
      공유받은 사람이 **보낸 사람과 같은 배분**을 본다.
      범위를 벗어난 값은 버린다 — 주소창을 손으로 고쳐도 화면이 깨지지 않아야 한다. */
-  const clamp = (raw: string | null, max: number) => {
+  /* ⚠️ 하한을 0으로 박아두면 안 된다. Q4b("수능 잘봤는데 수시 납치되는 것")가 floor를
+     깎기 때문에 floor는 음수가 나온다. 0 미만을 버리면 그 사람들의 공유 링크와 새로고침이
+     기본값(2)으로 떨어져 **화면에서 봤던 배분과 달라진다.** */
+  const clamp = (raw: string | null, min: number, max: number) => {
     if (raw === null) return null;
     const n = Number(raw);
-    if (!Number.isInteger(n) || n < 0 || n > max) return null;
+    if (!Number.isInteger(n) || n < min || n > max) return null;
     return n;
   };
 
   return (
     <AimingClient
       initialType={first("t")}
-      initialFloor={clamp(first("f"), MAX_FLOOR)}
-      initialIntv={clamp(first("i"), MAX_INTV)}
+      initialFloor={clamp(first("f"), MIN_FLOOR, MAX_FLOOR)}
+      initialIntv={clamp(first("i"), 0, MAX_INTV)}
     />
   );
 }

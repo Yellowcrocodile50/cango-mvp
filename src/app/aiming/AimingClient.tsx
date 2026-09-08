@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import {
   COMMON_RULES,
   ENROLL_WARNING,
-  NO_STABLE_WARNING,
+  noStableWarning,
   RESULT_DISCLAIMER,
   QUESTIONS,
   STRATEGY_TYPES,
@@ -188,14 +188,18 @@ export default function AimingClient({
 
   async function share() {
     if (!result) return;
-    const { type, floor, intv } = result;
-    const url = `https://www.cango.kr/aiming?t=${type.id}&f=${floor}&i=${intv}&r=1`;
+    const { type } = result;
+    /* 📌 공유 링크는 **내 결과가 아니라 테스트 첫 화면**으로 보낸다.
+       받은 사람이 남의 유형을 먼저 보면 "얘는 이거구나"로 끝나는데, 첫 화면으로 보내면
+       직접 풀어보게 된다. 이 도구는 결과 자랑보다 테스트 자체의 유입이 목적이다.
+       (유형은 GA에만 남긴다 — 어떤 유형이 많이 공유되는지는 알아야 하니까) */
+    const url = "https://www.cango.kr/aiming";
     trackToolEvent("aiming", "share", { type: type.id });
     /* 모바일은 OS 공유 시트를 띄운다 — 카카오톡으로 바로 보낼 수 있어야
        "친구도 해보게 만드는" 동선이 끊기지 않는다. 지원 안 하면 링크 복사로 떨어진다. */
     const shareData = {
-      title: `${type.name} — 원서 조준 테스트`,
-      text: `나는 ${type.name}! 너는 무슨 형이야?`,
+      title: "원서 조준 테스트",
+      text: "너는 무슨 형이야? 수시 원서 6장, 어떻게 쓸지 1분이면 나와요",
       url,
     };
     if (typeof navigator !== "undefined" && navigator.share) {
@@ -437,11 +441,15 @@ function ResultView({
         </div>
         <dl className="mt-3 space-y-1.5">
           {TIER_ORDER.filter((k) => mix[k] > 0).map((key) => (
+            /* ⚠️ dt와 dd의 leading이 다르면 같은 줄인데 글자 높이가 어긋난다.
+               둘 다 leading-relaxed로 맞추고, dt에 고정 폭을 줘서 설명 시작점도 세로로 정렬한다. */
             <div key={key} className="flex items-start gap-2">
-              <dt className={`shrink-0 text-xs font-bold ${TIERS[key].text}`}>
+              <dt
+                className={`shrink-0 w-[4.5rem] text-xs font-bold leading-relaxed ${TIERS[key].text}`}
+              >
                 {TIERS[key].label} {mix[key]}장
               </dt>
-              <dd className="text-xs text-[#5a7d50] leading-relaxed break-keep">
+              <dd className="flex-1 text-xs text-[#5a7d50] leading-relaxed break-keep">
                 <b className={TIERS[key].text}>{TIERS[key].catch}</b> {TIERS[key].desc}
               </dd>
             </div>
@@ -451,7 +459,7 @@ function ResultView({
             도구가 "안전판 없이 가도 된다"고 권한 것처럼 읽힌다. */}
         {mix.stable === 0 && (
           <p className="mt-2.5 rounded-lg border border-[#f0cdd9] bg-[#fdf2f6] px-3 py-2 text-xs text-[#8a4159] leading-relaxed break-keep">
-            {NO_STABLE_WARNING}
+            {noStableWarning(floor)}
           </p>
         )}
         {/* 기본 배분에서 안정을 옮겼으면 왜 옮겼는지 밝힌다. 말없이 숫자만 바뀌면
@@ -534,7 +542,7 @@ function ResultView({
           className="inline-flex items-center gap-1.5 text-sm font-medium text-white bg-[#4a7a38] hover:bg-[#365927] rounded-full px-5 py-3 transition"
         >
           <Share2 className="w-4 h-4 shrink-0" aria-hidden />
-          내 친구는 무슨 형일까? 공유하기
+          너는 무슨 형이야? 공유하기
         </button>
       </div>
 

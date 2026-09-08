@@ -77,7 +77,11 @@ export type Mix = Record<TierKey, number>;
    칸을 쪼개는 일이 아니라 **축을 늘리는 일**이다.
 
    ⚠️ agg와 floor는 반드시 분리한다. "안 갈 곳은 쓰기 싫다"가 공격성을 올리면
-   정시도 약하고 안정권도 못 쓰는 가장 위험한 학생이 공격형으로 분류된다. */
+   정시도 약하고 안정권도 못 쓰는 가장 위험한 학생이 공격형으로 분류된다.
+
+   📌 floor는 **음수도 준다**(Q4b 수시 납치). 안정을 "덜 받아들인다"는 답이 있어야
+   Q2 하나로만 안정 장수가 정해지는 걸 막을 수 있다. MAX_FLOOR는 선택지별 최댓값의
+   합이라 음수를 넣어도 6으로 유지된다. */
 
 export type Option = {
   id: string;
@@ -132,11 +136,17 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: "q4",
-    text: "6장을 쓸 때 어느 쪽이 더 아까울 것 같나요?",
+    /* ⚠️ 세 선택지가 한 줄 위에 놓인 정도 차이가 아니다.
+       a는 **상향 회피**(agg를 안 올린다), b는 **안정 회피**(floor를 깎는다),
+       c는 **상향 미련**(agg 최대)이다. a와 b는 방향이 반대인 두 축의 기피라서
+       가운데 칸을 "반반"으로 두던 예전 문항보다 답이 갈린다. */
+    text: "원서를 쓰고 나서 가장 후회할 것 같은 건?",
     options: [
-      { id: "a", label: "안 될 곳에 써서 한 장 버리는 것", agg: 0, floor: 1, intv: 0, gyo: 0, rec: 0 },
-      { id: "b", label: "반반이에요", agg: 2, floor: 0, intv: 0, gyo: 0, rec: 0 },
-      { id: "c", label: "내가 정말 가고 싶은 곳에 원서 못 넣고 후회하는 것", agg: 4, floor: 0, intv: 0, gyo: 0, rec: 0 },
+      { id: "a", label: "우주상향으로 가능성 낮은 데 질러서\n한 장 날리는 것", agg: 0, floor: 1, intv: 0, gyo: 0, rec: 0 },
+      /* 수시 납치가 무섭다 = 안정권에 붙어서 정시 길이 막히는 게 싫다는 뜻이다.
+         공격성보다 **안정 수용도(floor)를 깎는 답**이라 floor를 음수로 준다. */
+      { id: "b", label: "수능 잘봤는데 수시 납치되는 것", agg: 2, floor: -1, intv: 0, gyo: 0, rec: 0 },
+      { id: "c", label: "가고 싶던 대학에 한 번도 못 질러보는 것", agg: 4, floor: 0, intv: 0, gyo: 0, rec: 0 },
     ],
   },
   {
@@ -154,7 +164,11 @@ export const QUESTIONS: Question[] = [
     options: [
       { id: "a", label: "3년 동안 꾸준히 쌓아왔어요", agg: 0, floor: 0, intv: 0, gyo: 0, rec: 2 },
       { id: "b", label: "보통은 하는 것 같아요", agg: 0, floor: 0, intv: 0, gyo: 0, rec: 1 },
-      { id: "c", label: "딱히 내세울 게 없어요..ㅜ", agg: 0, floor: 0, intv: 0, gyo: 0, rec: 0 },
+      /* ⚠️ 생기부를 못 챙긴 학생은 내신도 같이 낮은 경우가 많다. 그래서 이 답은
+         "교과로 안전하게 간다"가 아니라 **수시에 쓸 무기가 없다**는 신호로 읽는다.
+         수시로 확보할 게 없으면 위로 지르고 정시로 받치는 쪽이 맞아서 agg를 올린다.
+         (교과 갈래에서 빼는 처리는 decideType ④에 있다) */
+      { id: "c", label: "딱히 내세울 게 없어요..ㅜ", agg: 2, floor: 0, intv: 0, gyo: 0, rec: 0 },
     ],
   },
   {
@@ -174,6 +188,12 @@ const maxOf = (key: "agg" | "floor" | "intv" | "gyo" | "rec") =>
 
 export const MAX_AGG = maxOf("agg");
 export const MAX_FLOOR = maxOf("floor");
+/** floor 최솟값. Q4b가 floor를 깎으므로 **음수가 될 수 있다**.
+ *  공유 링크(`?f=`)를 0 이상으로만 받으면 이 사람들의 배분이 링크에서 되살아나지 않는다. */
+export const MIN_FLOOR = QUESTIONS.reduce(
+  (s, q) => s + Math.min(...q.options.map((o) => o.floor)),
+  0
+);
 export const MAX_INTV = maxOf("intv");
 export const MAX_GYO = maxOf("gyo");
 export const MAX_REC = maxOf("rec");
@@ -527,7 +547,9 @@ export function decideType(
 
   /* ① 올인 — 공격성이 최상위. 논술 여력이 만점이면 논술 올인, 아니면 정시 올인
      ⚠️ 경계를 10 → 9로 낮췄다. 10에서는 전수 2187조합 중 45개(2%)만 도달해서
-     사실상 아무도 못 보는 유형이었다. */
+     사실상 아무도 못 보는 유형이었다.
+     ⚠️ Q6c에 agg +2를 준 뒤 MAX_AGG가 11 → 13이 됐지만 경계는 9로 **그대로 둔다.**
+     재실측: 9면 정시올인 5.6% / 논술올인 5.3%, 10이면 둘 다 2.7%로 다시 죽는다. */
   if (agg >= 9) return intv >= MAX_INTV ? byId("essayAllIn") : byId("jungsiAllIn");
 
   /* ② 논술 병행 — 대학별고사 여력이 만점이고 위로 갈 의사도 있을 때 */
@@ -538,12 +560,17 @@ export function decideType(
      무기가 둘 다 있으면 학종 쪽이 더 유리하다. */
   if (rec >= MAX_REC && agg >= 2 && agg <= 5) return byId("hakjong");
 
-  /* ④ 교과 정공법 — 내신이 확실히 강하고, 생기부가 최강은 아니고, 위로 크게 지르지 않을 때.
+  /* ④ 교과 정공법 — 내신이 확실히 강하고, 생기부는 중간이고, 위로 크게 지르지 않을 때.
      ⚠️ 전엔 `agg >= 1` 하한이 있었는데, 그러면 **내신이 가장 강하면서 올해 꼭 끝내야 하는 사람**
      (Q7a가 agg를 -2 깎는다)이 교과형에 못 왔다. 교과 정공법의 전형적인 대상이라 하한을 없앴다.
-     ⚠️ `rec < MAX_REC` 조건이 없으면 이 갈래가 전체의 22%를 먹어버린다(전수 실측).
+     ⚠️ 전엔 `rec < MAX_REC`(생기부가 최강만 아니면)였는데, 그러면 **생기부가 아예 없는 사람도
+     교과로 왔다.** 생기부를 못 챙긴 학생은 내신도 같이 낮은 경우가 많아서 교과 정공법의
+     대상이 아니다. 실제로 전수 2187조합에서 Q6b와 Q6c의 결과 분포가 완전히 같았다
+     (gyogwa 159 / standard 129 / essay 114) — 질문을 넣어놓고 답을 안 쓰던 셈이다.
+     그래서 `rec === 1`로 좁혀 Q6를 a=학종 / b=교과 / c=사다리로 완전히 가른다.
+     ⚠️ 조건을 느슨하게 두면 이 갈래가 전체의 22%를 먹어버린다(전수 실측).
      질문 하나(3지선다)가 곧 33%라, 무기 갈래는 조건을 두 개 이상 걸어야 한다. */
-  if (gyo >= MAX_GYO && rec < MAX_REC && agg <= 4) return byId("gyogwa");
+  if (gyo >= MAX_GYO && rec === 1 && agg <= 4) return byId("gyogwa");
 
   /* ⑤ 공격성 사다리 */
   if (agg <= 1) return byId("safe");
@@ -552,8 +579,8 @@ export function decideType(
 
   /* 정시 믿는 스나이퍼 — 공격성이 최상위이거나, 7이면서 대학별고사에 쓸 여력이 거의 없을 때.
      ⚠️ agg 7은 도전 저격형과 겹치는 구간이다. 정수 경계로만 자르면 이 유형이 agg 8 하나에
-     묶여 4.1%밖에 안 나오고, 7까지 열면 9.4%로 튄다(전수 실측). 그래서 겹치는 구간을
-     **대학별고사 여력**으로 가른다 — 상향을 논술·면접으로 받칠 수 있으면 도전 저격형,
+     묶여 5.8%밖에 안 나오고, 7까지 열면 12.6%로 튄다(2026-09-08 재실측, 현재 8.8%).
+     그래서 겹치는 구간을 **대학별고사 여력**으로 가른다 — 상향을 논술·면접으로 받칠 수 있으면 도전 저격형,
      그럴 여력이 없어 정시로 받쳐야 하면 이 유형이다. 유형의 성격과도 맞는 기준이다. */
   if (agg >= 8 || (agg === 7 && intv <= 1)) return byId("jungsi");
   return byId("aggressive");

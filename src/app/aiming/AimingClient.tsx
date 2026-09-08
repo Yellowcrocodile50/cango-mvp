@@ -26,6 +26,16 @@ import {
 import { trackEvent, trackToolEvent } from "@/lib/ga";
 import ToolCrossLinks from "@/components/ToolCrossLinks";
 
+/* 유형 그림 경로. 파일명은 유형 id와 같아서 유형이 늘어도 코드를 안 고친다.
+   **버전은 폴더 이름에 있다.** next/image 최적화 결과는 원본 URL을 키로 캐시되는데,
+   같은 경로에 다른 그림을 올리면 이미 페이지를 본 사람이 옛 그림을 계속 본다
+   (2026-09-08 정시 두 유형 그림을 맞바꾸고 실제로 겪었다).
+   ⚠️ 쿼리스트링(`?v=2`)으로는 못 뺀다 — **next/image는 로컬 src에 쿼리가 붙으면 400이다**(실측).
+   경로 자체가 달라져야 한다. 그림을 교체할 때마다 이 폴더 번호를 올리고 파일을 옮긴다. */
+const IMG_DIR = "/aiming/v2";
+const imgSrc = (id: string) => `${IMG_DIR}/${id}.png`;
+
+
 /* naeshin·career와 같은 접이식 상자 스타일. 도구끼리 생김새가 다르면 같은 사이트로 안 읽힌다. */
 const DETAILS_SUMMARY =
   "flex items-center gap-1.5 text-sm font-medium cursor-pointer list-none [&::-webkit-details-marker]:hidden";
@@ -412,7 +422,7 @@ function ResultView({
             ⚠️ 원본이 1200x1200이라 next/image로 리사이즈해 내보낸다 —
             원본을 그대로 서빙하다 트래픽 한도를 넘겨 서비스가 멈춘 적이 있다. */}
         <Image
-          src={`/aiming/${type.id}.png`}
+          src={imgSrc(type.id)}
           alt={type.name}
           width={200}
           height={200}
@@ -661,7 +671,7 @@ function OtherTypes({ current, floor }: { current: StrategyType; floor: number }
               >
                 <ChevronRight className={DETAILS_CHEVRON} aria-hidden />
                 <Image
-                  src={`/aiming/${t.id}.png`}
+                  src={imgSrc(t.id)}
                   alt=""
                   width={64}
                   height={64}

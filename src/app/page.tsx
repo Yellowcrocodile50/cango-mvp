@@ -10,17 +10,6 @@ import { supabase } from "@/lib/supabase";
 import { categoryGroups, getBreadcrumb, isFreeCategory } from "@/data/categories";
 import type { Material } from "@/types/material";
 
-/* 수시 원서 접수 시즌 종료일. 이 시각이 지나면 홈 배너 두 번째 자리가
-   지원 전략(/aiming) → 진로 탐구(/career)로 자동으로 되돌아간다.
-
-   📌 렌더 함수 안이 아니라 모듈 스코프에서 한 번만 잰다. 렌더 중 Date.now()를 부르면
-   같은 렌더가 매번 다른 값을 볼 수 있어 React가 불순 함수 호출로 막는다(lint 실측).
-
-   ⚠️ 수시 원서 접수가 9월 11일까지라 12일 0시(KST)에 내려간다. 마감 당일까지는 떠 있어야
-   해서 11일이 아니라 12일 0시로 잡았다. */
-const AIMING_SEASON_END = new Date("2026-09-12T00:00:00+09:00").getTime();
-const inAimingSeason = Date.now() < AIMING_SEASON_END;
-
 function ProductGrid() {
   const searchParams = useSearchParams();
   const category = searchParams.get("category");
@@ -81,51 +70,43 @@ function ProductGrid() {
           밀려나는데, 헤더 클릭의 61%가 자료 카테고리였다(도구는 23%) — 홈에 온 사람의
           다수는 자료를 찾으러 온 사람이다.
 
-          평소 순서는 내신 계산기가 먼저다(이벤트의 77%가 거기서 나온다). 다만 원서 접수
-          기간에는 조준 테스트를 맨 위로 올린다 — 그 며칠에만 쓸모가 있는 도구라
-          둘째 줄에 두면 시즌이 끝난 뒤에 발견된다.
+          🔻 2026-09-19 (사용자 지시): 내신 계산기 배너를 내리고 조준 테스트 + 진로 탐구
+          2개로 고정했다. 계산기는 배너 없이도 검색에서 `/naeshin`으로 직접 떨어지는 반면,
+          나머지 두 도구는 그만한 자력 유입이 없다. 배너 칸을 자력으로 못 버는 쪽에 준다.
+          (판단 근거가 된 실측 수치와 철거 전 기준선은 레포 밖 운영 메모에 있다.)
 
-          ⚠️ 마감이 지나면 조준 테스트가 내려가고 진로 탐구가 돌아온다. 접수가 끝났는데
-          "지금 6장을 정하세요" 배너가 남아 있으면 안 되기 때문이다.
-          날짜는 AIMING_SEASON_END 한 곳만 고치면 된다.
+          ⚠️ 기간 조건은 일부러 두지 않았다(사용자 결정). 예전엔 AIMING_SEASON_END로 수시
+          접수 마감(9/12 0시)에 맞춰 조준 테스트를 자동으로 내렸는데, 그 상수는 지웠고 이제
+          두 배너 다 상시다. 그래서 조준 테스트 첫 줄에서 시즌을 가리키던 "원서 접수 기간"을
+          "수시 6장 전략"으로 바꿨다 — 접수가 끝난 뒤에도 접수 중인 것처럼 읽히면 안 된다.
+
+          🚫 되돌릴 땐 날짜 상수를 되살리지 말고 이 주석부터 읽을 것. 자동 복귀는 실제로
+          코드대로 동작했지만(9/12 확인), "언제 내려갔는지"를 아무도 모르는 채로 지표가
+          바뀌어서 원인 분석이 한 번 꼬였다.
 
           문구는 갈아치우지 않고 누적한다(v3.5 때 정리한 원칙). */}
-      {inAimingSeason && (
-        <PromoBanner href="/aiming" tone="plum">
-          <span className="block md:inline">
-            🎯 원서 조준 테스트 <BannerPill>NEW</BannerPill>{" "}
-            <b className="font-semibold">원서 접수 기간</b>
-          </span>{" "}
-          {/* 유형이 나오는 테스트라는 걸 배너에서 먼저 알린다.
-              "전략은?"이라고 하면 계산기처럼 읽혀서, 무엇이 나오는지가 안 보인다. */}
-          <span className="block md:inline">
-            <b className="font-semibold">10가지 유형 중 내 원서 스타일은?</b> 1분이면 나와요{" "}
-            <span className="whitespace-nowrap">→</span>
-          </span>
-        </PromoBanner>
-      )}
-      <PromoBanner href="/naeshin" tone="green">
+      <PromoBanner href="/aiming" tone="plum">
         <span className="block md:inline">
-          🎓 내신 계산기 <BannerPill>무료</BannerPill>{" "}
-          <b className="font-semibold">화공·바이오·신소재·수학·물리·통계 추가!</b>
+          🎯 원서 조준 테스트 <BannerPill>NEW</BannerPill>{" "}
+          <b className="font-semibold">수시 6장 전략</b>
         </span>{" "}
+        {/* 유형이 나오는 테스트라는 걸 배너에서 먼저 알린다.
+            "전략은?"이라고 하면 계산기처럼 읽혀서, 무엇이 나오는지가 안 보인다. */}
         <span className="block md:inline">
-          가고 싶은 대학, <b className="font-semibold">몇 등급이 필요할까?</b>{" "}
+          <b className="font-semibold">10가지 유형 중 내 원서 스타일은?</b> 1분이면 나와요{" "}
           <span className="whitespace-nowrap">→</span>
         </span>
       </PromoBanner>
-      {!inAimingSeason && (
-        <PromoBanner href="/career" tone="blue">
-          <span className="block md:inline">
-            🧭 진로 탐구 <BannerPill>NEW</BannerPill>{" "}
-            <b className="font-semibold">학과 99개</b>
-          </span>{" "}
-          <span className="block md:inline">
-            내가 좋아하는 건 이런 건데, <b className="font-semibold">어떤 학과에 가면 좋을까?</b>{" "}
-            <span className="whitespace-nowrap">→</span>
-          </span>
-        </PromoBanner>
-      )}
+      <PromoBanner href="/career" tone="blue">
+        <span className="block md:inline">
+          🧭 진로 탐구 <BannerPill>NEW</BannerPill>{" "}
+          <b className="font-semibold">학과 99개</b>
+        </span>{" "}
+        <span className="block md:inline">
+          내가 좋아하는 건 이런 건데, <b className="font-semibold">어떤 학과에 가면 좋을까?</b>{" "}
+          <span className="whitespace-nowrap">→</span>
+        </span>
+      </PromoBanner>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       {supplierUserId && (
         <SupplierUploadSection

@@ -71,6 +71,12 @@ export const metadata: Metadata = {
     icon: "/icon.png",
     apple: "/icon.png",
   },
+  // 아이폰 "홈 화면에 추가" 시 아이콘 밑 이름. 없으면 <title>이 쓰여 "선배들이 만든…"으로 잘린다.
+  // capable은 기본값이 true라 명시적으로 끈다 — 켜면 주소창·뒤로가기 없는 전체화면으로 열린다.
+  appleWebApp: {
+    title: "Cango",
+    capable: false,
+  },
   ...(process.env.NAVER_SITE_VERIFICATION && {
     verification: {
       other: {

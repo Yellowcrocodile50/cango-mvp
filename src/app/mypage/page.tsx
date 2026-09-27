@@ -435,7 +435,7 @@ export default function MyPage() {
                     {naeshinDept ? (
                       <Link
                         href={`/naeshin?department=${encodeURIComponent(naeshinDept)}`}
-                        className="inline-flex items-center min-h-[36px] px-3 py-1.5 rounded-full bg-[#365927] text-white text-xs font-bold hover:bg-[#4a7a38] transition"
+                        className="inline-flex items-center min-h-[36px] px-3 py-1.5 rounded-full bg-[#b03a5b] text-white text-xs font-bold hover:bg-[#c2415f] transition"
                       >
                         등급컷 보러 가기 →
                       </Link>

@@ -84,7 +84,22 @@ function ProductGrid() {
           코드대로 동작했지만(9/12 확인), "언제 내려갔는지"를 아무도 모르는 채로 지표가
           바뀌어서 원인 분석이 한 번 꼬였다.
 
-          문구는 갈아치우지 않고 누적한다(v3.5 때 정리한 원칙). */}
+          문구는 갈아치우지 않고 누적한다(v3.5 때 정리한 원칙).
+
+          🔁 2026-09-27 (사용자 지시): 진로 탐구 배너를 내리고 내신 계산기 v5.0 배너를 다시
+          올렸다(조준 테스트 + 계산기 2개). 9/19에 계산기를 내린 이유(검색 자력 유입)는
+          그대로지만, v5.0에 요청 많던 학과 7개가 들어와서 이미 온 사람에게 알리는 칸으로 쓴다.
+          진로 탐구의 NEW 딱지도 이때 같이 뗐다. */}
+      <PromoBanner href="/naeshin" tone="green">
+        <span className="block md:inline">
+          🎓 내신 계산기 <BannerPill>v5.0</BannerPill>{" "}
+          <b className="font-semibold">경제·통상·사범대·사회복지·광고홍보 추가!</b>
+        </span>{" "}
+        <span className="block md:inline">
+          가고 싶은 대학, <b className="font-semibold">몇 등급이 필요할까?</b>{" "}
+          <span className="whitespace-nowrap">→</span>
+        </span>
+      </PromoBanner>
       <PromoBanner href="/aiming" tone="plum">
         <span className="block md:inline">
           🎯 원서 조준 테스트 <BannerPill>NEW</BannerPill>{" "}
@@ -94,16 +109,6 @@ function ProductGrid() {
             "전략은?"이라고 하면 계산기처럼 읽혀서, 무엇이 나오는지가 안 보인다. */}
         <span className="block md:inline">
           <b className="font-semibold">10가지 유형 중 내 원서 스타일은?</b> 1분이면 나와요{" "}
-          <span className="whitespace-nowrap">→</span>
-        </span>
-      </PromoBanner>
-      <PromoBanner href="/career" tone="blue">
-        <span className="block md:inline">
-          🧭 진로 탐구 <BannerPill>NEW</BannerPill>{" "}
-          <b className="font-semibold">학과 99개</b>
-        </span>{" "}
-        <span className="block md:inline">
-          내가 좋아하는 건 이런 건데, <b className="font-semibold">어떤 학과에 가면 좋을까?</b>{" "}
           <span className="whitespace-nowrap">→</span>
         </span>
       </PromoBanner>

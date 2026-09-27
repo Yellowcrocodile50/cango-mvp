@@ -9,7 +9,10 @@ import { createClient } from "@supabase/supabase-js";
  * 노출됐다. 변환과 로그인을 모두 서버에서 처리해 이메일이 클라이언트로 나가지 않게 한다.
  */
 export async function POST(req: NextRequest) {
-  const { userid, password } = await req.json();
+  const { userid: rawUserid, password } = await req.json();
+  // 아이디는 가입 시 영문 소문자·숫자만 허용된다. 아이폰은 첫 글자를 대문자로 바꾸고
+  // 자동완성은 뒤에 공백을 붙여서, 비밀번호가 맞아도 401이 나던 걸 여기서 맞춘다.
+  const userid = typeof rawUserid === "string" ? rawUserid.trim().toLowerCase() : rawUserid;
 
   if (!userid || !password) {
     return NextResponse.json({ error: "아이디와 비밀번호를 입력해주세요." }, { status: 400 });

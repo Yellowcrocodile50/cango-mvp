@@ -81,6 +81,10 @@ function LoginForm() {
           <label className="block text-sm font-medium mb-1 text-[#365927]">아이디</label>
           <input
             type="text"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            autoComplete="username"
             value={identifier}
             onChange={(e) => { e.target.setCustomValidity(""); setIdentifier(e.target.value); }}
             onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("아이디를 입력해주세요.")}

@@ -56,6 +56,14 @@ export const NAESHIN_DEPARTMENTS = [
   "수학과",
   "물리학과",
   "통계학과",
+  // v5.0 상경·사범·사회 확충 (2026-09-27)
+  "경제학과",
+  "국제통상·무역학과",
+  "수학교육과",
+  "역사교육과",
+  "유아교육과",
+  "사회복지학과",
+  "광고홍보학과",
 ] as const;
 
 export type NaeshinDepartment = (typeof NAESHIN_DEPARTMENTS)[number];

@@ -28,10 +28,10 @@ const TRACKS: { label: string; departments: NaeshinDepartment[] }[] = [
   { label: "공대", departments: ["컴퓨터공학과", "전자전기공학과", "기계공학과", "화학공학과", "생명공학과", "신소재공학과"] },
   { label: "건축", departments: ["건축계열"] },
   { label: "자연", departments: ["화학과", "생명과학과", "수학과", "물리학과", "통계학과"] },
-  { label: "상경", departments: ["경영학과"] },
-  { label: "사회", departments: ["미디어커뮤니케이션학과", "정치외교학과", "심리학과", "행정학과"] },
+  { label: "상경", departments: ["경영학과", "경제학과", "국제통상·무역학과"] },
+  { label: "사회", departments: ["미디어커뮤니케이션학과", "광고홍보학과", "정치외교학과", "심리학과", "행정학과", "사회복지학과"] },
   { label: "법학", departments: ["법학과"] },
-  { label: "사범대", departments: ["교육학과", "국어교육과", "영어교육과", "사회·윤리교육과"] },
+  { label: "사범대", departments: ["교육학과", "국어교육과", "영어교육과", "수학교육과", "역사교육과", "사회·윤리교육과", "유아교육과"] },
   { label: "인문/어문", departments: ["국어국문학과", "영어영문학과", "중어중문학과", "일어일문학과"] },
 ];
 
@@ -446,6 +446,17 @@ export default function NaeshinClient({
         >
           결과 보기
         </button>
+
+        {/* 등급컷(과거 결과)과 지원할 해의 모집단위(2027)가 어긋날 수 있다는 안내.
+            2026-09-27 사용자 지시로 결과 보기 바로 아래에 둔다. 컷은 지난 입시 결과일 수밖에
+            없지만, 모집단위 통합·명칭 변경은 올해 모집요강을 따라야 한다
+            (실측: 전남대 여수 글로벌비즈니스학부는 2027 전형이 0건으로 조회됐다).
+            접어두지 않는다 — 결과를 보기 전에 읽혀야 하는 한 줄이다. */}
+        <p className="mt-3 rounded-lg border border-[#e6ece4] bg-[#f7faf6] px-3 py-2.5 text-xs text-[#5a7d50] leading-relaxed break-keep">
+          📌 등급컷은 <b className="font-semibold text-[#365927]">2026학년도 입시 결과</b>예요.
+          2027학년도에는 학과가 합쳐지거나 이름이 바뀐 곳도 있을 수 있어서, 원서를 쓰기 전에
+          그 대학 2027 모집요강을 한 번 같이 보시면 좋아요.
+        </p>
       </div>
 
       {results && (
@@ -531,7 +542,7 @@ export default function NaeshinClient({
         <details className={`group ${DETAILS_BOX_INFO}`}>
           <summary className={`${DETAILS_SUMMARY} text-[#3a5a8f]`}>
             <ChevronRight className={DETAILS_CHEVRON} aria-hidden />
-            업데이트 내역 (v4.0)
+            업데이트 내역 (v5.0)
           </summary>
           <div className="mt-3 space-y-1.5 text-sm text-[#3a5a8f] leading-relaxed">
             <p>계열 2개가 새로 생겼어요.</p>
@@ -548,6 +559,11 @@ export default function NaeshinClient({
               <b className="font-semibold">이공계를 크게 넓혔어요</b> 공대에 화학공학·생명공학·신소재공학,
               자연에 수학·물리학·통계학을 더했어요. 학과 6개가 한 번에 들어왔어요.
             </p>
+            <p>
+              <b className="font-semibold">상경·사범·사회를 넓혔어요</b> 상경에 경제학과·국제통상·무역학과,
+              사범대에 수학교육과·역사교육과·유아교육과, 사회에 사회복지학과·광고홍보학과를 더했어요.
+              광고홍보학과는 미디어커뮤니케이션학과와 따로 볼 수 있어요.
+            </p>
           </div>
         </details>
       </div>
@@ -559,7 +575,7 @@ export default function NaeshinClient({
               누적 이력은 위 '업데이트 내역'이 맡는다(2026-08-21 사용자 결정).
               학과명은 숫자로 뭉뚱그리지 않고 그대로 밝힌다 — 학생이 자기가 찾는
               학과가 그 안에 있는지 확인할 수 있어야 한다. */}
-          이번에 화학공학·생명공학·신소재공학·수학·물리학·통계학을 새로 넣었어요.{" "}
+          이번에 경제학과·국제통상·무역학과, 수학교육과·역사교육과·유아교육과, 사회복지학과·광고홍보학과를 새로 넣었어요.{" "}
           <br className="sm:hidden" />
           아직 없는 학교나 학과를 알려주시면 다음 업데이트 때 반영할게요.
         </p>

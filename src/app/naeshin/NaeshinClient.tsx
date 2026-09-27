@@ -454,7 +454,10 @@ export default function NaeshinClient({
             접어두지 않는다 — 결과를 보기 전에 읽혀야 하는 한 줄이다. */}
         <p className="mt-3 rounded-lg border border-[#e6ece4] bg-[#f7faf6] px-3 py-2.5 text-xs text-[#5a7d50] leading-relaxed break-keep">
           📌 등급컷은 <b className="font-semibold text-[#365927]">2026학년도 입시 결과</b>예요.
-          2027학년도에는 학과가 합쳐지거나 이름이 바뀐 곳도 있을 수 있어서, 원서를 쓰기 전에
+          2027학년도에는 학과가 합쳐지거나 이름이 바뀐 곳도 있을 수 있어서,
+          <br />
+          원서를 쓰기 전에
+          <br className="sm:hidden" />{" "}
           그 대학 2027 모집요강을 한 번 같이 보시면 좋아요.
         </p>
       </div>

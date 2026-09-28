@@ -139,7 +139,23 @@ export default function OrdersPage() {
     return arr;
   }, [orders, sortKey, sortDir]);
 
-  const pager = usePagination(sortedOrders);
+  // 유료 구매와 무료 다운로드는 처리할 일이 전혀 다르다(입금·발송 vs 없음). 따로 볼 수 있게 나눈다.
+  type KindFilter = "all" | "paid" | "free";
+  const [kindFilter, setKindFilter] = useState<KindFilter>("all");
+  const kindCounts = useMemo(() => {
+    let free = 0;
+    for (const o of orders) if (isFreeCategory(o.material_category)) free += 1;
+    return { all: orders.length, paid: orders.length - free, free };
+  }, [orders]);
+  const filteredOrders = useMemo(
+    () =>
+      kindFilter === "all"
+        ? sortedOrders
+        : sortedOrders.filter((o) => isFreeCategory(o.material_category) === (kindFilter === "free")),
+    [sortedOrders, kindFilter]
+  );
+
+  const pager = usePagination(filteredOrders);
 
   function toggleSort(key: SortKey) {
     pager.reset();
@@ -359,14 +375,38 @@ export default function OrdersPage() {
       )}
 
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">전체 주문 목록</CardTitle>
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
+          <CardTitle className="text-lg">주문 목록</CardTitle>
+          <div className="inline-flex rounded-md border border-[#d6e4d3] overflow-hidden">
+            {([
+              { v: "all", label: "전체" },
+              { v: "paid", label: "유료 구매" },
+              { v: "free", label: "무료 다운로드" },
+            ] as const).map((opt) => (
+              <button
+                key={opt.v}
+                onClick={() => { setKindFilter(opt.v); pager.reset(); }}
+                aria-pressed={kindFilter === opt.v}
+                className={`px-3 py-1.5 text-xs font-medium transition cursor-pointer ${
+                  kindFilter === opt.v
+                    ? "bg-[#365927] text-white"
+                    : "bg-white text-[#5a7d50] hover:bg-[#eef5ec]"
+                }`}
+              >
+                {opt.label} {kindCounts[opt.v].toLocaleString()}
+              </button>
+            ))}
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
             <p className="text-sm text-muted-foreground py-8 text-center">로딩 중...</p>
           ) : orders.length === 0 ? (
             <p className="text-sm text-muted-foreground py-8 text-center">아직 주문이 없습니다.</p>
+          ) : filteredOrders.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-8 text-center">
+              {kindFilter === "free" ? "무료 다운로드 내역이 없습니다." : "유료 구매 내역이 없습니다."}
+            </p>
           ) : (
             <>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mb-3 text-xs text-muted-foreground">

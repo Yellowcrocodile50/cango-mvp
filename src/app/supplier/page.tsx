@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { fetchAllRows } from "@/lib/fetchAllRows";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, ShoppingCart, Clock, Download, RefreshCw, ChevronRight } from "lucide-react";
 import { isFreeCategory } from "@/data/categories";
@@ -50,10 +51,15 @@ export default function SupplierDashboard() {
       return;
     }
 
-    const { data: orderRows } = await supabase
-      .from("orders")
-      .select("payment_status, is_sent, amount, payment_method, material_id, order_id")
-      .in("material_id", materialIds);
+    // 1000행 상한 — 넘으면 발송 대기·매출이 조용히 줄어든다
+    const { data: orderRows } = await fetchAllRows((from, to) =>
+      supabase
+        .from("orders")
+        .select("payment_status, is_sent, amount, payment_method, material_id, order_id")
+        .in("material_id", materialIds)
+        .order("id")
+        .range(from, to)
+    );
 
     // 단일 패스로 통계 집계 (유료 결제 / 무료 다운로드 분리)
     let paidCount = 0;

@@ -12,10 +12,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Send, CheckCircle, RefreshCw, Receipt, ChevronLeft, ChevronRight } from "lucide-react";
+import { Send, CheckCircle, RefreshCw, Receipt } from "lucide-react";
 import { toast } from "sonner";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { isFreeCategory, getCategoryLabel } from "@/data/categories";
+import { fetchAllRows } from "@/lib/fetchAllRows";
+import { TablePagination, usePagination } from "@/components/supplier/TablePagination";
 
 interface Order {
   id: string;
@@ -43,9 +45,8 @@ interface Order {
   email_error: string | null;
 }
 
-const FETCH_CHUNK = 1000; // Supabase API 한 번 응답의 최대 행 수
+// 구매자 id를 .in()에 한 번에 넣으면 URL이 길어져 Bad Request가 난다(수백 개에서 실측)
 const PROFILE_CHUNK = 200;
-const PAGE_SIZES = [50, 100, 200] as const;
 
 function formatDownloadTime(iso: string): string {
   const d = new Date(iso);
@@ -138,36 +139,10 @@ export default function OrdersPage() {
     return arr;
   }, [orders, sortKey, sortDir]);
 
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState<number>(PAGE_SIZES[0]);
-  const totalPages = Math.max(1, Math.ceil(sortedOrders.length / pageSize));
-  // 새로고침으로 건수가 줄어도 빈 페이지에 머물지 않게
-  const currentPage = Math.min(page, totalPages);
-  const pageStart = (currentPage - 1) * pageSize;
-  const pagedOrders = sortedOrders.slice(pageStart, pageStart + pageSize);
-
-  // 현재 페이지 주변 번호만 보여준다: 1 … 4 5 [6] 7 8 … 37
-  const pageNumbers = useMemo(() => {
-    const nums = new Set([1, totalPages]);
-    for (let p = currentPage - 2; p <= currentPage + 2; p++) {
-      if (p >= 1 && p <= totalPages) nums.add(p);
-    }
-    const sorted = [...nums].sort((a, b) => a - b);
-    const out: (number | "gap")[] = [];
-    sorted.forEach((p, i) => {
-      if (i > 0 && p - sorted[i - 1] > 1) out.push("gap");
-      out.push(p);
-    });
-    return out;
-  }, [currentPage, totalPages]);
-
-  function goToPage(p: number) {
-    setPage(Math.min(Math.max(1, p), totalPages));
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
+  const pager = usePagination(sortedOrders);
 
   function toggleSort(key: SortKey) {
-    setPage(1);
+    pager.reset();
     if (sortKey === key) {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     } else {
@@ -200,30 +175,21 @@ export default function OrdersPage() {
       return;
     }
 
-    /* Supabase는 한 번에 최대 1000행만 돌려준다(초과분은 에러 없이 잘림).
-       주문이 1000건을 넘자 오래된 주문이 목록에서 사라져 처리할 수 없었다 —
-       다 받을 때까지 1000건씩 끊어서 가져온다. 상태 정렬·대기 건수 배너·묶음 합계가
+    /* 1000건씩 끊어서 전부 받는다. 상태 정렬·대기 건수 배너·묶음 합계가
        전체 주문을 기준으로 해야 하므로, 페이지 나누기는 서버가 아니라 화면에서 한다. */
-    const orderList = [];
-    for (let from = 0; ; from += FETCH_CHUNK) {
-      const { data: chunk, error } = await supabase
+    const { data: orderList, error: ordersError } = await fetchAllRows((from, to) =>
+      supabase
         .from("orders")
         .select("id, order_id, depositor_name, buyer_id, buyer_email, buyer_phone, amount, payment_status, payment_method, is_sent, created_at, first_downloaded_at, material_id, cash_receipt_requested, cash_receipt_phone, cash_receipt_issued, email_status, email_error")
         .in("material_id", materialIds)
         .order("created_at", { ascending: false })
-        .order("id", { ascending: true }) // 같은 시각 주문이 청크 경계에서 중복·누락되지 않도록
-        .range(from, from + FETCH_CHUNK - 1);
-      if (error) {
-        toast.error("주문 목록을 끝까지 불러오지 못했습니다. 새로고침해주세요.");
-        break;
-      }
-      orderList.push(...(chunk ?? []));
-      if (!chunk || chunk.length < FETCH_CHUNK) break;
-    }
+        .order("id", { ascending: true })
+        .range(from, to)
+    );
+    if (ordersError) toast.error("주문 목록을 끝까지 불러오지 못했습니다. 새로고침해주세요.");
 
     const buyerIds = [...new Set(orderList.map((o) => o.buyer_id).filter((id): id is string => id !== null))];
 
-    // 구매자 id도 1000개 상한 + URL 길이 제한에 걸리므로 나눠서 조회한다
     const profiles: { id: string; userid: string | null; user_type: string | null; grade: string | null }[] = [];
     for (let i = 0; i < buyerIds.length; i += PROFILE_CHUNK) {
       const { data } = await supabase
@@ -452,7 +418,7 @@ export default function OrdersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {pagedOrders.map((order) => {
+                {pager.pageItems.map((order) => {
                   const isFree = isFreeCategory(order.material_category);
                   const isGuest = order.buyer_id === null;
                   const group = order.order_id ? orderGroups.get(order.order_id) : undefined;
@@ -591,48 +557,7 @@ export default function OrdersPage() {
                 })}
               </TableBody>
             </Table>
-            <div className="flex flex-wrap items-center justify-between gap-3 mt-4 text-sm">
-              <span className="text-muted-foreground">
-                전체 {sortedOrders.length.toLocaleString()}건 중{" "}
-                {(pageStart + 1).toLocaleString()}–{Math.min(pageStart + pageSize, sortedOrders.length).toLocaleString()}
-              </span>
-              <div className="flex items-center gap-1">
-                <Button size="sm" variant="outline" disabled={currentPage === 1} onClick={() => goToPage(currentPage - 1)} aria-label="이전 페이지">
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                {pageNumbers.map((p, i) =>
-                  p === "gap" ? (
-                    <span key={`gap-${i}`} className="px-1 text-muted-foreground">…</span>
-                  ) : (
-                    <Button
-                      key={p}
-                      size="sm"
-                      variant={p === currentPage ? "default" : "outline"}
-                      onClick={() => goToPage(p)}
-                      className={p === currentPage ? "bg-[#365927] hover:bg-[#4a7a38] min-w-8" : "min-w-8"}
-                      aria-current={p === currentPage ? "page" : undefined}
-                    >
-                      {p}
-                    </Button>
-                  )
-                )}
-                <Button size="sm" variant="outline" disabled={currentPage === totalPages} onClick={() => goToPage(currentPage + 1)} aria-label="다음 페이지">
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-              <label className="flex items-center gap-2 text-muted-foreground">
-                페이지당
-                <select
-                  value={pageSize}
-                  onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
-                  className="border rounded-md px-2 py-1 text-sm bg-white"
-                >
-                  {PAGE_SIZES.map((s) => (
-                    <option key={s} value={s}>{s}건</option>
-                  ))}
-                </select>
-              </label>
-            </div>
+            <TablePagination {...pager.props} />
             </>
           )}
         </CardContent>

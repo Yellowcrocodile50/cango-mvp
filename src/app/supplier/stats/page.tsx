@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { fetchAllRows } from "@/lib/fetchAllRows";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { isFreeCategory } from "@/data/categories";
 import { PAID_OR_FILTER } from "@/lib/depositConfirmedOrders";
@@ -142,6 +143,8 @@ export default function StatsPage() {
   // orders는 materials 로드 후 + 날짜 변경 시 조회
   useEffect(() => {
     if (materialIds === null) return;
+    // 여러 번 나눠 받는 동안 날짜를 또 바꾸면, 늦게 끝난 이전 기간 결과가 덮어쓰지 않게
+    let stale = false;
 
     (async () => {
       setLoading(true);
@@ -155,17 +158,24 @@ export default function StatsPage() {
       const startISO = new Date(`${startDate}T00:00:00+09:00`).toISOString();
       const endISO = new Date(`${endDate}T23:59:59+09:00`).toISOString();
 
-      const { data: rawOrders } = await supabase
-        .from("orders")
-        .select("amount, created_at, material_id, buyer_id")
-        .in("material_id", materialIds)
-        .or(PAID_OR_FILTER)
-        .gte("created_at", startISO)
-        .lte("created_at", endISO);
+      // 1000행 상한 — 넘으면 기간 매출·건수가 조용히 줄어든다
+      const { data: rawOrders } = await fetchAllRows((from, to) =>
+        supabase
+          .from("orders")
+          .select("amount, created_at, material_id, buyer_id")
+          .in("material_id", materialIds)
+          .or(PAID_OR_FILTER)
+          .gte("created_at", startISO)
+          .lte("created_at", endISO)
+          .order("id")
+          .range(from, to)
+      );
 
-      setOrders(rawOrders ?? []);
+      if (stale) return;
+      setOrders(rawOrders);
       setLoading(false);
     })();
+    return () => { stale = true; };
   }, [materialIds, startDate, endDate]);
 
   const dailyData: DailyEntry[] = useMemo(() => {

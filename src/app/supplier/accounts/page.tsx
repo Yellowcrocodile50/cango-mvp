@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { fetchAllRows } from "@/lib/fetchAllRows";
+import { TablePagination, usePagination } from "@/components/supplier/TablePagination";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -44,19 +46,28 @@ export default function AccountsPage() {
 
   const fetchData = useCallback(async () => {
     const [profilesResult, guestOrdersResult] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select("id, userid, email, user_type, grade, phone, marketing_agreed, created_at")
-        .eq("role", "buyer")
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("orders")
-        .select("buyer_email, buyer_phone, marketing_agreed, created_at")
-        .is("buyer_id", null)
-        .order("created_at", { ascending: false }),
+      // 1000행 상한 — 넘으면 넘친 만큼의 회원이 조용히 빠진다
+      fetchAllRows((from, to) =>
+        supabase
+          .from("profiles")
+          .select("id, userid, email, user_type, grade, phone, marketing_agreed, created_at")
+          .eq("role", "buyer")
+          .order("created_at", { ascending: false })
+          .order("id")
+          .range(from, to)
+      ),
+      fetchAllRows((from, to) =>
+        supabase
+          .from("orders")
+          .select("buyer_email, buyer_phone, marketing_agreed, created_at")
+          .is("buyer_id", null)
+          .order("created_at", { ascending: false })
+          .order("id")
+          .range(from, to)
+      ),
     ]);
 
-    const members: AccountRow[] = (profilesResult.data ?? []).map((p) => ({
+    const members: AccountRow[] = profilesResult.data.map((p) => ({
       kind: "member",
       key: `m-${p.id}`,
       userid: p.userid,
@@ -70,7 +81,7 @@ export default function AccountsPage() {
 
     // 비로그인 구매자: 이메일 기준 중복 제거(가장 최근 주문, 동의 이력 있으면 동의 유지)
     const emailMap = new Map<string, AccountRow>();
-    for (const o of guestOrdersResult.data ?? []) {
+    for (const o of guestOrdersResult.data) {
       if (!o.buyer_email) continue;
       const existing = emailMap.get(o.buyer_email);
       if (!existing) {
@@ -118,6 +129,8 @@ export default function AccountsPage() {
     return arr;
   }, [rows, kindFilter, agreedOnly, gradeFilter, sortDir]);
 
+  const pager = usePagination(visibleRows);
+
   // 학년 필터는 비로그인 구매자에겐 학년 정보가 없어 의미가 없음
   const gradeDisabled = kindFilter === "guest";
 
@@ -147,7 +160,7 @@ export default function AccountsPage() {
               ] as const).map((opt) => (
                 <button
                   key={opt.v}
-                  onClick={() => setKindFilter(opt.v)}
+                  onClick={() => { setKindFilter(opt.v); pager.reset(); }}
                   className={`px-3 py-1.5 text-xs font-medium transition ${
                     kindFilter === opt.v
                       ? "bg-[#365927] text-white"
@@ -161,7 +174,7 @@ export default function AccountsPage() {
 
             {/* 마케팅 동의만 보기 */}
             <button
-              onClick={() => setAgreedOnly((v) => !v)}
+              onClick={() => { setAgreedOnly((v) => !v); pager.reset(); }}
               className={`px-3 py-1.5 rounded-md text-xs font-medium border transition ${
                 agreedOnly
                   ? "bg-green-600 text-white border-green-600"
@@ -174,7 +187,7 @@ export default function AccountsPage() {
             {/* 학년 필터 */}
             <select
               value={gradeFilter}
-              onChange={(e) => setGradeFilter(e.target.value)}
+              onChange={(e) => { setGradeFilter(e.target.value); pager.reset(); }}
               disabled={gradeDisabled}
               className="h-8 px-2 rounded-md border border-[#d6e4d3] bg-white text-xs text-[#5a7d50] focus:outline-none focus:ring-2 focus:ring-[#365927] disabled:opacity-50"
             >
@@ -188,7 +201,7 @@ export default function AccountsPage() {
 
             {/* 날짜 정렬 */}
             <button
-              onClick={() => setSortDir((d) => (d === "desc" ? "asc" : "desc"))}
+              onClick={() => { setSortDir((d) => (d === "desc" ? "asc" : "desc")); pager.reset(); }}
               className="px-3 py-1.5 rounded-md text-xs font-medium border border-[#d6e4d3] bg-white text-[#5a7d50] hover:bg-[#eef5ec] transition"
             >
               가입/구매 시기순 {sortDir === "desc" ? "최신순 ▼" : "오래된순 ▲"}
@@ -204,6 +217,7 @@ export default function AccountsPage() {
               조건에 맞는 계정이 없습니다.
             </p>
           ) : (
+            <>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -218,7 +232,7 @@ export default function AccountsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {visibleRows.map((r) => (
+                {pager.pageItems.map((r) => (
                   <TableRow
                     key={r.key}
                     className={
@@ -274,6 +288,8 @@ export default function AccountsPage() {
                 ))}
               </TableBody>
             </Table>
+            <TablePagination {...pager.props} />
+            </>
           )}
         </CardContent>
       </Card>

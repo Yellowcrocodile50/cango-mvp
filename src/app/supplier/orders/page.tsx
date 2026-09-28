@@ -465,7 +465,10 @@ function OrdersPageInner() {
           <span className="text-red-700 font-semibold">
             📮 이메일 반송 {bouncedCount}건
           </span>
-          <span className="text-red-600">받는 주소가 없거나 잘못된 건입니다. 사유를 확인하고 주소를 정정한 뒤 다시 보내주세요.</span>
+          <span className="text-red-600">
+            <span className="block sm:inline">받는 주소가 없거나 잘못된 건입니다.</span>{" "}
+            <span className="block sm:inline">사유를 확인하고 주소를 정정한 뒤 다시 보내주세요.</span>
+          </span>
         </div>
       )}
 
@@ -474,7 +477,10 @@ function OrdersPageInner() {
           <span className="text-blue-600 font-semibold">
             💰 입금 확인 대기 {bankPendingCount}건
           </span>
-          <span className="text-blue-500">카카오뱅크 3333-23-1624402 입금 확인 후 아래에서 승인해주세요.</span>
+          <span className="text-blue-500">
+            <span className="block sm:inline">카카오뱅크 3333-23-1624402</span>{" "}
+            <span className="block sm:inline">입금 확인 후 아래에서 승인해주세요.</span>
+          </span>
         </div>
       )}
 
@@ -483,7 +489,10 @@ function OrdersPageInner() {
           <span className="text-emerald-700 font-semibold">
             🧾 현금영수증 발행 대기 {cashReceiptPendingCount}건
           </span>
-          <span className="text-emerald-600">입금 확인된 주문 중 현금영수증 신청 건입니다. 홈택스에서 발행해주세요.</span>
+          <span className="text-emerald-600">
+            <span className="block sm:inline">입금 확인된 주문 중 현금영수증 신청 건입니다.</span>{" "}
+            <span className="block sm:inline">홈택스에서 발행해주세요.</span>
+          </span>
         </div>
       )}
 

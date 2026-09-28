@@ -339,6 +339,112 @@ function OrdersPageInner() {
     toast.success("현금영수증 발행 완료로 표시했습니다.");
   }
 
+  /* 표(PC)와 카드(모바일)가 같은 상태·버튼을 쓴다 — 한쪽만 고치다 어긋나지 않게 한 곳에 둔다. */
+  // 비로그인(노랑) > 입금 대기(파랑, 로그인만) > 무료(초록) > 유료(기본)
+  function rowTone(order: Order) {
+    if (order.buyer_id === null) return "bg-yellow-100/70";
+    if (order.payment_method === "bank_transfer" && order.payment_status === "pending") return "bg-blue-50/60";
+    if (isFreeCategory(order.material_category)) return "bg-emerald-50/60";
+    return "";
+  }
+
+  function renderCashReceipt(order: Order) {
+    return (
+      <>
+        {order.cash_receipt_requested && (
+          <div>
+            {order.cash_receipt_issued ? (
+              <span className="inline-block text-xs font-medium text-[#8aab82] bg-[#f5f9f4] border border-[#d6e4d3] px-2 py-0.5 rounded-md whitespace-nowrap">
+                🧾 현금영수증 발행완료
+              </span>
+            ) : (
+              <span className="inline-block text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md whitespace-nowrap">
+                🧾 현금영수증 {order.cash_receipt_phone || "번호 미입력"}
+              </span>
+            )}
+          </div>
+        )}
+      </>
+    );
+  }
+
+  function renderStatus(order: Order, withCashReceipt = true) {
+    const isFree = isFreeCategory(order.material_category);
+    return (
+      <div className="space-y-1">
+        {isFree ? (
+          order.first_downloaded_at ? (
+            <span className="inline-block text-xs font-medium text-[#365927] bg-[#eaf2e8] px-2 py-1 rounded-md whitespace-nowrap">
+              다운로드 {formatDownloadTime(order.first_downloaded_at)}
+            </span>
+          ) : (
+            <span className="inline-block text-xs text-[#8aab82] bg-[#f5f9f4] px-2 py-1 rounded-md whitespace-nowrap">
+              미다운로드
+            </span>
+          )
+        ) : (
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <OrderStatusBadge is_sent={order.is_sent} payment_status={order.payment_status} payment_method={order.payment_method} email_status={order.email_status} />
+              {order.payment_method === "bank_transfer" && order.payment_status === "done" && (
+                <span className="text-xs text-[#8aab82] whitespace-nowrap">
+                  입금완료 {formatDownloadTime(order.created_at)}
+                </span>
+              )}
+            </div>
+            {order.email_status === "bounced" && order.email_error && (
+              <p className="text-xs text-red-600 max-w-[22rem] leading-snug">
+                {order.email_error}
+              </p>
+            )}
+          </div>
+        )}
+        {withCashReceipt && renderCashReceipt(order)}
+      </div>
+    );
+  }
+
+  function renderActions(order: Order, mobile = false) {
+    const isFree = isFreeCategory(order.material_category);
+    // 모바일은 손가락으로 누르니 버튼을 카드 폭만큼 넓고 높게
+    const btn = mobile ? "flex-1 h-10" : "";
+    return (
+      <div className={mobile ? "flex gap-2" : "flex justify-end gap-2"}>
+        {!isFree && order.payment_method === "bank_transfer" && order.payment_status === "pending" && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => confirmBankTransfer(order)}
+            className={`border-[#365927] text-[#365927] hover:bg-[#eaf2e8] ${btn}`}
+          >
+            <CheckCircle className="mr-1 h-3 w-3" />
+            입금확인
+          </Button>
+        )}
+        {!isFree && order.payment_status === "done" && !order.is_sent && (
+          <Button
+            size="sm"
+            onClick={() => markAsSent(order)}
+            className={`bg-[#365927] hover:bg-[#4a7a38] ${btn}`}
+          >
+            <Send className="mr-1 h-3 w-3" />
+            발송완료
+          </Button>
+        )}
+        {order.cash_receipt_requested && order.payment_status === "done" && !order.cash_receipt_issued && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => markCashReceiptIssued(order)}
+            className={`border-emerald-600 text-emerald-700 hover:bg-emerald-50 ${btn}`}
+          >
+            <Receipt className="mr-1 h-3 w-3" />
+            영수증발행
+          </Button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -355,7 +461,7 @@ function OrdersPageInner() {
       </div>
 
       {bouncedCount > 0 && (
-        <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm">
           <span className="text-red-700 font-semibold">
             📮 이메일 반송 {bouncedCount}건
           </span>
@@ -364,7 +470,7 @@ function OrdersPageInner() {
       )}
 
       {bankPendingCount > 0 && (
-        <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm">
           <span className="text-blue-600 font-semibold">
             💰 입금 확인 대기 {bankPendingCount}건
           </span>
@@ -373,7 +479,7 @@ function OrdersPageInner() {
       )}
 
       {cashReceiptPendingCount > 0 && (
-        <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 text-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 text-sm">
           <span className="text-emerald-700 font-semibold">
             🧾 현금영수증 발행 대기 {cashReceiptPendingCount}건
           </span>
@@ -434,6 +540,76 @@ function OrdersPageInner() {
                 입금 확인 대기
               </span>
             </div>
+            {/* 모바일: 표 헤더(정렬)가 안 보이므로 정렬은 선택 상자로 */}
+            <div className="md:hidden mb-3">
+              <select
+                value={`${sortKey}-${sortDir}`}
+                onChange={(e) => {
+                  const [k, d] = e.target.value.split("-") as [SortKey, "asc" | "desc"];
+                  setSortKey(k);
+                  setSortDir(d);
+                  pager.reset();
+                }}
+                aria-label="정렬"
+                className="w-full border rounded-md px-3 py-2 text-sm bg-white"
+              >
+                <option value="status-asc">처리 필요 먼저</option>
+                <option value="created_at-desc">최신순</option>
+                <option value="created_at-asc">오래된순</option>
+                <option value="amount-desc">금액 높은순</option>
+              </select>
+            </div>
+
+            {/* 모바일: 주문 한 건 = 카드 한 장. 처리에 필요한 것(상태·금액·입금자·이메일·버튼)을 위로,
+                문제가 생겼을 때만 보는 것(아이디·전화번호·현금영수증 등)은 아래 작은 글씨로 */}
+            <div className="md:hidden space-y-3">
+              {pager.pageItems.map((order) => {
+                const isFree = isFreeCategory(order.material_category);
+                const group = order.order_id ? orderGroups.get(order.order_id) : undefined;
+                const tone = rowTone(order);
+                return (
+                  <div key={order.id} className={`rounded-lg border p-3 space-y-2 ${tone || "bg-white"}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-medium text-sm leading-snug break-keep">{order.material_title}</p>
+                      <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0 pt-0.5">
+                        {formatDownloadTime(order.created_at)}
+                      </span>
+                    </div>
+                    {renderStatus(order, false)}
+                    <div className="text-sm">
+                      <span className="font-semibold text-[#365927]">
+                        {isFree ? "무료" : `${order.amount.toLocaleString()}원`}
+                      </span>
+                      {group && group.count > 1 && (
+                        <span className="text-xs text-[#365927]"> · 묶음 {group.count}건 합계 {group.total.toLocaleString()}원</span>
+                      )}
+                    </div>
+                    {order.payment_method === "bank_transfer" && (
+                      <p className="text-sm">
+                        {order.depositor_name
+                          ? <span className="text-blue-600">입금자: {order.depositor_name}</span>
+                          : <span className="text-[#8aab82]">입금자명 미입력</span>}
+                      </p>
+                    )}
+                    <p className="text-sm break-all">{order.buyer_email}</p>
+                    {renderActions(order, true)}
+                    <div className="pt-2 border-t border-black/5 text-xs text-muted-foreground space-y-1">
+                      <p>
+                        {[
+                          order.buyer_userid || "비로그인",
+                          order.user_type ? `${order.user_type === "student" ? "학생" : "학부모"}${order.grade ? ` · ${order.grade}` : ""}` : null,
+                          order.buyer_phone,
+                          order.material_category !== "-" ? getCategoryLabel(order.material_category) : null,
+                        ].filter(Boolean).join(" · ")}
+                      </p>
+                      {renderCashReceipt(order)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="hidden md:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -467,18 +643,8 @@ function OrdersPageInner() {
               <TableBody>
                 {pager.pageItems.map((order) => {
                   const isFree = isFreeCategory(order.material_category);
-                  const isGuest = order.buyer_id === null;
                   const group = order.order_id ? orderGroups.get(order.order_id) : undefined;
-                  const isBankPending =
-                    order.payment_method === "bank_transfer" && order.payment_status === "pending";
-                  // 비로그인(노랑) > 입금 대기(파랑, 로그인만) > 무료(초록) > 유료(기본)
-                  const rowClass = isGuest
-                    ? "bg-yellow-100/70"
-                    : isBankPending
-                      ? "bg-blue-50/60"
-                      : isFree
-                        ? "bg-emerald-50/60"
-                        : "";
+                  const rowClass = rowTone(order);
                   return (
                     <TableRow key={order.id} className={rowClass}>
                       <TableCell className="font-medium">{order.material_title}</TableCell>
@@ -517,93 +683,20 @@ function OrdersPageInner() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <div className="space-y-1">
-                          {isFree ? (
-                            order.first_downloaded_at ? (
-                              <span className="inline-block text-xs font-medium text-[#365927] bg-[#eaf2e8] px-2 py-1 rounded-md whitespace-nowrap">
-                                다운로드 {formatDownloadTime(order.first_downloaded_at)}
-                              </span>
-                            ) : (
-                              <span className="inline-block text-xs text-[#8aab82] bg-[#f5f9f4] px-2 py-1 rounded-md whitespace-nowrap">
-                                미다운로드
-                              </span>
-                            )
-                          ) : (
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <OrderStatusBadge is_sent={order.is_sent} payment_status={order.payment_status} payment_method={order.payment_method} email_status={order.email_status} />
-                                {order.payment_method === "bank_transfer" && order.payment_status === "done" && (
-                                  <span className="text-xs text-[#8aab82] whitespace-nowrap">
-                                    입금완료 {formatDownloadTime(order.created_at)}
-                                  </span>
-                                )}
-                              </div>
-                              {order.email_status === "bounced" && order.email_error && (
-                                <p className="text-xs text-red-600 max-w-[22rem] leading-snug">
-                                  {order.email_error}
-                                </p>
-                              )}
-                            </div>
-                          )}
-                          {order.cash_receipt_requested && (
-                            <div>
-                              {order.cash_receipt_issued ? (
-                                <span className="inline-block text-xs font-medium text-[#8aab82] bg-[#f5f9f4] border border-[#d6e4d3] px-2 py-0.5 rounded-md whitespace-nowrap">
-                                  🧾 현금영수증 발행완료
-                                </span>
-                              ) : (
-                                <span className="inline-block text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md whitespace-nowrap">
-                                  🧾 현금영수증 {order.cash_receipt_phone || "번호 미입력"}
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
+                        {renderStatus(order)}
                       </TableCell>
                       <TableCell>
                         {new Date(order.created_at).toLocaleDateString("ko-KR")}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          {!isFree && order.payment_method === "bank_transfer" && order.payment_status === "pending" && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => confirmBankTransfer(order)}
-                              className="border-[#365927] text-[#365927] hover:bg-[#eaf2e8]"
-                            >
-                              <CheckCircle className="mr-1 h-3 w-3" />
-                              입금확인
-                            </Button>
-                          )}
-                          {!isFree && order.payment_status === "done" && !order.is_sent && (
-                            <Button
-                              size="sm"
-                              onClick={() => markAsSent(order)}
-                              className="bg-[#365927] hover:bg-[#4a7a38]"
-                            >
-                              <Send className="mr-1 h-3 w-3" />
-                              발송완료
-                            </Button>
-                          )}
-                          {order.cash_receipt_requested && order.payment_status === "done" && !order.cash_receipt_issued && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => markCashReceiptIssued(order)}
-                              className="border-emerald-600 text-emerald-700 hover:bg-emerald-50"
-                            >
-                              <Receipt className="mr-1 h-3 w-3" />
-                              영수증발행
-                            </Button>
-                          )}
-                        </div>
+                        {renderActions(order)}
                       </TableCell>
                     </TableRow>
                   );
                 })}
               </TableBody>
             </Table>
+            </div>
             <TablePagination {...pager.props} />
             </>
           )}

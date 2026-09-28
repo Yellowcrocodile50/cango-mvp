@@ -111,7 +111,7 @@ export default function SupplierDashboard() {
     { title: "등록 자료", value: stats.totalMaterials, icon: Package, description: "등록된 PDF 자료 수" },
     { title: "유료 결제", value: stats.paidCount, icon: ShoppingCart, description: "유료 자료 결제 건수", href: "/supplier/orders?kind=paid" },
     { title: "무료 다운로드", value: stats.freeDownloads, icon: Download, description: "무료 자료 다운로드 수", href: "/supplier/orders?kind=free" },
-    { title: "발송 대기", value: stats.paidPending, icon: Clock, description: "결제 완료, 발송 필요", highlight: true },
+    { title: "발송 대기", value: stats.paidPending, icon: Clock, description: "결제 완료, 발송 필요", highlight: true, href: "/supplier/orders?kind=paid" },
   ], [stats]);
 
   return (
@@ -145,7 +145,7 @@ export default function SupplierDashboard() {
             </CardContent>
           </Card>
           );
-          // 유료 결제·무료 다운로드 카드는 주문 관리의 해당 목록으로 바로 간다
+          // 유료 결제·발송 대기·무료 다운로드 카드는 주문 관리의 해당 목록으로 바로 간다
           return card.href ? (
             <Link key={card.title} href={card.href} className="block">
               {body}

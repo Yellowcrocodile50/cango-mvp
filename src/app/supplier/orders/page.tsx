@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -71,7 +72,9 @@ function actionPriority(o: Order): number {
   return 4; // 처리 완료(무료 다운로드 포함)
 }
 
-export default function OrdersPage() {
+type KindFilter = "all" | "paid" | "free";
+
+function OrdersPageInner() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -140,8 +143,12 @@ export default function OrdersPage() {
   }, [orders, sortKey, sortDir]);
 
   // 유료 구매와 무료 다운로드는 처리할 일이 전혀 다르다(입금·발송 vs 없음). 따로 볼 수 있게 나눈다.
-  type KindFilter = "all" | "paid" | "free";
-  const [kindFilter, setKindFilter] = useState<KindFilter>("all");
+  // 대시보드 카드에서 ?kind=paid|free로 들어온다. 없으면 처리할 일(입금 확인·발송)이 있는 유료부터.
+  const searchParams = useSearchParams();
+  const [kindFilter, setKindFilter] = useState<KindFilter>(() => {
+    const k = searchParams.get("kind");
+    return k === "all" || k === "free" ? k : "paid";
+  });
   const kindCounts = useMemo(() => {
     let free = 0;
     for (const o of orders) if (isFreeCategory(o.material_category)) free += 1;
@@ -603,5 +610,14 @@ export default function OrdersPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+// useSearchParams는 Suspense 경계가 있어야 빌드된다
+export default function OrdersPage() {
+  return (
+    <Suspense>
+      <OrdersPageInner />
+    </Suspense>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { fetchAllRows } from "@/lib/fetchAllRows";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -108,8 +109,8 @@ export default function SupplierDashboard() {
 
   const statCards = useMemo(() => [
     { title: "등록 자료", value: stats.totalMaterials, icon: Package, description: "등록된 PDF 자료 수" },
-    { title: "유료 결제", value: stats.paidCount, icon: ShoppingCart, description: "유료 자료 결제 건수" },
-    { title: "무료 다운로드", value: stats.freeDownloads, icon: Download, description: "무료 자료 다운로드 수" },
+    { title: "유료 결제", value: stats.paidCount, icon: ShoppingCart, description: "유료 자료 결제 건수", href: "/supplier/orders?kind=paid" },
+    { title: "무료 다운로드", value: stats.freeDownloads, icon: Download, description: "무료 자료 다운로드 수", href: "/supplier/orders?kind=free" },
     { title: "발송 대기", value: stats.paidPending, icon: Clock, description: "결제 완료, 발송 필요", highlight: true },
   ], [stats]);
 
@@ -127,10 +128,12 @@ export default function SupplierDashboard() {
       )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {statCards.map((card) => (
+        {statCards.map((card) => {
+          const body = (
           <Card
-            key={card.title}
-            className={card.highlight && stats.paidPending > 0 ? "border-yellow-300 bg-yellow-50/50" : ""}
+            className={`${card.highlight && stats.paidPending > 0 ? "border-yellow-300 bg-yellow-50/50" : ""} ${
+              card.href ? "h-full transition hover:border-[#8aab82] hover:shadow-sm" : ""
+            }`}
           >
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">{card.title}</CardTitle>
@@ -141,7 +144,16 @@ export default function SupplierDashboard() {
               <p className="text-xs text-muted-foreground mt-1">{card.description}</p>
             </CardContent>
           </Card>
-        ))}
+          );
+          // 유료 결제·무료 다운로드 카드는 주문 관리의 해당 목록으로 바로 간다
+          return card.href ? (
+            <Link key={card.title} href={card.href} className="block">
+              {body}
+            </Link>
+          ) : (
+            <div key={card.title}>{body}</div>
+          );
+        })}
       </div>
 
       {/* 유료 결제 현황 */}

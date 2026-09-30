@@ -237,12 +237,25 @@ export default function StatsPage() {
   const yMax = tab === "count" ? countAxisMax(rawMax) : amountAxisMax(rawMax);
   const yTicks = [0, 0.25, 0.5, 0.75, 1].map((r) => Math.round(yMax * r));
 
-  const showXLabel = (idx: number, len: number) => {
-    if (len <= 31) return true;
-    if (len <= 62) return idx % 2 === 0 || idx === len - 1;
-    if (len <= 100) return idx % 5 === 0 || idx === len - 1;
-    return idx % 10 === 0 || idx === len - 1;
-  };
+  // x축 라벨 간격은 날짜 개수가 아니라 실제 폭으로 정한다.
+  // 개수로만 정하면 폰(30일)이나 노트북(전체 기간)에서 한 칸이 라벨보다 좁아 잘린다.
+  const [labelRowEl, setLabelRowEl] = useState<HTMLDivElement | null>(null);
+  const [labelRowWidth, setLabelRowWidth] = useState(0);
+  useEffect(() => {
+    if (!labelRowEl) return;
+    const ro = new ResizeObserver(([entry]) => setLabelRowWidth(entry.contentRect.width));
+    ro.observe(labelRowEl);
+    return () => ro.disconnect();
+  }, [labelRowEl]);
+
+  // "09-30"(10px 글씨, 약 28px) + 여백. 양 끝 라벨을 안쪽으로 당겨도 옆 라벨과 안 붙을 만큼
+  const X_LABEL_SLOT_PX = 52;
+  const xLabelStep = Math.max(
+    1,
+    Math.ceil(dailyData.length / Math.max(1, Math.floor(labelRowWidth / X_LABEL_SLOT_PX)))
+  );
+  // 오늘(마지막 날)을 기준으로 거꾸로 세서, 가장 궁금한 최근 날짜가 항상 보이게
+  const showXLabel = (idx: number, len: number) => (len - 1 - idx) % xLabelStep === 0;
 
   return (
     <div className="space-y-6">
@@ -385,15 +398,27 @@ export default function StatsPage() {
                   </div>
                 </div>
 
-                <div className="flex gap-px px-1 mt-2">
-                  {dailyData.map((d, idx) => (
-                    <div
-                      key={d.day}
-                      className="flex-1 text-center text-[10px] text-[#8aab82] min-w-0 truncate"
-                    >
-                      {showXLabel(idx, dailyData.length) ? d.day.slice(5) : ""}
-                    </div>
-                  ))}
+                <div className="px-1 mt-2">
+                  <div ref={setLabelRowEl} className="relative h-4 text-[10px] text-[#8aab82]">
+                    {dailyData.map((d, idx) => {
+                      const len = dailyData.length;
+                      if (!labelRowWidth || !showXLabel(idx, len)) return null;
+                      // 양 끝 라벨은 가운데 정렬하면 카드 밖으로 반쯤 나가서 안쪽으로 붙인다
+                      const isFirst = len > 1 && idx === 0;
+                      const isLast = len > 1 && idx === len - 1;
+                      const left = isFirst ? 0 : isLast ? 100 : ((idx + 0.5) / len) * 100;
+                      const align = isFirst ? "" : isLast ? "-translate-x-full" : "-translate-x-1/2";
+                      return (
+                        <span
+                          key={d.day}
+                          className={`absolute top-0 whitespace-nowrap ${align}`}
+                          style={{ left: `${left}%` }}
+                        >
+                          {d.day.slice(5)}
+                        </span>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>

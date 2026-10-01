@@ -42,6 +42,7 @@ export default function MyPage() {
   /* 진로 탐구에서 찜한 학과. 계열·관심사와 무관한 계정 단위 목록이라 여기서도 같은 걸 본다. */
   const [wishes, setWishes] = useState<string[]>([]);
   const [wishPending, setWishPending] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [marketingAgreed, setMarketingAgreed] = useState<boolean | null>(null);
   const [marketingSaving, setMarketingSaving] = useState(false);
@@ -144,7 +145,13 @@ export default function MyPage() {
     trackEvent("career_wish_remove", { department, from: "mypage" });
   };
 
-  const handleDownload = async (materialId: string, title: string) => {
+  /* 파일을 blob으로 받아 a.download로 저장하던 방식은 인앱 브라우저(틱톡·네이버 앱 등)에서
+     조용히 무시돼 "버튼이 안 눌려요" 문의가 이어졌다. 서명 URL로 바로 이동해 브라우저의
+     PDF 뷰어로 열게 한다 — 저장 파일명이 원본 업로드 이름(숫자)이 되는 건 감수한 트레이드오프.
+     await 뒤라 window.open은 팝업 차단에 걸리니 같은 탭 이동(location.assign)을 쓴다. */
+  const handleDownload = async (materialId: string) => {
+    if (downloadingId) return;
+    setDownloadingId(materialId);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch(`/api/download/${materialId}`, {
@@ -153,26 +160,21 @@ export default function MyPage() {
           : undefined,
       });
       if (!res.ok) {
-        toast.error("다운로드 링크 생성에 실패했습니다.");
+        toast.error(
+          res.status === 401
+            ? "로그인이 만료됐어요. 다시 로그인한 뒤 눌러주세요."
+            : "다운로드 링크 생성에 실패했습니다."
+        );
+        setDownloadingId(null);
         return;
       }
       const { signedUrl } = await res.json();
-      const fileRes = await fetch(signedUrl);
-      if (!fileRes.ok) {
-        toast.error("파일을 가져오지 못했습니다.");
-        return;
-      }
-      const blob = await fileRes.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = blobUrl;
-      a.download = `${title}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(blobUrl);
+      // 이동 전에 풀어둔다 — 뒤로가기(bfcache)로 돌아왔을 때 버튼이 "준비 중"에 묶이지 않게.
+      setDownloadingId(null);
+      window.location.assign(signedUrl);
     } catch {
       toast.error("다운로드 중 오류가 발생했습니다.");
+      setDownloadingId(null);
     }
   };
 
@@ -265,12 +267,12 @@ export default function MyPage() {
         <div className="flex-shrink-0">
           {isFree ? (
             <button
-              onClick={() => m && handleDownload(m.id, m.title)}
-              disabled={!m}
+              onClick={() => m && handleDownload(m.id)}
+              disabled={!m || downloadingId === m.id}
               className="flex items-center gap-1.5 text-xs font-medium text-white bg-[#365927] px-3 py-1.5 rounded-md hover:bg-[#4a7a38] transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Download className="w-3.5 h-3.5" />
-              다운로드
+              {m && downloadingId === m.id ? "준비 중..." : "다운로드"}
             </button>
           ) : order.payment_method === "bank_transfer" && order.payment_status === "pending" ? (
             <div className="flex flex-col items-end gap-1">

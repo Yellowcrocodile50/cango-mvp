@@ -19,6 +19,25 @@ export async function GET(
     ? await supabaseAdmin.auth.getUser(token)
     : { data: { user: null } };
 
+  if (!user) {
+    return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
+  }
+
+  /* 무료라도 마이페이지에 등록(무료 주문)한 사람만 받는다 — 자료 ID만 알면
+     가입 없이 받아가던 구멍을 막는다. */
+  const { data: owned } = await supabaseAdmin
+    .from("orders")
+    .select("id")
+    .eq("buyer_id", user.id)
+    .eq("material_id", materialId)
+    .eq("payment_status", "done")
+    .limit(1)
+    .maybeSingle();
+
+  if (!owned) {
+    return NextResponse.json({ error: "마이페이지에 등록된 자료가 아닙니다." }, { status: 403 });
+  }
+
   const { data: material, error: dbError } = await supabaseAdmin
     .from("materials")
     .select("file_url, category, title")
@@ -52,15 +71,13 @@ export async function GET(
     return NextResponse.json({ error: "스토리지 오류: " + signedError?.message }, { status: 500 });
   }
 
-  if (user) {
-    await supabaseAdmin
-      .from("orders")
-      .update({ first_downloaded_at: new Date().toISOString() })
-      .eq("buyer_id", user.id)
-      .eq("material_id", materialId)
-      .eq("payment_status", "done")
-      .is("first_downloaded_at", null);
-  }
+  await supabaseAdmin
+    .from("orders")
+    .update({ first_downloaded_at: new Date().toISOString() })
+    .eq("buyer_id", user.id)
+    .eq("material_id", materialId)
+    .eq("payment_status", "done")
+    .is("first_downloaded_at", null);
 
   return NextResponse.json({ signedUrl: signedData.signedUrl });
 }

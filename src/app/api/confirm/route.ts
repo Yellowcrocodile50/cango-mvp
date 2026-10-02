@@ -28,9 +28,25 @@ export async function POST(req: NextRequest) {
 
   // 결제번호를 먼저 "점유"한다. payment_claims.payment_id가 기본키라 동시에 와도 한 요청만 성공한다.
   // 위의 done 조회만으로는 조회와 확정 사이에 다른 요청이 끼어드는 경우를 막지 못한다.
-  const { error: claimError } = await supabase
-    .from("payment_claims")
-    .insert({ payment_id: paymentId });
+  const claim = () => supabase.from("payment_claims").insert({ payment_id: paymentId });
+  let { error: claimError } = await claim();
+
+  // 확정 도중 함수가 죽으면 finally가 못 돌아 점유가 남는다. 10분 넘게 남았는데 done이 아닌 점유는
+  // 버려진 것으로 보고 한 번 치운 뒤 다시 점유한다. (위에서 done이 없음을 이미 확인했다.)
+  // 오래된 것만 지우는 조건부 DELETE라, 동시에 여러 요청이 와도 다시 점유하는 건 하나뿐이다.
+  if (claimError?.code === "23505") {
+    const staleBefore = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const { data: cleared } = await supabase
+      .from("payment_claims")
+      .delete()
+      .eq("payment_id", paymentId)
+      .lt("claimed_at", staleBefore)
+      .select("payment_id");
+    if (cleared && cleared.length > 0) {
+      console.warn(`[confirm] 버려진 결제 점유를 정리하고 재시도: ${paymentId}`);
+      ({ error: claimError } = await claim());
+    }
+  }
 
   if (claimError) {
     if (claimError.code === "23505") {

@@ -65,7 +65,9 @@ function LoginForm() {
     if (requested) {
       try {
         const target = new URL(requested, window.location.origin);
-        if (target.origin === window.location.origin) {
+        // 같은 origin이어도 경로가 `//`로 시작하면(`https://현재사이트//evil.com`, `/\evil.com`)
+        // router.push가 다시 프로토콜 상대 주소로 해석해 외부로 나간다
+        if (target.origin === window.location.origin && !target.pathname.startsWith("//")) {
           redirect = target.pathname + target.search + target.hash;
         }
       } catch {

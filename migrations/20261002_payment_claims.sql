@@ -9,7 +9,7 @@
 -- 유니크 위반(23505)이면 409. 확정이 실패하면 claim을 지워 재시도를 허용한다.
 --
 -- 접근: service_role(서버 라우트)만. RLS를 켜고 정책을 두지 않으며 anon·authenticated 권한도 회수한다.
--- 적용 시점 기존 카드 결제(payment_key) 0건이라 백필 없음.
+-- 기존 카드 결제 확정 기록(payment_key)이 없는 시점에 적용해 백필하지 않았다.
 --
 -- 롤백: drop table if exists public.payment_claims;
 

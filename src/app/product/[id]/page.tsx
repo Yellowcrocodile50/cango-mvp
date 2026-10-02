@@ -102,7 +102,9 @@ export default async function ProductDetailPage(
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        // 제목·설명은 공급자 입력이다. `</script>`로 태그를 닫고 스크립트를 넣지 못하게 `<`를 이스케이프한다
+        // (Next 공식 가이드 json-ld.md 권장 방식. JSON 의미는 그대로라 검색엔진 해석은 같다)
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
       <ProductDetailClient material={material} />
     </>

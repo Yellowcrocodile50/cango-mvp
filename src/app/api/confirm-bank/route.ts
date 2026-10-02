@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
 
   const { data: orders, error: fetchError } = await adminClient
     .from("orders")
-    .select("id, payment_status, payment_method")
+    .select("id, materials(supplier_id)")
     .eq("order_id", orderId)
     .eq("payment_status", "pending")
     .eq("payment_method", "bank_transfer");
@@ -66,28 +66,48 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "확인할 수 있는 주문이 없습니다." }, { status: 400 });
   }
 
-  const { error: updateError } = await adminClient
+  // service_role은 RLS를 건너뛰므로 "내 자료의 주문인가"를 여기서 직접 확인한다.
+  // 한 주문번호에 다른 공급자의 자료가 섞여 있으면 남의 주문까지 확정하게 되므로 전체를 거절한다.
+  const ownsAll = orders.every(
+    (o) => (o.materials as unknown as { supplier_id: string } | null)?.supplier_id === user.id
+  );
+  if (!ownsAll) {
+    return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
+  }
+
+  // pending → done 전환은 "아직 pending인 행"에만 건다. 조회와 변경 사이에
+  // 같은 요청이 한 번 더 들어오거나(두 번 클릭) 구매자가 취소하면, 늦게 온 쪽은 바꿀 행이 없다.
+  // 실제로 바꾼 행이 있는 요청만 메일을 보낸다 — 메일이 두 번 나가지 않게 하는 유일한 지점이다.
+  const { data: confirmed, error: updateError } = await adminClient
     .from("orders")
     .update({ payment_status: "done" })
     .eq("order_id", orderId)
-    .eq("payment_method", "bank_transfer");
+    .eq("payment_method", "bank_transfer")
+    .eq("payment_status", "pending")
+    .select("id");
 
   if (updateError) {
     return NextResponse.json({ error: "상태 업데이트에 실패했습니다." }, { status: 500 });
   }
+  if (!confirmed || confirmed.length === 0) {
+    return NextResponse.json({ error: "이미 처리되었거나 취소된 주문입니다." }, { status: 409 });
+  }
+  const confirmedIds = confirmed.map((o) => o.id);
 
   if (EMAIL_SUPPRESSED_ORDER_IDS.has(orderId)) {
     console.warn(`[confirm-bank] 메일 발송 보류 주문: ${orderId}`);
     return NextResponse.json({ success: true, emailSuppressed: true });
   }
 
-  // 주문 완료 영수증 이메일 발송 (실패해도 결제 확정 자체는 이미 완료된 상태이므로 응답에 영향 없음)
+  // 주문 완료 영수증 이메일 발송. 결제 확정은 이미 끝났으므로 실패해도 되돌리지 않지만,
+  // 공급자가 "발송된 줄" 알고 넘어가지 않도록 결과를 응답에 그대로 싣는다(emailSent).
+  // 메일에는 이번 요청이 실제로 확정한 행만 담는다 — 같은 주문번호의 취소된 행이 섞이지 않게.
+  let emailSent = false;
   try {
     const { data: orderItems } = await adminClient
       .from("orders")
       .select("buyer_email, amount, materials(title, file_url)")
-      .eq("order_id", orderId)
-      .eq("payment_method", "bank_transfer");
+      .in("id", confirmedIds);
 
     const buyerEmail = orderItems?.[0]?.buyer_email;
 
@@ -149,12 +169,14 @@ export async function POST(req: NextRequest) {
       await adminClient
         .from("orders")
         .update({ sent_at: new Date().toISOString(), resend_email_id: emailResult?.id ?? null })
-        .eq("order_id", orderId)
-        .eq("payment_method", "bank_transfer");
+        .in("id", confirmedIds);
+      emailSent = true;
+    } else {
+      console.error(`[confirm-bank] 구매자 이메일이 없어 영수증을 보내지 못함: ${orderId}`);
     }
   } catch (emailError) {
     console.error("[confirm-bank] 영수증 이메일 발송 실패:", emailError);
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, emailSent });
 }

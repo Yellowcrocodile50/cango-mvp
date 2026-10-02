@@ -35,6 +35,8 @@ export async function POST(req: NextRequest) {
       .eq("buyer_id", user.id)
       .eq("material_id", materialId)
       .eq("payment_status", "done")
+      // 결과가 2행 이상이면 maybeSingle()은 data 없이 에러를 돌려줘 "아직 안 받음"으로 오인한다
+      .limit(1)
       .maybeSingle(),
     supabaseAdmin
       .from("profiles")
@@ -68,6 +70,11 @@ export async function POST(req: NextRequest) {
   });
 
   if (insertError) {
+    // 위의 조회와 이 INSERT 사이에 같은 요청이 먼저 들어가 등록을 끝낸 경우.
+    // (buyer_id, material_id) 무료 완료 주문은 DB에서 유일하다(orders_free_buyer_material_unique).
+    if (insertError.code === "23505") {
+      return NextResponse.json({ alreadyRegistered: true });
+    }
     return NextResponse.json({ error: "등록 중 오류가 발생했습니다: " + insertError.message }, { status: 500 });
   }
 

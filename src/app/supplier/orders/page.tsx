@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -77,6 +77,9 @@ type KindFilter = "all" | "paid" | "free";
 function OrdersPageInner() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  // 입금확인 처리 중인 주문번호. ref는 같은 틱의 연타를 막고, state는 버튼을 비활성화해 보여준다.
+  const confirmingRef = useRef(new Set<string>());
+  const [confirmingIds, setConfirmingIds] = useState<Set<string>>(new Set());
 
   /* 한 주문(order_id)에 묶인 행이 몇 개이고 합계가 얼마인지.
      장바구니로 여러 자료를 한 번에 사면 자료 수만큼 행이 생기므로, 행 단위로 세면
@@ -285,16 +288,24 @@ function OrdersPageInner() {
       return;
     }
 
+    const orderId = order.order_id;
+    if (confirmingRef.current.has(orderId)) return;
+    confirmingRef.current.add(orderId);
+    setConfirmingIds(new Set(confirmingRef.current));
+
     const res = await fetch("/api/confirm-bank", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify({ orderId: order.order_id }),
+      body: JSON.stringify({ orderId }),
     }).catch(() => null);
 
-    const body = res?.ok ? await res.json().catch(() => null) : null;
+    confirmingRef.current.delete(orderId);
+    setConfirmingIds(new Set(confirmingRef.current));
+
+    const body = res ? await res.json().catch(() => null) : null;
 
     if (res?.ok) {
       /* confirm-bank는 order_id로 묶인 행 전체를 done 처리한다.
@@ -310,9 +321,14 @@ function OrdersPageInner() {
       // 메일 보류 주문은 상태만 바뀌므로, 발송된 줄 알고 넘어가지 않도록 명시한다
       if (body?.emailSuppressed) {
         toast.success(`입금이 확인되었습니다.${suffix} 자료 메일은 보내지 않았습니다.`);
+      } else if (body?.emailSent === false) {
+        // 결제는 확정됐지만 메일이 안 나갔다. 다시 누르면 409라 재발송 수단이 없으니 직접 전달이 필요하다.
+        toast.warning(`입금은 확인됐지만 자료 메일 발송에 실패했습니다.${suffix} 구매자에게 직접 전달해주세요.`, { duration: 10000 });
       } else {
         toast.success(`입금이 확인되었습니다.${suffix}`);
       }
+    } else if (res?.status === 409) {
+      toast.error("이미 처리되었거나 구매자가 취소한 주문입니다. 새로고침해서 상태를 확인해주세요.");
     } else {
       toast.error("입금 확인 처리에 실패했습니다. 다시 시도해주세요.");
     }
@@ -415,6 +431,7 @@ function OrdersPageInner() {
             size="sm"
             variant="outline"
             onClick={() => confirmBankTransfer(order)}
+            disabled={!!order.order_id && confirmingIds.has(order.order_id)}
             className={`border-[#365927] text-[#365927] hover:bg-[#eaf2e8] ${btn}`}
           >
             <CheckCircle className="mr-1 h-3 w-3" />

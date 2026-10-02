@@ -38,8 +38,6 @@ export const categoryGroups: CategoryGroup[] = [
   },
 ];
 
-export const allCategories = categoryGroups.flatMap((g) => g.items);
-
 export const FREE_PARENT_CATEGORY = "무료 입시 자료";
 
 // 무료 입시 자료 subGroup 내부 label → UI 표시 이름

@@ -73,10 +73,6 @@ export const tools: Tool[] = [
 /** 헤더·사이트맵에 노출할 도구 (준비 중인 것은 제외) */
 export const liveTools = tools.filter((t) => t.status === "live");
 
-export function getTool(slug: string): Tool | undefined {
-  return tools.find((t) => t.slug === slug);
-}
-
 /** 도구 간 교차링크용 — 자기 자신을 뺀 나머지 라이브 도구 */
 export function otherLiveTools(currentSlug: string): Tool[] {
   return liveTools.filter((t) => t.slug !== currentSlug);

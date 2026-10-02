@@ -13,10 +13,23 @@ export async function POST(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
+  // 이미 결제 완료 처리된 결제번호면 거절한다. INSERT 정책은 order_id 값을 막지 않으므로,
+  // 끝난 결제번호로 새 pending 행을 넣고 다시 확정을 부르면 추가 결제 없이 자료가 열릴 수 있었다.
+  const { data: used } = await supabase
+    .from("orders")
+    .select("id")
+    .eq("order_id", paymentId)
+    .eq("payment_status", "done")
+    .limit(1);
+
+  if (used && used.length > 0) {
+    return NextResponse.json({ error: "이미 처리된 결제입니다." }, { status: 409 });
+  }
+
   // DB에 저장된 금액 조회
   const { data: orders } = await supabase
     .from("orders")
-    .select("amount, material_id")
+    .select("id, amount, material_id")
     .eq("order_id", paymentId)
     .eq("payment_status", "pending");
 
@@ -63,11 +76,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "결제 금액이 일치하지 않습니다." }, { status: 400 });
   }
 
-  // 결제 완료 상태로 업데이트
-  await supabase
+  // 결제 완료 상태로 업데이트 — 위에서 금액을 대조한 바로 그 pending 행만.
+  // order_id 전체로 걸면 취소된 행이나 그사이 끼어든 행까지 검증 없이 done이 된다.
+  const { data: confirmed, error: updateError } = await supabase
     .from("orders")
     .update({ payment_status: "done", payment_key: paymentId })
-    .eq("order_id", paymentId);
+    .in("id", orders.map((o) => o.id))
+    .eq("payment_status", "pending")
+    .select("id");
+
+  if (updateError || !confirmed || confirmed.length !== orders.length) {
+    console.error(`[confirm] 결제 확정 실패: ${paymentId}`, updateError);
+    return NextResponse.json({ error: "결제 확정 처리에 실패했습니다. 고객센터로 문의해주세요." }, { status: 500 });
+  }
 
   const materialIds = orders.map((o) => o.material_id);
   return NextResponse.json({ success: true, materialIds });

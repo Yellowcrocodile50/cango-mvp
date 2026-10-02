@@ -55,11 +55,23 @@ function LoginForm() {
     }
 
     const isSupplier = result.role === "supplier";
-    // 사이트 안 경로만 따른다. `https://…`나 `//…`(프로토콜 상대), `/\…`를 그대로 넘기면
-    // Next 라우터가 외부 주소로 이동시켜 로그인 직후 피싱 페이지로 보낼 수 있다.
+    // 사이트 안 경로만 따른다. 외부 주소를 그대로 넘기면 Next 라우터가 그쪽으로 이동시켜
+    // 로그인 직후 피싱 페이지로 보낼 수 있다. 문자열로 검사하면 `/%09/evil.com`처럼 URL 파서가
+    // 탭·개행을 지워 `//evil.com`이 되는 우회가 있어서, 실제로 파싱한 결과의 origin으로 비교하고
+    // 이동도 파싱된 경로로 한다.
+    const fallback = isSupplier ? "/supplier" : "/";
+    let redirect = fallback;
     const requested = searchParams.get("redirect");
-    const isInternalPath = !!requested && /^\/(?![/\\])/.test(requested);
-    const redirect = isInternalPath ? requested : isSupplier ? "/supplier" : "/";
+    if (requested) {
+      try {
+        const target = new URL(requested, window.location.origin);
+        if (target.origin === window.location.origin) {
+          redirect = target.pathname + target.search + target.hash;
+        }
+      } catch {
+        // 파싱 불가 → 기본 경로
+      }
+    }
     router.push(redirect);
     router.refresh();
   };

@@ -250,15 +250,12 @@ export default function MaterialsPage() {
         payload.file_url = fileUrl;
       }
 
+      // 기존 썸네일은 DB 저장이 끝난 뒤에 지운다. 먼저 지우면 저장이 실패했을 때
+      // DB가 이미 사라진 파일 주소를 가리켜 홈·상품 페이지 이미지가 깨진다.
+      let replacedThumbnailPath: string | null = null;
       if (thumbnailUrl) {
         payload.thumbnail_url = thumbnailUrl;
-
-        if (editingId) {
-          const oldPath = thumbnailPathFromUrl(existingThumbnailUrl);
-          if (oldPath) {
-            await supabase.storage.from("thumbnails").remove([oldPath]);
-          }
-        }
+        if (editingId) replacedThumbnailPath = thumbnailPathFromUrl(existingThumbnailUrl);
       }
 
       // 미리보기 이미지 업로드
@@ -280,15 +277,24 @@ export default function MaterialsPage() {
       const finalPreviewUrls = [...existingPreviewUrls, ...uploadedPreviewUrls];
       payload.preview_images = finalPreviewUrls.length > 0 ? finalPreviewUrls : null;
 
+      // RLS에 막히면(세션 만료 등) 에러 없이 0행으로 끝나므로, 바뀐 행이 있는지까지 확인한다
       if (editingId) {
-        await supabase.from("materials").update(payload).eq("id", editingId);
+        const { data: saved, error } = await supabase
+          .from("materials").update(payload).eq("id", editingId).select("id");
+        if (error) throw error;
+        if (!saved || saved.length === 0) throw new Error("저장되지 않았습니다. 다시 로그인한 뒤 시도해주세요.");
       } else {
         if (!pdfFile) {
           alert("PDF 파일을 선택해주세요.");
           setUploading(false);
           return;
         }
-        await supabase.from("materials").insert(payload);
+        const { error } = await supabase.from("materials").insert(payload);
+        if (error) throw error;
+      }
+
+      if (replacedThumbnailPath) {
+        await supabase.storage.from("thumbnails").remove([replacedThumbnailPath]);
       }
 
       setForm({ title: "", description: "", price: "", category: "기타" });
@@ -309,7 +315,12 @@ export default function MaterialsPage() {
 
   async function handleDelete(id: string) {
     if (!confirm("정말 삭제하시겠습니까?")) return;
-    await supabase.from("materials").update({ is_deleted: true }).eq("id", id);
+    const { data: deleted, error } = await supabase
+      .from("materials").update({ is_deleted: true }).eq("id", id).select("id");
+    if (error || !deleted || deleted.length === 0) {
+      toast.error("삭제하지 못했습니다. 다시 로그인한 뒤 시도해주세요.");
+      return;
+    }
     fetchMaterials();
   }
 

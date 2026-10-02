@@ -341,13 +341,15 @@ export default function MaterialsPage() {
     try {
       const { data, error } = await supabase.storage
         .from("materials")
-        .createSignedUrl(m.file_url, 60, { download: `${m.title}.pdf` });
+        .createSignedUrl(m.file_url, 60);
 
       if (error || !data?.signedUrl) {
         toast.error("다운로드 링크 발급에 실패했습니다.");
         return;
       }
-      window.location.href = data.signedUrl;
+      // SDK의 download 옵션은 한글 파일명을 이중 인코딩해 `%EC%9E…pdf`로 저장된다.
+      // 옵션 없이 발급한 URL 뒤에 직접 붙이면 원래 제목으로 저장된다(마이페이지 수정 때 실측).
+      window.location.href = `${data.signedUrl}&download=${encodeURIComponent(`${m.title}.pdf`)}`;
     } catch {
       toast.error("다운로드 중 오류가 발생했습니다.");
     } finally {

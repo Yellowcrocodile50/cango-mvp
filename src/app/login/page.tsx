@@ -55,7 +55,11 @@ function LoginForm() {
     }
 
     const isSupplier = result.role === "supplier";
-    const redirect = searchParams.get("redirect") || (isSupplier ? "/supplier" : "/");
+    // 사이트 안 경로만 따른다. `https://…`나 `//…`(프로토콜 상대), `/\…`를 그대로 넘기면
+    // Next 라우터가 외부 주소로 이동시켜 로그인 직후 피싱 페이지로 보낼 수 있다.
+    const requested = searchParams.get("redirect");
+    const isInternalPath = !!requested && /^\/(?![/\\])/.test(requested);
+    const redirect = isInternalPath ? requested : isSupplier ? "/supplier" : "/";
     router.push(redirect);
     router.refresh();
   };

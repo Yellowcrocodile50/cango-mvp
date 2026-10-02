@@ -73,6 +73,34 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // 계좌이체 "입금 완료했어요"를 누른 뒤 공급자 확인 전인 주문. 이 상태로 탈퇴하면 아래에서
+  // buyer_email이 익명 주소로 바뀌어, 입금 확인 후 자료 메일이 갈 곳이 없어진다.
+  const { data: awaitingDeposit, error: depositError } = await supabaseAdmin
+    .from("orders")
+    .select("id")
+    .eq("buyer_id", user.id)
+    .eq("payment_method", "bank_transfer")
+    .eq("payment_status", "pending")
+    .limit(1);
+
+  if (depositError) {
+    return NextResponse.json(
+      { error: "주문 상태 확인 중 오류가 발생했습니다." },
+      { status: 500 }
+    );
+  }
+
+  if (awaitingDeposit && awaitingDeposit.length > 0) {
+    return NextResponse.json(
+      {
+        error:
+          "입금 확인을 기다리는 주문이 있어 지금은 탈퇴할 수 없어요. 자료를 받은 뒤 다시 시도해주세요.",
+        code: "AWAITING_DEPOSIT",
+      },
+      { status: 409 }
+    );
+  }
+
   if (pendingOrders && pendingOrders.length > 0) {
     return NextResponse.json(
       {

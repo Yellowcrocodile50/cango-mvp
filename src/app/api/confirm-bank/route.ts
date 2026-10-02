@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
   );
   if (!ownsAll) {
     // 공급자가 여럿이 되면 여러 공급자의 자료가 한 주문번호에 섞일 수 있다. 입금 계좌가 하나라
-    // 누가 확정할지 정해지지 않았으므로 지금은 막고 운영자가 처리한다(현재 공급자는 1명).
+    // 누가 확정할지 정해지지 않았으므로 지금은 막고 운영자가 처리한다.
     return NextResponse.json({ error: "다른 공급자의 자료가 포함된 주문이라 직접 확정할 수 없습니다." }, { status: 403 });
   }
 
@@ -87,8 +87,9 @@ export async function POST(req: NextRequest) {
   const { data: confirmed, error: updateError } = await adminClient
     .from("orders")
     .update({ payment_status: "done" })
-    .eq("order_id", orderId)
-    .eq("payment_method", "bank_transfer")
+    // 위에서 소유권을 검사한 바로 그 행들만 바꾼다. order_id만으로 걸면 그 사이 같은 order_id로
+    // 새로 들어온 pending 행(INSERT 정책은 order_id 값을 제한하지 않는다)까지 검사 없이 확정된다.
+    .in("id", orders.map((o) => o.id))
     .eq("payment_status", "pending")
     .select("id");
 

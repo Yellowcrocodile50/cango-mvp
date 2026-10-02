@@ -161,7 +161,7 @@ export default function Header() {
               alt="CANGO"
               width={1731}
               height={909}
-              priority
+              preload
               className="h-16 w-auto"
             />
             <span className="hidden sm:block text-[17px] font-bold text-[#b7beb1] leading-tight">

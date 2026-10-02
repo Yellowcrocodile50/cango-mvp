@@ -426,7 +426,7 @@ function ResultView({
           alt={type.name}
           width={200}
           height={200}
-          priority
+          preload
           className="w-32 h-32 sm:w-40 sm:h-40 object-contain -ml-2"
         />
         <h2 className="mt-1.5 text-2xl sm:text-3xl font-extrabold text-[#365927] tracking-tight break-keep">

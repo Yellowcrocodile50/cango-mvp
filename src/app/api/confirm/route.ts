@@ -26,70 +26,93 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "이미 처리된 결제입니다." }, { status: 409 });
   }
 
-  // DB에 저장된 금액 조회
-  const { data: orders } = await supabase
-    .from("orders")
-    .select("id, amount, material_id")
-    .eq("order_id", paymentId)
-    .eq("payment_status", "pending");
+  // 결제번호를 먼저 "점유"한다. payment_claims.payment_id가 기본키라 동시에 와도 한 요청만 성공한다.
+  // 위의 done 조회만으로는 조회와 확정 사이에 다른 요청이 끼어드는 경우를 막지 못한다.
+  const { error: claimError } = await supabase
+    .from("payment_claims")
+    .insert({ payment_id: paymentId });
 
-  if (!orders || orders.length === 0) {
-    return NextResponse.json({ error: "주문을 찾을 수 없습니다." }, { status: 400 });
-  }
-
-  const dbTotal = orders.reduce((sum, o) => sum + o.amount, 0);
-
-  // 포트원 V2 결제 단건 조회 (금액 위변조 검증)
-  const portoneRes = await fetch(
-    `https://api.portone.io/payments/${encodeURIComponent(paymentId)}`,
-    {
-      headers: {
-        Authorization: `PortOne ${process.env.PORTONE_API_SECRET}`,
-        "Content-Type": "application/json",
-      },
+  if (claimError) {
+    if (claimError.code === "23505") {
+      return NextResponse.json({ error: "이미 처리 중이거나 처리된 결제입니다." }, { status: 409 });
     }
-  );
-
-  if (!portoneRes.ok) {
-    return NextResponse.json({ error: "결제 정보 조회에 실패했습니다." }, { status: 500 });
+    console.error(`[confirm] 결제번호 점유 실패: ${paymentId}`, claimError);
+    return NextResponse.json({ error: "결제 확인 중 오류가 발생했습니다." }, { status: 500 });
   }
 
-  const portonePayment = await portoneRes.json();
-
-  // 결제 상태 검증
-  if (portonePayment.status !== "PAID") {
-    await supabase
+  // 확정에 성공했을 때만 점유를 남긴다. 그 외 모든 경로에서는 풀어서 재시도를 허용한다.
+  let confirmedOk = false;
+  try {
+    // DB에 저장된 금액 조회
+    const { data: orders } = await supabase
       .from("orders")
-      .update({ payment_status: "canceled" })
+      .select("id, amount, material_id")
       .eq("order_id", paymentId)
       .eq("payment_status", "pending");
-    return NextResponse.json({ error: "결제가 완료되지 않았습니다." }, { status: 400 });
-  }
 
-  // 금액 위변조 검증
-  if (portonePayment.amount?.total !== dbTotal) {
-    await supabase
+    if (!orders || orders.length === 0) {
+      return NextResponse.json({ error: "주문을 찾을 수 없습니다." }, { status: 400 });
+    }
+
+    const dbTotal = orders.reduce((sum, o) => sum + o.amount, 0);
+
+    // 포트원 V2 결제 단건 조회 (금액 위변조 검증)
+    const portoneRes = await fetch(
+      `https://api.portone.io/payments/${encodeURIComponent(paymentId)}`,
+      {
+        headers: {
+          Authorization: `PortOne ${process.env.PORTONE_API_SECRET}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!portoneRes.ok) {
+      return NextResponse.json({ error: "결제 정보 조회에 실패했습니다." }, { status: 500 });
+    }
+
+    const portonePayment = await portoneRes.json();
+
+    // 결제 상태 검증
+    if (portonePayment.status !== "PAID") {
+      await supabase
+        .from("orders")
+        .update({ payment_status: "canceled" })
+        .eq("order_id", paymentId)
+        .eq("payment_status", "pending");
+      return NextResponse.json({ error: "결제가 완료되지 않았습니다." }, { status: 400 });
+    }
+
+    // 금액 위변조 검증
+    if (portonePayment.amount?.total !== dbTotal) {
+      await supabase
+        .from("orders")
+        .update({ payment_status: "canceled" })
+        .eq("order_id", paymentId)
+        .eq("payment_status", "pending");
+      return NextResponse.json({ error: "결제 금액이 일치하지 않습니다." }, { status: 400 });
+    }
+
+    // 결제 완료 상태로 업데이트 — 위에서 금액을 대조한 바로 그 pending 행만.
+    // order_id 전체로 걸면 취소된 행이나 그사이 끼어든 행까지 검증 없이 done이 된다.
+    const { data: confirmed, error: updateError } = await supabase
       .from("orders")
-      .update({ payment_status: "canceled" })
-      .eq("order_id", paymentId)
-      .eq("payment_status", "pending");
-    return NextResponse.json({ error: "결제 금액이 일치하지 않습니다." }, { status: 400 });
+      .update({ payment_status: "done", payment_key: paymentId })
+      .in("id", orders.map((o) => o.id))
+      .eq("payment_status", "pending")
+      .select("id");
+
+    if (updateError || !confirmed || confirmed.length !== orders.length) {
+      console.error(`[confirm] 결제 확정 실패: ${paymentId}`, updateError);
+      return NextResponse.json({ error: "결제 확정 처리에 실패했습니다. 고객센터로 문의해주세요." }, { status: 500 });
+    }
+
+    confirmedOk = true;
+    const materialIds = orders.map((o) => o.material_id);
+    return NextResponse.json({ success: true, materialIds });
+  } finally {
+    if (!confirmedOk) {
+      await supabase.from("payment_claims").delete().eq("payment_id", paymentId);
+    }
   }
-
-  // 결제 완료 상태로 업데이트 — 위에서 금액을 대조한 바로 그 pending 행만.
-  // order_id 전체로 걸면 취소된 행이나 그사이 끼어든 행까지 검증 없이 done이 된다.
-  const { data: confirmed, error: updateError } = await supabase
-    .from("orders")
-    .update({ payment_status: "done", payment_key: paymentId })
-    .in("id", orders.map((o) => o.id))
-    .eq("payment_status", "pending")
-    .select("id");
-
-  if (updateError || !confirmed || confirmed.length !== orders.length) {
-    console.error(`[confirm] 결제 확정 실패: ${paymentId}`, updateError);
-    return NextResponse.json({ error: "결제 확정 처리에 실패했습니다. 고객센터로 문의해주세요." }, { status: 500 });
-  }
-
-  const materialIds = orders.map((o) => o.material_id);
-  return NextResponse.json({ success: true, materialIds });
 }

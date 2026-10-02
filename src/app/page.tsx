@@ -7,28 +7,37 @@ import ProductCard from "@/components/ProductCard";
 import SupplierUploadSection from "@/components/SupplierUploadSection";
 import PromoBanner, { BannerPill } from "@/components/PromoBanner";
 import { supabase } from "@/lib/supabase";
+import { fetchIsSupplier } from "@/lib/supplierRole";
 import { categoryGroups, getBreadcrumb, isFreeCategory } from "@/data/categories";
 import type { Material } from "@/types/material";
 
 function ProductGrid() {
   const searchParams = useSearchParams();
   const category = searchParams.get("category");
-  const [supplierUserId, setSupplierUserId] = useState<string | null>(null);
+  const [authUserId, setAuthUserId] = useState<string | null>(null);
+  const [confirmedSupplierId, setConfirmedSupplierId] = useState<string | null>(null);
+  // 공급자 판별은 profiles.role(fetchIsSupplier). 현재 로그인 사용자와 확인된 id가 같을 때만 업로드 폼을 보인다
+  const supplierUserId = authUserId && confirmedSupplierId === authUserId ? authUserId : null;
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        const user = session?.user;
-        setSupplierUserId(
-          user?.user_metadata?.role === "supplier" ? user.id : null
-        );
-      }
+      (_event, session) => setAuthUserId(session?.user?.id ?? null)
     );
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // onAuthStateChange 콜백 안에서 supabase를 다시 부르면 교착될 수 있어 별도 effect에서 조회한다
+  useEffect(() => {
+    if (!authUserId) return;
+    let cancelled = false;
+    fetchIsSupplier(authUserId).then((ok) => {
+      if (!cancelled) setConfirmedSupplierId(ok ? authUserId : null);
+    });
+    return () => { cancelled = true; };
+  }, [authUserId]);
 
   const fetchMaterials = useCallback(() => {
     supabase

@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { FileText, Download, Heart } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { fetchIsSupplier } from "@/lib/supplierRole";
 import { isFreeCategory } from "@/data/categories";
 import { departments } from "@/data/careerDepartments";
 import { colorForId } from "@/lib/coverColor";
@@ -70,7 +71,7 @@ export default function MyPage() {
         return;
       }
 
-      if (authUser.user_metadata?.role === "supplier") {
+      if (await fetchIsSupplier(authUser.id)) {
         router.replace("/supplier");
         return;
       }

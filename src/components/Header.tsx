@@ -7,6 +7,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/lib/supabase";
+import { fetchIsSupplier } from "@/lib/supplierRole";
 import { trackNavClick } from "@/lib/ga";
 import { liveTools, TOOLS_HUB_PATH, TOOLS_NAV_LABEL } from "@/data/tools";
 import type { User } from "@supabase/supabase-js";
@@ -131,6 +132,21 @@ export default function Header() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // 공급자 여부는 profiles.role로 따로 조회한다(fetchIsSupplier 주석 참고).
+  // onAuthStateChange 콜백 안에서 supabase를 다시 부르면 교착될 수 있어 user가 바뀐 뒤 별도 effect에서 조회한다.
+  // 확인된 사용자 id를 들고 있다가 현재 user와 같을 때만 공급자로 본다 — 로그아웃·계정 전환 시 바로 풀린다.
+  const [supplierId, setSupplierId] = useState<string | null>(null);
+  const userId = user?.id ?? null;
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    fetchIsSupplier(userId).then((ok) => {
+      if (!cancelled) setSupplierId(ok ? userId : null);
+    });
+    return () => { cancelled = true; };
+  }, [userId]);
+  const isSupplier = !!userId && supplierId === userId;
+
   useEffect(() => {
     if (!menuOpen) return;
     function handleClickOutside(e: MouseEvent) {
@@ -171,7 +187,7 @@ export default function Header() {
 
           <nav className="flex items-center gap-6 text-sm">
             {user ? (
-              user.user_metadata?.role === "supplier" ? (
+              isSupplier ? (
                 <>
                   <span className="text-[#365927] font-medium">
                     {user.user_metadata?.userid || user.email}님

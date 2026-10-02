@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
 
   const { data: profile } = await adminClient
     .from("profiles")
-    .select("email")
+    .select("email, role")
     .eq("userid", userid)
     .maybeSingle();
 
@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     access_token: data.session.access_token,
     refresh_token: data.session.refresh_token,
-    role: data.user?.user_metadata?.role ?? null,
+    // 공급자 판별 기준은 profiles.role (user_metadata는 사용자가 고칠 수 있다)
+    role: profile.role ?? null,
   });
 }

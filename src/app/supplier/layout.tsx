@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { fetchIsSupplier } from "@/lib/supplierRole";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
@@ -19,12 +20,12 @@ export default function SupplierLayout({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) {
         router.replace("/login?redirect=/supplier");
         return;
       }
-      if (user.user_metadata?.role !== "supplier") {
+      if (!(await fetchIsSupplier(user.id))) {
         router.replace("/");
         return;
       }

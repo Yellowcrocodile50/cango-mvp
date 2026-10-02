@@ -62,8 +62,12 @@ export async function POST(req: NextRequest) {
     .eq("payment_status", "pending")
     .eq("payment_method", "bank_transfer");
 
-  if (fetchError || !orders || orders.length === 0) {
-    return NextResponse.json({ error: "확인할 수 있는 주문이 없습니다." }, { status: 400 });
+  if (fetchError) {
+    return NextResponse.json({ error: "주문 조회에 실패했습니다." }, { status: 500 });
+  }
+  // pending 행이 없다 = 이미 입금확인됐거나 취소됐다. 아래 UPDATE에서 경쟁에 진 경우와 같은 상황이므로 같은 409로 답한다.
+  if (!orders || orders.length === 0) {
+    return NextResponse.json({ error: "이미 처리되었거나 취소된 주문입니다." }, { status: 409 });
   }
 
   // service_role은 RLS를 건너뛰므로 "내 자료의 주문인가"를 여기서 직접 확인한다.
@@ -72,7 +76,9 @@ export async function POST(req: NextRequest) {
     (o) => (o.materials as unknown as { supplier_id: string } | null)?.supplier_id === user.id
   );
   if (!ownsAll) {
-    return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
+    // 공급자가 여럿이 되면 여러 공급자의 자료가 한 주문번호에 섞일 수 있다. 입금 계좌가 하나라
+    // 누가 확정할지 정해지지 않았으므로 지금은 막고 운영자가 처리한다(현재 공급자는 1명).
+    return NextResponse.json({ error: "다른 공급자의 자료가 포함된 주문이라 직접 확정할 수 없습니다." }, { status: 403 });
   }
 
   // pending → done 전환은 "아직 pending인 행"에만 건다. 조회와 변경 사이에

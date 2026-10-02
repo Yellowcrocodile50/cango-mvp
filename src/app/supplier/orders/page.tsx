@@ -322,11 +322,13 @@ function OrdersPageInner() {
       if (body?.emailSuppressed) {
         toast.success(`입금이 확인되었습니다.${suffix} 자료 메일은 보내지 않았습니다.`);
       } else if (body?.emailSent === false) {
-        // 결제는 확정됐지만 메일이 안 나갔다. 다시 누르면 409라 재발송 수단이 없으니 직접 전달이 필요하다.
+        // 결제는 확정됐지만 메일이 안 나갔다. 이미 done이라 다시 눌러도 409 — 재발송 수단이 없으니 직접 전달이 필요하다.
         toast.warning(`입금은 확인됐지만 자료 메일 발송에 실패했습니다.${suffix} 구매자에게 직접 전달해주세요.`, { duration: 10000 });
       } else {
         toast.success(`입금이 확인되었습니다.${suffix}`);
       }
+    } else if (res?.status === 403 && body?.error) {
+      toast.error(body.error);
     } else if (res?.status === 409) {
       toast.error("이미 처리되었거나 구매자가 취소한 주문입니다. 새로고침해서 상태를 확인해주세요.");
     } else {

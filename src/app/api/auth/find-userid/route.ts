@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse, after } from "next/server";
+import { ACCOUNT_RECOVERY_ENABLED } from "@/lib/featureFlags";
 import { adminClient, allowAndRecord, clientIp, looksLikeEmail, normalizeIdentifier } from "@/lib/accountRecovery";
 import { sendUserIdEmail } from "@/lib/email/accountRecovery";
 
@@ -11,6 +12,8 @@ import { sendUserIdEmail } from "@/lib/email/accountRecovery";
  * 메일 발송만 응답 뒤(after)에 해서 화면이 빨리 넘어가게 한다.
  */
 export async function POST(req: NextRequest) {
+  // 보류 중인 기능 — 스위치가 꺼져 있으면 아무것도 조회·발송하지 않는다
+  if (!ACCOUNT_RECOVERY_ENABLED) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const { email: rawEmail } = await req.json().catch(() => ({}));
   const email = normalizeIdentifier(rawEmail);
 

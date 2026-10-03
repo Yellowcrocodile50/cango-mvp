@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { ACCOUNT_RECOVERY_ENABLED } from "@/lib/featureFlags";
 
 function LoginForm() {
   const router = useRouter();
@@ -141,11 +142,13 @@ function LoginForm() {
         </button>
       </form>
 
+      {ACCOUNT_RECOVERY_ENABLED && (
       <p className="text-sm text-center text-[#5a7d50] mt-5">
         <Link href="/find-id" className="hover:text-[#365927] underline-offset-2 hover:underline">아이디 찾기</Link>
         <span className="mx-2 text-[#d6e4d3]">|</span>
         <Link href="/find-password" className="hover:text-[#365927] underline-offset-2 hover:underline">비밀번호 찾기</Link>
       </p>
+      )}
 
       <p className="text-sm text-center text-[#5a7d50] mt-4">
         아직 계정이 없으신가요?{" "}

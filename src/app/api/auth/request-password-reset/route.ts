@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse, after } from "next/server";
+import { ACCOUNT_RECOVERY_ENABLED } from "@/lib/featureFlags";
 import {
   RESET_REDIRECT_URL,
   adminClient,
@@ -19,6 +20,8 @@ import { sendPasswordResetEmail } from "@/lib/email/accountRecovery";
  * 가입 여부를 알려주는 건 사용자 결정(2026-10-03) — find-userid 주석 참고. 링크 생성·발송만 응답 뒤(after)에 한다.
  */
 export async function POST(req: NextRequest) {
+  // 보류 중인 기능 — 스위치가 꺼져 있으면 아무것도 조회·발송하지 않는다
+  if (!ACCOUNT_RECOVERY_ENABLED) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const { identifier: raw } = await req.json().catch(() => ({}));
   const identifier = normalizeIdentifier(raw);
 

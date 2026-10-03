@@ -8,7 +8,8 @@ import dynamic from "next/dynamic";
 import PromoBanner, { BannerPill } from "@/components/PromoBanner";
 import { supabase } from "@/lib/supabase";
 import { fetchIsSupplier } from "@/lib/supplierRole";
-import { categoryGroups, getBreadcrumb, isFreeCategory } from "@/data/categories";
+import { categoryMatches, getBreadcrumb, isFreeCategory } from "@/data/categories";
+import SusiFilterChips from "@/components/SusiFilterChips";
 import type { Material } from "@/types/material";
 
 // 공급자만 보는 업로드 폼. 정적으로 import하면 모든 방문자의 홈 번들에 들어가므로 필요할 때만 불러온다.
@@ -64,17 +65,9 @@ function ProductGrid() {
     fetchMaterials();
   }, [fetchMaterials]);
 
-  const group = categoryGroups.find((g) => g.label === category);
-  const subGroup = !group
-    ? categoryGroups.flatMap((g) => g.subGroups ?? []).find((sg) => sg.label === category)
-    : undefined;
-
+  // 상위 카테고리를 고르면 하위(무료 수시의 학년·과목 등)까지 포함한다 — categoryMatches
   const filtered = category
-    ? materials.filter((m) => {
-        if (group) return group.items.includes(m.category);
-        if (subGroup) return subGroup.items.includes(m.category);
-        return m.category === category;
-      })
+    ? materials.filter((m) => categoryMatches(category, m.category))
     : materials.filter((m) => !isFreeCategory(m.category));
 
   return (
@@ -138,7 +131,9 @@ function ProductGrid() {
           {category ? (
             <>
               {getBreadcrumb(category).map((item, i) => (
-                <span key={item.name}>
+                // 단계 이름 안에서는 줄을 바꾸지 않고(좁은 화면에서 "수 / 시"로 갈라지던 것), 단계 사이에서만 바꾼다.
+                // inline-block이어야 단계 단위로 줄이 넘어간다 — nowrap만 주면 전체가 한 덩어리로 화면 밖으로 나간다
+                <span key={item.name} className="inline-block whitespace-nowrap">
                   {i > 0 && (
                     <span className="mx-1.5 text-[#8aab82] font-normal">›</span>
                   )}
@@ -162,6 +157,7 @@ function ProductGrid() {
         <p className="text-sm text-[#5a7d50] mt-1">
           {loading ? "로딩 중..." : `${filtered.length}개의 자료`}
         </p>
+        {category && <SusiFilterChips category={category} />}
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8">

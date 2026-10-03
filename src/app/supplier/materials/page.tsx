@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Pencil, Upload, FileText, Image as ImageIcon, X, Download } from "lucide-react";
-import { categoryGroups, FREE_SUB_DISPLAY } from "@/data/categories";
+import { getCategoryOptions } from "@/data/categories";
 import { toast } from "sonner";
 
 const THUMBNAIL_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -466,31 +466,13 @@ export default function MaterialsPage() {
                   onChange={(e) => setForm({ ...form, category: e.target.value })}
                   className="mt-1 w-full h-10 px-3 border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-background"
                 >
-                  {categoryGroups.flatMap((group) =>
-                    group.subGroups
-                      ? group.subGroups.map((sub) => {
-                          const subLabel = `${group.label} › ${FREE_SUB_DISPLAY[sub.label] ?? sub.label}`;
-                          if (sub.items.length === 1) {
-                            return (
-                              <option key={sub.items[0]} value={sub.items[0]}>{subLabel}</option>
-                            );
-                          }
-                          return (
-                            <optgroup key={`${group.label}-${sub.label}`} label={subLabel}>
-                              {sub.items.map((item) => (
-                                <option key={item} value={item}>{item.startsWith("무료-") ? `${item.slice(3)} (무료)` : item}</option>
-                              ))}
-                            </optgroup>
-                          );
-                        })
-                      : [
-                          <optgroup key={group.label} label={group.label}>
-                            {group.items.map((item) => (
-                              <option key={item} value={item}>{item.startsWith("무료-") ? item.slice(3) : item}</option>
-                            ))}
-                          </optgroup>,
-                        ]
-                  )}
+                  {getCategoryOptions(form.category).map(({ group, options }) => (
+                    <optgroup key={group} label={group}>
+                      {options.map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </optgroup>
+                  ))}
                 </select>
               </div>
               <div>

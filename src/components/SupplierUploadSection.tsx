@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { Upload, FileText, Plus, X, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
-import { categoryGroups, FREE_SUB_DISPLAY } from "@/data/categories";
+import { getCategoryOptions } from "@/data/categories";
 import { toast } from "sonner";
 
 const THUMBNAIL_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -281,31 +281,13 @@ export default function SupplierUploadSection({
               onChange={(e) => setForm({ ...form, category: e.target.value })}
               className="w-full h-10 px-3 border border-[#d6e4d3] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#365927] focus:border-transparent bg-white"
             >
-              {categoryGroups.flatMap((group) =>
-                group.subGroups
-                  ? group.subGroups.map((sub) => {
-                      const subLabel = `${group.label} › ${FREE_SUB_DISPLAY[sub.label] ?? sub.label}`;
-                      if (sub.items.length === 1) {
-                        return (
-                          <option key={sub.items[0]} value={sub.items[0]}>{subLabel}</option>
-                        );
-                      }
-                      return (
-                        <optgroup key={`${group.label}-${sub.label}`} label={subLabel}>
-                          {sub.items.map((item) => (
-                            <option key={item} value={item}>{item.startsWith("무료-") ? `${item.slice(3)} (무료)` : item}</option>
-                          ))}
-                        </optgroup>
-                      );
-                    })
-                  : [
-                      <optgroup key={group.label} label={group.label}>
-                        {group.items.map((item) => (
-                          <option key={item} value={item}>{item.startsWith("무료-") ? item.slice(3) : item}</option>
-                        ))}
-                      </optgroup>,
-                    ]
-              )}
+              {getCategoryOptions(form.category).map(({ group, options }) => (
+                <optgroup key={group} label={group}>
+                  {options.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </optgroup>
+              ))}
             </select>
           </div>
           <div>

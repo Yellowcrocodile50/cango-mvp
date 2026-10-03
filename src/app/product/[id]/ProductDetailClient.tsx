@@ -99,9 +99,11 @@ export default function ProductDetailClient({ material }: { material: Material }
         {getBreadcrumb(material.category).map((item) => (
           <span key={item.name} className="flex items-center">
             <span className="mx-2">{">"}</span>
+            {/* 링크가 없는 마지막 단계는 이 자료의 카테고리 목록으로 보낸다. 표시 이름(item.name)으로 만들면
+                무료 "수시"가 유료 수시로, "한국사"가 없는 카테고리로 가 버린다. */}
             <Link
-              href={item.href ?? `/?category=${encodeURIComponent(item.name)}`}
-              className="hover:text-[#365927]"
+              href={item.href ?? `/?category=${encodeURIComponent(material.category)}`}
+              className="hover:text-[#365927] whitespace-nowrap"
             >
               {item.name}
             </Link>

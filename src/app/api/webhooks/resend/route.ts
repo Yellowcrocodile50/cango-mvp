@@ -57,7 +57,13 @@ export async function POST(req: NextRequest) {
     // (공급자가 이미 수동으로 켰을 수 있으나, 배지는 email_status 를 우선한다)
     if (status === "delivered") patch.is_sent = true;
 
-    await adminClient.from("orders").update(patch).eq("resend_email_id", emailId);
+    const { error } = await adminClient.from("orders").update(patch).eq("resend_email_id", emailId);
+    // 저장에 실패했는데 200을 주면 Resend는 다시 보내지 않아 상태가 영영 비게 된다.
+    // 5xx를 돌려 재전송을 받는다(같은 값을 덮어쓰는 갱신이라 여러 번 와도 안전하다).
+    if (error) {
+      console.error(`[webhooks/resend] 상태 저장 실패: ${emailId} ${event.type}`, error);
+      return NextResponse.json({ error: "저장 실패" }, { status: 500 });
+    }
   }
 
   return NextResponse.json({ received: true });

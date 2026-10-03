@@ -40,7 +40,7 @@ export default function PromoBanner({
         <Link
           href={href}
           onClick={() => trackBannerClick(href)}
-          className="flex-1 text-xs sm:text-sm leading-snug hover:underline"
+          className="flex-1 text-xs sm:text-sm leading-snug hover:underline break-keep"
         >
           {children}
         </Link>

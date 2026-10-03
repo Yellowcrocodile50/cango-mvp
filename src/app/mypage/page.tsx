@@ -225,7 +225,8 @@ export default function MyPage() {
   const renderOrderItem = (order: OrderRow, isFree: boolean) => {
     const m = order.materials;
     const deleted = !m;
-    const bg = colorForId(order.id);
+    // 자료 id로 계산해야 상품 카드·상세·장바구니와 같은 색이 된다(삭제된 자료만 주문 id로)
+    const bg = colorForId(m?.id ?? order.id);
     return (
       <li
         key={order.id}

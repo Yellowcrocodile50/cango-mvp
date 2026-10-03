@@ -6,19 +6,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/lib/supabase";
-
-const coverColors = [
-  "#365927", "#4a7a38", "#2d4a22", "#5a8c4a",
-  "#3d6b2e", "#6b9e5a", "#2a5020", "#4d7040",
-];
-
-function colorForId(id: string): string {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) {
-    hash = (hash * 31 + id.charCodeAt(i)) | 0;
-  }
-  return coverColors[Math.abs(hash) % coverColors.length];
-}
+// 표지 색은 상품 카드·상세와 같은 함수·같은 키(자료 id)로 계산해야 같은 색이 나온다
+import { colorForId } from "@/lib/coverColor";
 
 export default function CartPage() {
   const { items, removeItem, removeItems, setItemQuantity } = useCart();

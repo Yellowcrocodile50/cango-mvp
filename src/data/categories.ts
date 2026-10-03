@@ -76,12 +76,16 @@ export function parseSusiCategory(category: string): { grade?: SusiGrade; subjec
 
 /** 고른 카테고리(selected)에 자료 카테고리가 들어가는지 — 상위 값을 고르면 하위 값도 포함 */
 export function categoryMatches(selected: string, materialCategory: string): boolean {
+  // 항목 하나와 비교 — 자기 자신이거나 그 아래(접두어 + "-")
+  const inItem = (item: string) => materialCategory === item || materialCategory.startsWith(`${item}-`);
   if (selected === FREE_PARENT_CATEGORY) return isFreeCategory(materialCategory);
+  // ⚠️ 그룹 항목은 재귀하지 말고 바로 비교한다. "진로/직업"·"기타"는 그룹 이름과 항목 이름이 같아서
+  // 재귀하면 같은 인자로 끝없이 다시 불려 홈이 죽는다(배포 전 Claude·Codex 리뷰가 둘 다 잡음).
   const top = categoryGroups.find((g) => g.label === selected);
-  if (top) return top.items.some((item) => categoryMatches(item, materialCategory));
+  if (top) return top.items.some(inItem);
   const sub = categoryGroups.flatMap((g) => g.subGroups ?? []).find((sg) => sg.label === selected);
-  if (sub) return sub.items.some((item) => categoryMatches(item, materialCategory));
-  return materialCategory === selected || materialCategory.startsWith(`${selected}-`);
+  if (sub) return sub.items.some(inItem);
+  return inItem(selected);
 }
 
 // 무료 입시 자료 subGroup 내부 label → UI 표시 이름

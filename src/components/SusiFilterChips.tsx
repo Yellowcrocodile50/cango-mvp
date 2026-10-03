@@ -10,7 +10,8 @@ import {
 } from "@/data/categories";
 
 /* 무료 수시 목록 위의 학년·과목 칩 (2026-10-04 사용자 결정: 헤더는 '수시'까지, 세분화는 목록 위 칩).
-   1줄: 전체 · 고1 · 고2 · 고3 · 입시 정보 / 2줄(학년을 골랐을 때만): 전체 · 과목들(고1만 한국사).
+   1줄: 전체 · 고1 · 고2 · 고3 · 입시 정보 / 2줄(학년을 골랐을 때만): 과목들(고1만 한국사).
+   과목 줄의 '전체'는 사용자 요청으로 뺐다(2026-10-04) — 학년 전체로 돌아가려면 위 줄의 학년 칩을 다시 누른다.
    칩은 링크라 주소(?category=)가 바뀌고, 뒤로 가기·공유가 그대로 된다.
    모바일에서 잘못 눌리지 않게 높이 40px·폭 48px 이상, 칩 사이 8px. 모바일은 좌우 여백을 줄여
    학년 줄(전체·고1·고2·고3·입시 정보)이 360px 폭에서도 한 줄에 들어가게 했다(두 줄이 섞여 보이던 것). */
@@ -49,7 +50,6 @@ export default function SusiFilterChips({ category }: { category: string }) {
       </nav>
       {grade && (
         <nav aria-label="과목" className="flex flex-wrap gap-2">
-          <Chip to={href(susiGradeCategory(grade))} active={!susi.subject}>전체</Chip>
           {susiSubjects(grade).map((sub) => (
             <Chip key={sub} to={href(susiSubjectCategory(grade, sub))} active={susi.subject === sub}>{sub}</Chip>
           ))}

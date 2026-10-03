@@ -11,8 +11,8 @@ export default function FindIdSentPage() {
         <p className="mt-1">이메일을 확인해주세요.</p>
       </div>
       {/* 네이버·iCloud에서 "메일이 안 왔다" 문의가 실제로 있었다 — 스팸함·프로모션 탭 안내 */}
-      <p className="text-sm text-[#5a7d50] mt-4">
-        몇 분이 지나도 안 보이면 스팸함이나 프로모션 탭도 한번 확인해 주세요.
+      <p className="text-sm text-[#5a7d50] mt-4 leading-relaxed break-keep">
+        <span className="block">몇 분이 지나도 안 보이면</span> 스팸함이나 프로모션 탭도 한번 확인해 주세요.
       </p>
       <Link
         href="/login"

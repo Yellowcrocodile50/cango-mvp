@@ -17,7 +17,7 @@ const CONFIG: Record<Mode, {
   endpoint: string;
   field: "email" | "identifier";
   sentTitle: string;
-  sentBody: string;
+  sentBody: React.ReactNode;
 }> = {
   "find-id": {
     title: "아이디 찾기",
@@ -40,7 +40,8 @@ const CONFIG: Record<Mode, {
     endpoint: "/api/auth/request-password-reset",
     field: "identifier",
     sentTitle: "메일을 보냈어요",
-    sentBody: "가입하신 이메일로 비밀번호를 새로 정하는 링크를 보내드렸어요.",
+    // "새로 정하는 / 링크를" 사이에서 줄을 바꾼다(화면 폭이 max-w-sm이라 PC·모바일 같은 줄바꿈)
+    sentBody: <><span className="block">가입하신 이메일로 비밀번호를 새로 정하는</span> 링크를 보내드렸어요.</>,
   },
 };
 
@@ -86,16 +87,16 @@ export default function AccountRecoveryForm({ mode }: { mode: Mode }) {
 
       {sent ? (
         <div className="mt-6">
-          <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 leading-relaxed">
+          <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 leading-relaxed break-keep">
             <p className="font-medium">{c.sentTitle}</p>
             <p className="mt-1">{c.sentBody}</p>
             {/* 네이버·iCloud에서 "메일이 안 왔다" 문의가 실제로 있었다 — 스팸함·프로모션 탭 안내 */}
             <p className="mt-2 text-green-600">
-              몇 분이 지나도 안 보이면 스팸함이나 프로모션 탭도 한번 확인해 주세요.
+              <span className="block">몇 분이 지나도 안 보이면</span> 스팸함이나 프로모션 탭도 한번 확인해 주세요.
             </p>
           </div>
-          <p className="text-sm text-center text-[#5a7d50] mt-6">
-            가입한 이메일이 기억나지 않으면{" "}
+          <p className="text-sm text-center text-[#5a7d50] mt-6 leading-relaxed break-keep">
+            <span className="block">가입한 이메일이 기억나지 않으면</span>{" "}
             <a
               href="https://pf.kakao.com/_xnANbX/chat"
               target="_blank"
@@ -118,8 +119,11 @@ export default function AccountRecoveryForm({ mode }: { mode: Mode }) {
           <p className="text-sm text-center text-[#5a7d50] mb-8 leading-relaxed">{c.intro}</p>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-              {error}
+            // 서버 안내는 "…없어요. 다시 확인해 주세요."처럼 두 문장이다. 문장마다 줄을 나누고 단어 중간에서 끊지 않는다
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm leading-relaxed break-keep">
+              {error.split(/(?<=[.!?])\s+/).map((sentence) => (
+                <span key={sentence} className="block">{sentence}</span>
+              ))}
             </div>
           )}
 

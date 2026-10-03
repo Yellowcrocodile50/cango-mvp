@@ -57,8 +57,14 @@ export default function ResetPasswordPage() {
       );
       return;
     }
-    // 다른 기기에 남아 있을 수 있는 로그인까지 모두 끊는다(분실·도용 대비)
-    await supabase.auth.signOut({ scope: "global" });
+    // 다른 기기에 남아 있을 수 있는 로그인까지 모두 끊는다(분실·도용 대비). 실패하면 한 번 더 시도하고,
+    // 그래도 안 되면 이 기기만이라도 로그아웃한다. (이미 발급된 접속 토큰은 만료 전까지 유효 — Supabase 동작)
+    let { error: signOutError } = await supabase.auth.signOut({ scope: "global" });
+    if (signOutError) ({ error: signOutError } = await supabase.auth.signOut({ scope: "global" }));
+    if (signOutError) {
+      console.error("[reset-password] 전체 로그아웃 실패", signOutError);
+      await supabase.auth.signOut({ scope: "local" });
+    }
     router.replace("/login?reset=done");
   };
 
@@ -72,8 +78,9 @@ export default function ResetPasswordPage() {
 
       {status === "invalid" && (
         <div>
-          <div className="p-4 bg-[#f3f8f1] border border-[#d6e4d3] rounded-lg text-sm text-[#365927] leading-relaxed">
-            이 링크는 시간이 지났거나 이미 한 번 쓰였어요. 새 링크를 받으면 바로 다시 정할 수 있어요.
+          <div className="p-4 bg-[#f3f8f1] border border-[#d6e4d3] rounded-lg text-sm text-[#365927] leading-relaxed break-keep">
+            <span className="block">이 링크는 시간이 지났거나 이미 한 번 쓰였어요.</span>
+            <span className="block">새 링크를 받으면 바로 다시 정할 수 있어요.</span>
           </div>
           <Link
             href="/find-password"
@@ -87,8 +94,10 @@ export default function ResetPasswordPage() {
       {(status === "ready" || status === "saving") && (
         <>
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-              {error}
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm leading-relaxed break-keep">
+              {error.split(/(?<=[.!?])\s+/).map((sentence) => (
+                <span key={sentence} className="block">{sentence}</span>
+              ))}
             </div>
           )}
           <form onSubmit={handleSubmit} className="space-y-4">

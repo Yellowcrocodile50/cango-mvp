@@ -49,6 +49,12 @@ export async function allowAndRecord(
   // 기록·확인이 실패하면 막는다(메일 남발 방지가 목적이라 열어두지 않는다)
   if (insertError) return false;
 
+  // 하루 지난 기록은 쓸모가 없다(한도는 최근 1시간만 본다). 거절된 요청도 쌓이므로 기록할 때마다 함께 지운다
+  await db
+    .from("auth_recovery_requests")
+    .delete()
+    .lt("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+
   const [byTarget, byIp] = await Promise.all([
     db.from("auth_recovery_requests").select("id", { count: "exact", head: true })
       .eq("target_hash", targetHash).gte("created_at", since),

@@ -23,3 +23,8 @@ create index if not exists auth_recovery_requests_ip_idx
 
 alter table public.auth_recovery_requests enable row level security;
 revoke all on public.auth_recovery_requests from anon, authenticated;
+
+-- 오래된 기록 정리용 인덱스. 횟수 제한은 최근 1시간만 보므로, 라우트가 기록할 때 하루 지난 행을 함께 지운다
+-- (거절된 요청도 기록되므로 정리하지 않으면 계속 쌓인다 — 배포 전 Claude·Codex 리뷰).
+create index if not exists auth_recovery_requests_created_idx
+  on public.auth_recovery_requests (created_at);

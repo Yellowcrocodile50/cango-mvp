@@ -37,12 +37,14 @@ export default function SupplierDashboard() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data: myMaterials, count: materialsCount } = await supabase
+    // 주문 집계는 삭제(숨김)한 자료까지 포함한다. 이미 팔린 매출과 발송 대기는 자료를 내려도
+    // 남아 있어야 하고, 통계·주문 관리 화면도 같은 기준이다. "등록 자료" 수만 살아 있는 자료로 센다.
+    const { data: myMaterials } = await supabase
       .from("materials")
-      .select("id, category", { count: "exact" })
-      .eq("supplier_id", user.id)
-      .eq("is_deleted", false);
+      .select("id, category, is_deleted")
+      .eq("supplier_id", user.id);
 
+    const materialsCount = (myMaterials ?? []).filter((m) => !m.is_deleted).length;
     const materialIds = (myMaterials ?? []).map((m) => m.id);
     const categoryMap = new Map((myMaterials ?? []).map((m) => [m.id, m.category]));
 

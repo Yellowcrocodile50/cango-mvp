@@ -37,10 +37,14 @@ export async function POST(req: NextRequest) {
       const db = adminClient();
       const { data: profile } = await db
         .from("profiles")
-        .select("email, userid")
+        .select("email, userid, role")
         .eq(looksLikeEmail(identifier) ? "email" : "userid", identifier)
         .maybeSingle();
       if (!profile?.email || !profile.userid) return;
+      // 공급자 계정은 자가 재설정에서 뺀다(사용자 결정 2026-10-03). 가입 이메일이 검증된 적이 없어,
+      // 이메일 주인이 링크로 계정을 가져가면 전체 회원 개인정보·주문 관리가 넘어간다.
+      // 공급자 비밀번호는 Supabase 대시보드에서 직접 바꾼다. 응답은 다른 경우와 같다(구분 불가).
+      if (profile.role === "supplier") return;
 
       const { data, error } = await db.auth.admin.generateLink({
         type: "recovery",

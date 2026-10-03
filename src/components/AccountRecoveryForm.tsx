@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 /* 아이디 찾기·비밀번호 찾기 공용 폼. 두 화면은 입력칸 하나 + 메일 발송 안내로 모양이 같다. */
@@ -20,18 +21,19 @@ const CONFIG: Record<Mode, {
 }> = {
   "find-id": {
     title: "아이디 찾기",
-    intro: "가입할 때 적은 이메일을 알려주시면, 그 메일로 아이디를 보내드려요.",
+    intro: "가입하신 이메일을 적어주세요.",
     label: "이메일",
     placeholder: "example@email.com",
     inputType: "email",
     endpoint: "/api/auth/find-userid",
     field: "email",
-    sentTitle: "메일을 보냈어요",
-    sentBody: "가입된 이메일이라면 곧 아이디가 담긴 메일이 도착해요.",
+    // 아이디 찾기는 발송 후 /find-id/sent로 넘어가 아래 두 문구는 쓰이지 않는다
+    sentTitle: "",
+    sentBody: "",
   },
   "find-password": {
     title: "비밀번호 찾기",
-    intro: "아이디나 이메일 중 기억나는 것 하나만 적어주시면, 가입한 이메일로 새 비밀번호를 정하는 링크를 보내드려요.",
+    intro: "아이디나 이메일을 적어주세요.",
     label: "아이디 또는 이메일",
     placeholder: "아이디 또는 이메일",
     inputType: "text",
@@ -44,6 +46,7 @@ const CONFIG: Record<Mode, {
 
 export default function AccountRecoveryForm({ mode }: { mode: Mode }) {
   const c = CONFIG[mode];
+  const router = useRouter();
   const [value, setValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -62,6 +65,11 @@ export default function AccountRecoveryForm({ mode }: { mode: Mode }) {
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(body.error ?? "잠시 후 다시 시도해주세요.");
+        return;
+      }
+      // 아이디 찾기는 안내 페이지로 넘어간다(사용자 요청). 비밀번호 찾기는 같은 화면에서 안내한다
+      if (mode === "find-id") {
+        router.push("/find-id/sent");
         return;
       }
       setSent(true);
@@ -139,14 +147,6 @@ export default function AccountRecoveryForm({ mode }: { mode: Mode }) {
               {loading ? "보내는 중..." : "메일 보내기"}
             </button>
           </form>
-
-          <p className="text-sm text-center text-[#5a7d50] mt-6">
-            {mode === "find-id" ? (
-              <>비밀번호가 기억나지 않으면 <Link href="/find-password" className="text-[#365927] font-medium underline">비밀번호 찾기</Link></>
-            ) : (
-              <>아이디가 기억나지 않으면 <Link href="/find-id" className="text-[#365927] font-medium underline">아이디 찾기</Link></>
-            )}
-          </p>
         </>
       )}
     </div>

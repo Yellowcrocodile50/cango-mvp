@@ -19,7 +19,7 @@ export async function fetchAllRows<T>(
 }
 
 /* `.in("id", ids)`에 id를 수백 개 넣으면 요청 URL이 길어져 Bad Request로 통째로 실패한다
-   (profiles 913개에서 실측). id를 나눠 여러 번 조회해 합친다. */
+   (profiles 수백 개에서 실측). id를 나눠 여러 번 조회해 합친다. */
 export const IN_CHUNK = 200;
 
 export async function fetchByIdChunks<T>(

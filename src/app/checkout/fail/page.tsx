@@ -16,12 +16,17 @@ function FailContent() {
     if (hasRun.current || !orderId) return;
     hasRun.current = true;
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      // /api/cancel은 Bearer 토큰으로 본인을 확인한다(buyer_id는 토큰에서 꺼낸다).
+      // 토큰 없이 보내면 항상 401이라 실패한 결제의 주문이 pending으로 남았다.
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
       fetch("/api/cancel", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId, buyerId: user.id }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ orderId }),
       }).catch(() => {});
     })();
   }, [orderId]);

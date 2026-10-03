@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { Upload, FileText, Plus, X, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
@@ -36,7 +36,8 @@ export default function SupplierUploadSection({
   const [previewFiles, setPreviewFiles] = useState<File[]>([]);
   const [previewPreviews, setPreviewPreviews] = useState<string[]>([]);
   const [recentMaterials, setRecentMaterials] = useState<Material[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  // 업로드가 끝날 때마다 올려 최근 자료를 다시 불러온다
+  const [reloadKey, setReloadKey] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const previewInputRef = useRef<HTMLInputElement>(null);
@@ -103,21 +104,22 @@ export default function SupplierUploadSection({
     category: "기타",
   });
 
-  async function loadRecent() {
-    if (loaded) return;
-    const { data } = await supabase
+  // 렌더 중에 조회를 시작하면 응답이 오기 전 재렌더마다 같은 조회가 또 나갔다.
+  // effect로 옮겨 마운트·업로드 직후에만 한 번씩 부른다.
+  useEffect(() => {
+    let cancelled = false;
+    supabase
       .from("materials")
       .select("id, title, price, file_url, created_at")
       .eq("supplier_id", userId)
       .eq("is_deleted", false)
       .order("created_at", { ascending: false })
-      .limit(4);
-    setRecentMaterials(data || []);
-    setLoaded(true);
-  }
-
-  // Load on mount
-  if (!loaded) loadRecent();
+      .limit(4)
+      .then(({ data }) => {
+        if (!cancelled) setRecentMaterials(data || []);
+      });
+    return () => { cancelled = true; };
+  }, [userId, reloadKey]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -195,7 +197,7 @@ export default function SupplierUploadSection({
       setPreviewFiles([]);
       setPreviewPreviews([]);
       setShowForm(false);
-      setLoaded(false);
+      setReloadKey((k) => k + 1);
       onUploaded?.();
     } catch (err) {
       toast.error("업로드 중 오류가 발생했습니다: " + (err as Error).message);

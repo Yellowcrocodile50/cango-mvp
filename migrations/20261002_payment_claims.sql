@@ -20,3 +20,7 @@ create table if not exists public.payment_claims (
 
 alter table public.payment_claims enable row level security;
 revoke all on public.payment_claims from anon, authenticated;
+
+-- 확정에 성공한 점유 표시. 오래된 점유 정리는 confirmed_at이 NULL인 것(버려진 것)만 지운다.
+-- 성공한 점유까지 시간 기준으로 지우면 그 결제번호를 다시 쓸 수 있게 된다(배포 전 Codex 리뷰).
+alter table public.payment_claims add column if not exists confirmed_at timestamptz;

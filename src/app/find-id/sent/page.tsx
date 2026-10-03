@@ -1,7 +1,7 @@
 import Link from "next/link";
 
-/* 아이디 찾기 메일 발송 후 안내 페이지. 검색 색인 제외는 상위 find-id/layout이 맡는다.
-   응답은 가입 여부와 상관없이 같으므로(계정 열거 방지) 이 페이지도 누구에게나 같은 문구다. */
+/* 아이디 찾기 메일 발송 후 안내 페이지. 가입된 이메일일 때만 이 페이지로 넘어온다.
+   검색 색인 제외는 상위 find-id/layout이 맡는다. */
 export default function FindIdSentPage() {
   return (
     <div className="max-w-sm mx-auto px-4 py-20 text-center">

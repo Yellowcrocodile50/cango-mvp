@@ -33,14 +33,14 @@ const CONFIG: Record<Mode, {
   },
   "find-password": {
     title: "비밀번호 찾기",
-    intro: "아이디나 이메일을 적어주세요.",
+    intro: "아이디 또는 이메일을 적어주세요.",
     label: "아이디 또는 이메일",
     placeholder: "아이디 또는 이메일",
     inputType: "text",
     endpoint: "/api/auth/request-password-reset",
     field: "identifier",
     sentTitle: "메일을 보냈어요",
-    sentBody: "가입된 계정이라면 곧 비밀번호를 새로 정하는 링크가 담긴 메일이 도착해요.",
+    sentBody: "가입하신 이메일로 비밀번호를 새로 정하는 링크를 보내드렸어요.",
   },
 };
 

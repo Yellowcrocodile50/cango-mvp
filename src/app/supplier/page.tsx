@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { fetchAllRows } from "@/lib/fetchAllRows";
+import { fetchAllRows, fetchByIdChunks, IN_CHUNK } from "@/lib/fetchAllRows";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, ShoppingCart, Clock, Download, RefreshCw, ChevronRight } from "lucide-react";
 import { isFreeCategory } from "@/data/categories";
@@ -59,38 +59,47 @@ export default function SupplierDashboard() {
       return;
     }
 
-    // 1000행 상한 — 넘으면 발송 대기·매출이 조용히 줄어든다
-    const { data: orderRows } = await fetchAllRows((from, to) =>
-      supabase
+    // 무료 다운로드는 건수만 필요하다. 행을 다 받으면 주문의 대부분(무료)을 1000행씩 여러 번
+    // 직렬로 내려받게 되므로, 무료 자료는 count만 세고 행은 유료 자료 주문만 받는다.
+    const freeIds = materialIds.filter((id) => isFreeCategory(categoryMap.get(id) ?? ""));
+    const paidIds = materialIds.filter((id) => !isFreeCategory(categoryMap.get(id) ?? ""));
+
+    let freeDownloads = 0;
+    for (let i = 0; i < freeIds.length; i += IN_CHUNK) {
+      const { count } = await supabase
         .from("orders")
-        .select("payment_status, is_sent, amount, payment_method, material_id, order_id")
-        .in("material_id", materialIds)
-        .order("id")
-        .range(from, to)
+        .select("id", { count: "exact", head: true })
+        .in("material_id", freeIds.slice(i, i + IN_CHUNK))
+        .eq("payment_status", "done");
+      freeDownloads += count ?? 0;
+    }
+
+    // 유료 주문은 행이 필요하다(발송 여부·금액·입금 대기). 1000행 상한과 .in() 길이 둘 다 넘게 받는다
+    const { data: orderRows } = await fetchByIdChunks(paidIds, (chunk) =>
+      fetchAllRows((from, to) =>
+        supabase
+          .from("orders")
+          .select("payment_status, is_sent, amount, payment_method, material_id, order_id")
+          .in("material_id", chunk)
+          .order("id")
+          .range(from, to)
+      )
     );
 
-    // 단일 패스로 통계 집계 (유료 결제 / 무료 다운로드 분리)
+    // 단일 패스로 유료 주문 집계 (무료 다운로드는 위에서 count로 셌다)
     let paidCount = 0;
     let paidPending = 0;
     let paidCompleted = 0;
-    let freeDownloads = 0;
     let totalRevenue = 0;
     let bankPending = 0;
     for (const o of orderRows ?? []) {
-      const free = isFreeCategory(categoryMap.get(o.material_id) ?? "");
       // 입금은 확인했지만 발송 메일 때문에 pending으로 남겨둔 주문. 집계에서만 결제 완료로 친다.
       const depositConfirmed = o.order_id ? DEPOSIT_CONFIRMED_ORDER_IDS.has(o.order_id) : false;
-      // 무료 자료는 직접 다운로드 → 입금/발송 개념 없음. 유료 주문만 입금 대기 집계
       // 이미 입금을 확인한 주문은 배너로 다시 알리지 않는다
-      if (!free && o.payment_method === "bank_transfer" && o.payment_status === "pending" && !depositConfirmed) {
+      if (o.payment_method === "bank_transfer" && o.payment_status === "pending" && !depositConfirmed) {
         bankPending += 1;
       }
       if (o.payment_status !== "done" && !depositConfirmed) continue;
-      if (free) {
-        // 무료 다운로드는 발송 대기/정산에서 제외하고 별도 카운트
-        freeDownloads += 1;
-        continue;
-      }
       paidCount += 1;
       totalRevenue += o.amount;
       if (o.is_sent) paidCompleted += 1;

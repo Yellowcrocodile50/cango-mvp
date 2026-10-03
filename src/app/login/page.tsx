@@ -9,6 +9,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const registered = searchParams.get("registered");
+  const passwordReset = searchParams.get("reset") === "done";
 
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -88,6 +89,12 @@ function LoginForm() {
         </div>
       )}
 
+      {passwordReset && (
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-600 text-sm">
+          새 비밀번호로 바꿨어요. 새 비밀번호로 로그인해 주세요.
+        </div>
+      )}
+
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
           {error}
@@ -134,7 +141,13 @@ function LoginForm() {
         </button>
       </form>
 
-      <p className="text-sm text-center text-[#5a7d50] mt-6">
+      <p className="text-sm text-center text-[#5a7d50] mt-5">
+        <Link href="/find-id" className="hover:text-[#365927] underline-offset-2 hover:underline">아이디 찾기</Link>
+        <span className="mx-2 text-[#d6e4d3]">|</span>
+        <Link href="/find-password" className="hover:text-[#365927] underline-offset-2 hover:underline">비밀번호 찾기</Link>
+      </p>
+
+      <p className="text-sm text-center text-[#5a7d50] mt-4">
         아직 계정이 없으신가요?{" "}
         <Link href="/signup" className="text-[#365927] font-medium underline">
           회원가입

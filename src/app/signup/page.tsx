@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { validatePhone, normalizePhone } from "@/lib/phone";
+import { validatePassword, validateConfirm } from "@/lib/password";
 import { trackEvent } from "@/lib/ga";
 
 const GRADES = ["고3/N수", "고2", "고1", "중3", "중2", "중1"];
@@ -21,20 +22,6 @@ function validateEmail(v: string) {
   return "";
 }
 
-function validatePassword(v: string) {
-  if (!v) return "";
-  if (v.length < 8 || v.length > 16) return "8~16자로 입력해주세요.";
-  if (!/[a-zA-Z]/.test(v)) return "문자를 포함해야 합니다.";
-  if (!/[0-9]/.test(v)) return "숫자를 포함해야 합니다.";
-  if (!/[!@#$%^&*()\-_=+\[\]{};:'",.<>/?\\|`~]/.test(v)) return "특수문자를 포함해야 합니다.";
-  return "";
-}
-
-function validateConfirm(password: string, confirm: string) {
-  if (!confirm) return "";
-  if (password !== confirm) return "비밀번호가 일치하지 않습니다.";
-  return "";
-}
 
 export default function SignupPage() {
   const router = useRouter();

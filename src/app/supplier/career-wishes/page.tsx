@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronLeft, Heart } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { fetchAllRows, fetchByIdChunks } from "@/lib/fetchAllRows";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -38,11 +39,16 @@ export default function CareerWishesPage() {
   const fetchData = useCallback(async () => {
     /* department가 null인 행은 내신 계산기 자유 문의라 여기 대상이 아니다
        (그쪽은 "내신 계산기 추가 문의" 메뉴가 따로 본다). */
-    const { data: wishRows } = await supabase
-      .from("naeshin_requests")
-      .select("id, department, created_at, notified_at, user_id")
-      .not("department", "is", null)
-      .order("created_at", { ascending: false });
+    // 1000행 상한 — 넘으면 오래된 찜이 에러 없이 빠진다
+    const { data: wishRows } = await fetchAllRows((from, to) =>
+      supabase
+        .from("naeshin_requests")
+        .select("id, department, created_at, notified_at, user_id")
+        .not("department", "is", null)
+        .order("created_at", { ascending: false })
+        .order("id")
+        .range(from, to)
+    );
 
     const userIds = [
       ...new Set((wishRows ?? []).map((r) => r.user_id).filter(Boolean)),
@@ -50,10 +56,12 @@ export default function CareerWishesPage() {
 
     let profileMap = new Map<string, WishRow["profile"]>();
     if (userIds.length > 0) {
-      const { data: profileRows } = await supabase
-        .from("profiles")
-        .select("id, userid, email, user_type, grade, phone, marketing_agreed")
-        .in("id", userIds);
+      const { data: profileRows } = await fetchByIdChunks(userIds, (chunk) =>
+        supabase
+          .from("profiles")
+          .select("id, userid, email, user_type, grade, phone, marketing_agreed")
+          .in("id", chunk)
+      );
       profileMap = new Map((profileRows ?? []).map((p) => [p.id, p]));
     }
 

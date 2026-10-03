@@ -17,3 +17,20 @@ export async function fetchAllRows<T>(
     if (!data || data.length < FETCH_CHUNK) return { data: rows, error: null };
   }
 }
+
+/* `.in("id", ids)`에 id를 수백 개 넣으면 요청 URL이 길어져 Bad Request로 통째로 실패한다
+   (profiles 913개에서 실측). id를 나눠 여러 번 조회해 합친다. */
+export const IN_CHUNK = 200;
+
+export async function fetchByIdChunks<T>(
+  ids: string[],
+  page: (chunk: string[]) => PromiseLike<{ data: T[] | null; error: unknown }>
+): Promise<{ data: T[]; error: unknown }> {
+  const rows: T[] = [];
+  for (let i = 0; i < ids.length; i += IN_CHUNK) {
+    const { data, error } = await page(ids.slice(i, i + IN_CHUNK));
+    if (error) return { data: rows, error };
+    rows.push(...(data ?? []));
+  }
+  return { data: rows, error: null };
+}

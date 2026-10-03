@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { fetchAllRows, fetchByIdChunks } from "@/lib/fetchAllRows";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -33,21 +34,28 @@ export default function NaeshinRequestsPage() {
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
-    const { data: requestRows } = await supabase
-      .from("naeshin_requests")
-      .select("id, content, created_at, user_id")
-      /* 진로 탐구 찜(department 있음)은 전용 메뉴가 따로 본다. 여기는 자유 문의만. */
-      .is("department", null)
-      .order("created_at", { ascending: false });
+    // 1000행 상한 — 넘으면 오래된 문의가 에러 없이 빠진다
+    const { data: requestRows } = await fetchAllRows((from, to) =>
+      supabase
+        .from("naeshin_requests")
+        .select("id, content, created_at, user_id")
+        /* 진로 탐구 찜(department 있음)은 전용 메뉴가 따로 본다. 여기는 자유 문의만. */
+        .is("department", null)
+        .order("created_at", { ascending: false })
+        .order("id")
+        .range(from, to)
+    );
 
     const userIds = [...new Set((requestRows ?? []).map((r) => r.user_id).filter(Boolean))] as string[];
 
     let profileMap = new Map<string, NaeshinRequest["profile"]>();
     if (userIds.length > 0) {
-      const { data: profileRows } = await supabase
-        .from("profiles")
-        .select("id, userid, email, user_type, grade, phone, marketing_agreed, marketing_agreed_at")
-        .in("id", userIds);
+      const { data: profileRows } = await fetchByIdChunks(userIds, (chunk) =>
+        supabase
+          .from("profiles")
+          .select("id, userid, email, user_type, grade, phone, marketing_agreed, marketing_agreed_at")
+          .in("id", chunk)
+      );
       profileMap = new Map((profileRows ?? []).map((p) => [p.id, p]));
     }
 

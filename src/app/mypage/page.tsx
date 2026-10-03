@@ -59,6 +59,16 @@ export default function MyPage() {
     () => orders.filter((o) => isFreeCategory(o.materials?.category ?? "")),
     [orders]
   );
+  // 장바구니 묶음 주문은 자료마다 행이 따로 있고 order_id를 공유한다.
+  // 입금 안내에는 행 하나의 금액이 아니라 같은 주문번호의 합계를 넘겨야 한다.
+  const orderTotals = useMemo(() => {
+    const totals = new Map<string, number>();
+    for (const o of orders) {
+      if (!o.order_id || o.payment_method !== "bank_transfer" || o.payment_status !== "pending") continue;
+      totals.set(o.order_id, (totals.get(o.order_id) ?? 0) + o.amount);
+    }
+    return totals;
+  }, [orders]);
 
   useEffect(() => {
     (async () => {
@@ -282,7 +292,7 @@ export default function MyPage() {
               </span>
               {order.order_id && (
                 <Link
-                  href={`/checkout/bank-pending?orderId=${order.order_id}&amount=${order.amount}`}
+                  href={`/checkout/bank-pending?orderId=${order.order_id}&amount=${orderTotals.get(order.order_id) ?? order.amount}`}
                   className="text-xs text-[#8aab82] hover:text-[#365927] underline underline-offset-2"
                 >
                   입금 안내 다시 보기

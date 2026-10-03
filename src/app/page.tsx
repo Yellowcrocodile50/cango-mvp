@@ -4,12 +4,16 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
-import SupplierUploadSection from "@/components/SupplierUploadSection";
+import dynamic from "next/dynamic";
 import PromoBanner, { BannerPill } from "@/components/PromoBanner";
 import { supabase } from "@/lib/supabase";
 import { fetchIsSupplier } from "@/lib/supplierRole";
 import { categoryGroups, getBreadcrumb, isFreeCategory } from "@/data/categories";
 import type { Material } from "@/types/material";
+
+// 공급자만 보는 업로드 폼. 정적으로 import하면 모든 방문자의 홈 번들에 들어가므로 필요할 때만 불러온다.
+// 공급자 판별이 클라이언트에서 끝난 뒤에만 그려지는 컴포넌트라 서버 HTML(SEO)에는 원래 없다.
+const SupplierUploadSection = dynamic(() => import("@/components/SupplierUploadSection"), { ssr: false });
 
 function ProductGrid() {
   const searchParams = useSearchParams();
